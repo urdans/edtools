@@ -1,0 +1,48 @@
+✓1. Make all test cases work.
+	✓a. fix problems in the circuit class.
+	✓b. don't make profound changes, only the necessary ones.
+
+2. Start making the classes immutable; do it by package basis.
+	✓a. voltagedrop. DONE
+	b. conduits
+	c. conductors.
+	d. loads.
+	e. circuits.
+
+3. Refactoring of classes:
+	0. Commit.
+	a. Create a copy of the class with an old_ prefix name.
+	b. Make the changes to the existing class.
+	c. run tests
+	d. make changes to the classes using this class.
+	e. commit.
+
+ResultMessages
+This class is used as composition by other classes. ResultMessages is a container and so it is
+mutable. The owner class can add or remove messages from it. However, the owner class returns a
+ROResultMessages which does not have any setter and as such the container cannot be changed.
+It only has getters. One of the getters returns a list of ResultMessage objects. The ResultMessage
+class is completely immutable.
+
+Bundle
+This class is a container of conduitables. It will be transformed into an immutable class.
+Originally it has these methods:
+==to be passed in a Builder==
+- add(Conduitable) -> List<Conduitable>
+- setBundlingLength(double)
+
+==to be deleted==
+- remove(Conduitable)
+- empty()
+- NotifierDelegate getNotifier()
+
+==to be kept==
+boolean isEmpty()
+boolean hasConduitable(Conduitable)
+int getCurrentCarryingCount()
+int getConductorCount()
+boolean complyWith310_15_B_3_a_4()
+boolean complyWith310_15_B_3_a_5()
+double getBundlingLength()
+List<Conduitables> getConduitables() -> returning
+
