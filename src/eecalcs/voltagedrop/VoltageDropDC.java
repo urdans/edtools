@@ -2,234 +2,202 @@ package eecalcs.voltagedrop;
 
 import eecalcs.conductors.Conductor;
 import eecalcs.conductors.ConductorProperties;
-import eecalcs.conductors.RoConductor;
+import eecalcs.conductors.Conduitable;
 import eecalcs.conductors.Size;
-import eecalcs.conduits.Material;
-import eecalcs.systems.VoltageSystemAC;
 import org.jetbrains.annotations.Contract;
 import tools.JSONTools;
 import tools.ResultMessages;
 
+
+/**
+ Provides methods for calculation of the DC voltage drop across conductors and
+ for calculation of the maximum length of a circuit for a given maximum voltage
+ drop.
+ <br><br>
+ Before any computation is done, all the required input values are validated. If
+ there is any invalid input value, the results of the calculations are useless,
+ like:
+ <br>
+ - Zero for voltage drop;<br>
+ - Null for the minimum conductor size.<br>
+ <br>
+ When a zero or null value is returned, the resultMessages field contains the
+ message explaining the reason. Most of those reasons are failing in the
+ validation of the input data. However, there are few messages that are obtained
+ during calculation time. These are related to NEC code violations and no
+ valid results are obtained for the given set of conditions.<br>
+ The resultMessages field must be checked for the presence of those messages.
+ See {@link ResultMessages} class for how to use it.
+ @Immutable
+ */
 public class VoltageDropDC {
-	public final Params params;
-	public final Results results;
-	private final ResultMessages resultMessages = new ResultMessages();
+	//region params
+	private final Conduitable conduitable;
+	private double loadCurrent = 10;
+	private int numberOfSets = 1;
+	private double dcVoltage = 120;
+	private double maxVoltageDropPercent = 3.0;
+	//endregion
 
-	/**
-	 This class encapsulates the resultsVD of the voltage drop calculation for an
-	 AC circuit. The calculation is performed in accordance to IEEE Std 141<br>
-	 <ul>
-	 <li>voltageDropPercentage: The voltage drop expressed in percentage of the
-	 source voltage.</li>
-	 <li>voltageDropVolts: The voltage drop in volts.</li>
-	 <li>voltageAtLoad: The voltage at the load, in volts.</li>
-	 <li>maxLengthForMaxVD: The maximum length that the given conductor should
-	 be to not exceed the maximum given voltage drop percentage.</li>
-	 <li>minSizeForMaxVD: The size that the given conductor should be to not
-	 exceed the maximum given voltage drop percentage.</li>
-	 <li>vdPercentForMinSize: The voltage drop, in percentage, that the given
-	 conductor would have to not exceed the given voltage drop percentage.</li>
-	 <li>maxLengthForMinSize: The maximum length the given conductor having a
-	 size of minSizeForMaxVD would be to not exceed the maximum given voltage
-	 drop percentage.</li>
-	 <li>resultMessages: The container for the error and warning messages. See
-	 {@link ResultMessages} for details.</li>
-	 </ul>
-	 */
-	public static class Results {
-		public final double voltageDropPercentage;
-		public final double voltageDropVolts;
-		public final double voltageAtLoad;
-		public final double maxLengthForMaxVD;
-		public final Size minSizeForMaxVD;
-		public final double vdPercentForMinSize;
-		public final double maxLengthForMinSize;
-		public final double maxVoltageDropPercentParam;
-		public final ResultMessages resultMessages;
+	private final ResultMessages resultMessages =  new ResultMessages();
 
-		public Results(double voltageDropPercentage, double voltageDropVolts,
-		               double voltageAtLoad, double maxLengthForMaxVD,
-		               Size minSizeForMaxVD, double vdPercentForMinSize,
-		               double maxLengthForMinSize,
-		               double maxVoltageDropPercentParam,
-		               ResultMessages resultMessages) {
-			this.voltageDropPercentage = voltageDropPercentage;
-			this.voltageDropVolts = voltageDropVolts;
-			this.voltageAtLoad = voltageAtLoad;
-			this.maxLengthForMaxVD = maxLengthForMaxVD;
-			this.minSizeForMaxVD = minSizeForMaxVD;
-			this.vdPercentForMinSize = vdPercentForMinSize;
-			this.maxLengthForMinSize = maxLengthForMinSize;
-			this.maxVoltageDropPercentParam = maxVoltageDropPercentParam;
-			this.resultMessages = resultMessages;
-		}
+	public Conduitable getConduitable() {
+		return conduitable;
+	}
 
-		@Override
-		public String toString(){
-			return JSONTools.toJSON(this);
-		}
+	public double getLoadCurrent() {
+		return loadCurrent;
+	}
+
+	public int getNumberOfSets() {
+		return numberOfSets;
+	}
+
+	public double getDcVoltage() {
+		return dcVoltage;
+	}
+
+	public double getMaxVoltageDropPercent() {
+		return maxVoltageDropPercent;
+	}
+
+	public double getVoltageDropPercentage() {
+		if(goodParamsVD())
+			return calcVDPercent(calcVoltageDrop(calcVoltageAtLoad(conduitable.getSize())));
+		else
+			return 0;
+	}
+
+	public double getVoltageDropVolts() {
+		if(goodParamsVD())
+			return calcVoltageDrop(calcVoltageAtLoad(conduitable.getSize()));
+		else
+			return 0;
+	}
+
+	public double getVoltageAtLoad() {
+		if(goodParamsVD())
+			return calcVoltageAtLoad(conduitable.getSize());
+		else
+			return 0;
+	}
+
+	public double getMaxLengthForMaxVD() {
+		if(goodParamsVD())
+			return calcMaxLengthForMaxVD(conduitable.getSize());
+		else
+			return 0;
+	}
+
+	public Size getMinSizeForMaxVD() {
+		if(goodParamsSize())
+			return calcMinSizeForMaxVD();
+		else
+			return null;
+	}
+
+	public double getVdPercentForMinSize() {
+		if(goodParamsSize())
+			return calcVDPercent(calcVoltageDrop(calcVoltageAtLoad(calcMinSizeForMaxVD())));
+		else
+			return 0;
+	}
+
+	public double getMaxLengthForMinSize() {
+		if(goodParamsSize())
+			return calcMaxLengthForMaxVD(calcMinSizeForMaxVD());
+		else
+			return 0;
+	}
+
+	public ResultMessages getResultMessages() {
+		calAll();
+		return resultMessages;
 	}
 
 	/**
-	 This class encapsulates the set of input parameters required by the
-	 {@link VoltageDropDC} class.<br>
-	 <ul>
-	 <li>conductor: The conductor object for which the voltage drop calculation
-	 is required.</li>
-	 <li>conduitMaterial: The material of the conduit containing the conductor.
-	 See {@link Material}.</li>
-	 <li>loadCurrent: the current of the load that passes through the conductor.</li>
-	 <li>powerFactor: The power factor of the load.</li>
-	 <li>numberOfSets: The number of conductors in parallel for the same phase.</li>
-	 <li>sourceVoltageSystem: The voltage system object describing the source
-	 voltage. See {@link VoltageSystemAC}.</li>
-	 </ul>
+	 This triggers all the calculations this class performs, so the
+	 resultMessages list gets updated.
 	 */
-	public static class Params {
-		public final RoConductor conductor;
-		public final double loadCurrent;
-		public final int numberOfSets;
-		public final double DCVoltage;
-		public final double maxVoltageDropPercent;
+	private void calAll() {
+		getMaxLengthForMaxVD();
+		getVdPercentForMinSize();
+	}
 
-		public Params(RoConductor conductor, double loadCurrent,
-		              int numberOfSets, double DCVoltage, double maxVoltageDropPercent) {
-			this.conductor = conductor;
-			this.loadCurrent = loadCurrent;
-			this.numberOfSets = numberOfSets;
-			this.DCVoltage = DCVoltage;
-			this.maxVoltageDropPercent = maxVoltageDropPercent;
-		}
+	public VoltageDropDC setLoadCurrent(double loadCurrent){
+		this.loadCurrent = loadCurrent;
+		return this;
+	}
 
-		@Override
-		public String toString(){
-			return JSONTools.toJSON(this);
-		}
+	public VoltageDropDC setNumberOfSets(int numberOfSets){
+		this.numberOfSets = numberOfSets;
+		return this;
+	}
+
+	public VoltageDropDC setDcVoltage(double DCVoltage){
+		this.dcVoltage = DCVoltage;
+		return this;
+	}
+
+	public VoltageDropDC setMaxVoltageDropPercent(double maxVoltageDropPercent){
+		this.maxVoltageDropPercent = maxVoltageDropPercent;
+		return this;
+	}
+
+	public VoltageDropDC(Conductor conduitable){
+		if(conduitable == null)
+			throw new IllegalArgumentException("Conductor parameter cannot be" +
+					" null.");
+		this.conduitable = conduitable;
 	}
 
 	/**
-	 This is a builder class for the VoltageDropAC class. It provides methods for
-	 initialization of selective parameters (keeping other parameter as optional).
-	 It also allows the construction of a VoltageDropAC object using a Params
-	 object.<br>
-	 The selective method is recommended when using this class in a
-	 client-stand-alone application, while the params method is the best choice
-	 when using this class in a server side application (Restfull app).
+	 Checks that all the given parameters in params (necessary for a
+	 voltage drop calculation) are good, and populates the ResultMessages
+	 object if not. Parameters checked are: voltage, conductor(nullity, size,
+	 length, parallelism when < AWG_1$0), load current(<=0, > ampacity),
+	 and number of sets. The maxVoltageDropPercent is not required for
+	 voltage drop calculation so it is not checked.
 	 */
-	public static class Builder {
-		private Conductor conductor = new Conductor();
-		private double loadCurrent = 10;
-		private int numberOfSets = 1;
-		private double DCVoltage = 120;
-		private double maxVoltageDropPercent = 3.0;
-
-		public Builder conductor(Conductor conductor){
-			this.conductor = conductor;
-			return this;
-		}
-
-		public Builder loadCurrent(double loadCurrent){
-			this.loadCurrent = loadCurrent;
-			return this;
-		}
-
-		public Builder numberOfSets(int numberOfSets){
-			this.numberOfSets = numberOfSets;
-			return this;
-		}
-
-		public Builder dcVoltage(double DCVoltage){
-			this.DCVoltage = DCVoltage;
-			return this;
-		}
-
-		public Builder maxVoltageDropPercent(double maxVoltageDropPercent){
-			this.maxVoltageDropPercent = maxVoltageDropPercent;
-			return this;
-		}
-
-		public VoltageDropDC build(){
-			return new VoltageDropDC(new Params(
-					this.conductor,
-					this.loadCurrent,
-					this.numberOfSets,
-					this.DCVoltage,
-					this.maxVoltageDropPercent));
-		}
-
-		public VoltageDropDC build(Params params){
-			return new VoltageDropDC(params);
-		}
-	}
-
-	/**
-	 Construct a voltage drop object with the given params object. This
-	 constructor is only invoke by the VoltageDropACBuilderClass only.
-	 */
-	VoltageDropDC(Params params){
-		this.params = params;
-		results = calculate();
-	}
-
-	/**
-	 Checks that all the given parameters in params are good by populating
-	 the ResultMessages object.
-	 */
-	private boolean goodParams(){
-		if(params.DCVoltage <= 0)
-			resultMessages.add(VoltageDropAC.ERROR10);
-		if(params.conductor == null)
-			resultMessages.add(VoltageDropAC.ERROR09);
+	private boolean goodParamsVD(){
+		if (conduitable.getSize() == null)
+			resultMessages.add(VoltageDropAC.ERROR03);
 		else {
-			if (params.conductor.getSize() == null)
-				resultMessages.add(VoltageDropAC.ERROR03);
-			else {
-				if ((params.conductor.getSize().isLessThan(Size.AWG_1$0)) &&
-						params.numberOfSets > 1)
-					resultMessages.add(VoltageDropAC.ERROR21.append("Actual size is " + params.conductor.getSize().getName() + "."));
-			}
-
-			if(params.conductor.getLength() <= 0)
-				resultMessages.add(VoltageDropAC.ERROR05);
-			if(params.loadCurrent > params.numberOfSets * params.conductor.getCorrectedAndAdjustedAmpacity())
-				resultMessages.add(VoltageDropAC.ERROR20);
+			if ((conduitable.getSize().isLessThan(Size.AWG_1$0)) && numberOfSets > 1)
+				resultMessages.add(VoltageDropAC.ERROR21.append("Actual size is " + conduitable.getSize().getName() + "."));
 		}
-		if(params.numberOfSets <= 0 || params.numberOfSets > 10)
-			resultMessages.add(VoltageDropAC.ERROR04);
-		if(params.loadCurrent <= 0 )
-			resultMessages.add(VoltageDropAC.ERROR06);
-		if(params.maxVoltageDropPercent < 0.5 || params.maxVoltageDropPercent > 25.0)
-			resultMessages.add(VoltageDropAC.ERROR08);
-
-		return !resultMessages.hasErrors();
+		if(loadCurrent > numberOfSets * ConductorProperties.getStandardAmpacity(
+				conduitable.getSize(), conduitable.getMetal(),
+				conduitable.getTemperatureRating()))
+			resultMessages.add(VoltageDropAC.ERROR20);
+		return goodParamsSize();
 	}
 
 	/**
-	 Perform all the calculations for this voltage drop object and
-	 returns the resultsVD in a result object.
+	 Checks that all the given parameters in params (necessary for a
+	 minimum-size-for-the-given-VD-percent calculation) are good, and
+	 populates the ResultMessages object if not. Parameters checked are:
+	 voltage, conductor(nullity, size,
+	 length, parallelism when < AWG_1$0), load current(<=0, > ampacity),
+	 and number of sets. The maxVoltageDropPercent is not required for
+	 voltage drop calculation so it is not checked.
 	 */
-	private Results calculate() {
-		double voltageAtLoad = 0;
-		double voltageDrop = 0;
-		double vdPercent = 0;
-		double maxLength = 0;
-		Size minSize = null;
-		double vdPercentForMinSize = 0;
-		double maxLengthForMinSize = 0;
-
-		if(goodParams()){
-			voltageAtLoad = calcVoltageAtLoad(params.conductor.getSize());
-			voltageDrop = calcVoltageDrop(voltageAtLoad);
-			vdPercent = calcVDPercent(voltageDrop);
-			maxLength = calcMaxLengthForMaxVD(params.conductor.getSize());
-			minSize = calcMinSizeForMaxVD();
-			vdPercentForMinSize = calcVDPercent(calcVoltageDrop(calcVoltageAtLoad(minSize)));
-			maxLengthForMinSize = calcMaxLengthForMaxVD(minSize);
-		}
-
-		return new Results(vdPercent, voltageDrop, voltageAtLoad,
-				maxLength, minSize,	vdPercentForMinSize, maxLengthForMinSize,
-				params.maxVoltageDropPercent, resultMessages);
+	private boolean goodParamsSize(){
+		if(conduitable.getMetal() == null)
+			resultMessages.add(VoltageDropAC.ERROR12);
+		if(conduitable.getLength() <= 0)
+			resultMessages.add(VoltageDropAC.ERROR05);
+		if(conduitable.getCopperCoating() == null)
+			resultMessages.add(VoltageDropAC.ERROR11);
+		if(dcVoltage <= 0)
+			resultMessages.add(VoltageDropAC.ERROR01);
+		if(numberOfSets <= 0 || numberOfSets > 10)
+			resultMessages.add(VoltageDropAC.ERROR04);
+		if(loadCurrent <= 0 )
+			resultMessages.add(VoltageDropAC.ERROR06);
+		if(maxVoltageDropPercent < 0.5 || maxVoltageDropPercent > 25.0)
+			resultMessages.add(VoltageDropAC.ERROR08);
+		return !resultMessages.hasErrors();
 	}
 
 	/**
@@ -239,43 +207,43 @@ public class VoltageDropDC {
 	private double calcVoltageAtLoad(Size size) {
 		double oneWayDCResistance = ConductorProperties.getDCResistance(
 				size,
-				params.conductor.getMetal(),
-				params.conductor.getLength(),
-				params.numberOfSets,
-				params.conductor.getCopperCoating());
-		return params.DCVoltage - 2 * oneWayDCResistance * params.loadCurrent;
+				conduitable.getMetal(),
+				conduitable.getLength(),
+				numberOfSets,
+				conduitable.getCopperCoating());
+		return dcVoltage - 2 * oneWayDCResistance * loadCurrent;
 	}
 
 	/**
 	 Returns the DC voltage drop in volts for the given load terminal voltage.
 	 */
 	private double calcVoltageDrop(double voltageAtLoad){
-		return params.DCVoltage - voltageAtLoad;
+		return dcVoltage - voltageAtLoad;
 	}
 
 	/**
 	 Returns the DC voltage drop in percentage for the given voltage drop.
 	 */
 	private double calcVDPercent(double voltageDrop){
-		return 100.0 * voltageDrop/params.DCVoltage;
+		return 100.0 * voltageDrop/ dcVoltage;
 	}
 
 	/**
-	 Returns the maximum length in feet that the conductor parameter can have
+	 Returns the maximum length in feet that the size parameter can have
 	 while having a voltage drop equal os less than the voltage drop
 	 percentage parameter.
 	 */
 	private double calcMaxLengthForMaxVD(Size size) {
 		double dCResistance = ConductorProperties.getDCResistance(
 				size,
-				params.conductor.getMetal(),
-				params.conductor.getLength(),
-				params.numberOfSets,
-				params.conductor.getCopperCoating());
-		return params.DCVoltage
-				* params.maxVoltageDropPercent
-				* params.conductor.getLength()
-				/ (200 * params.loadCurrent * dCResistance);
+				conduitable.getMetal(),
+				conduitable.getLength(),
+				numberOfSets,
+				conduitable.getCopperCoating());
+		return dcVoltage
+				* maxVoltageDropPercent
+				* conduitable.getLength()
+				/ (200 * loadCurrent * dCResistance);
 	}
 
 	/**
@@ -286,21 +254,39 @@ public class VoltageDropDC {
 	@Contract(pure = true)
 	private Size calcMinSizeForMaxVD() {
 		for(Size size : Size.values()){
-			double actualVDPercent = 100 * (params.DCVoltage
-					- calcVoltageAtLoad(size)) / params.DCVoltage;
+			if(loadCurrent > numberOfSets *
+					ConductorProperties.getStandardAmpacity(size,
+							conduitable.getMetal(),
+							conduitable.getTemperatureRating()))
+				continue;
+			double actualVDPercent = 100 * (dcVoltage
+					- calcVoltageAtLoad(size)) / dcVoltage;
 
-			if(actualVDPercent <= params.maxVoltageDropPercent){
+			if(actualVDPercent <= maxVoltageDropPercent){
+				if(numberOfSets > 1 && (size.isLessThan(Size.AWG_1$0)))
+					continue;
 				double maxLengthDC = calcMaxLengthForMaxVD(size);
 				if(maxLengthDC <= 0) {
 					resultMessages.add(VoltageDropAC.ERROR30);
 					return null;
 				}
-				if(params.numberOfSets > 1 && (size.ordinal() < Size.AWG_1$0.ordinal()))
-					resultMessages.add(VoltageDropAC.WARNN21.append("Actual size is " + size.getName() + "."));
 				return size;
 			}
 		}
 		resultMessages.add(VoltageDropAC.ERROR31);
 		return null;
+	}
+
+	/**
+	 @return A JSON string of this class.
+	 */
+	public String toJSON(){
+		return JSONTools.toJSON(this);
+	}
+
+	@Override
+	public String toString() {
+		return "VoltageDropDC{" + "conduitable=" + conduitable + ", " +
+				"loadCurrent=" + loadCurrent + ", numberOfSets=" + numberOfSets + ", dcVoltage=" + dcVoltage + ", maxVoltageDropPercent=" + maxVoltageDropPercent + ", resultMessages=" + resultMessages + '}';
 	}
 }

@@ -16,12 +16,23 @@ import static eecalcs.loads.MotorProperties.DesignLetter.DESIGN_A;
  <p>This class represents a motor load.
  */
 public class ACMotor extends BaseLoad implements Load{
-	private final Horsepower horsepower;
+	private /*final*/ Horsepower horsepower;
 	private Circuit.CircuitType circuitType;
-	private final MotorProperties.Type motorType;
-	private final int motorVoltage;
+	private /*final*/ MotorProperties.Type motorType;
+	private /*final*/ int motorVoltage;
 	private OCPD.Type ocdpType = INVERSE_TIME_BREAKER;
 	private DesignLetter designLetter = DESIGN_A;
+
+	@Override
+	public Load getACopy() {
+		return null;
+	}
+
+	//delete later
+/*	public ACMotor(){
+		super(VoltageSystemAC.v120_1ph_2w, 10);
+	}*/
+
 
 	/**
 	 @return The standard voltage system that correspond to the voltage
@@ -137,7 +148,7 @@ public class ACMotor extends BaseLoad implements Load{
 	 @param voltageSystemAC The voltage system that will feed this motor.
 	 {@link Horsepower}.
 	 */
-	public ACMotor(MotorProperties.Type motorType,
+/*	public ACMotor(MotorProperties.Type motorType,
 	               int motorVoltageRating, Horsepower motorHorsepower,
 	               VoltageSystemAC voltageSystemAC){
 		checkNull(motorType, motorHorsepower, voltageSystemAC);
@@ -156,7 +167,7 @@ public class ACMotor extends BaseLoad implements Load{
 		powerFactor = 0.8;
 		notifier = new NotifierDelegate(this);
 		MCA = 1.25 * nominalCurrent;
-	}
+	}*/
 
 	/**
 	 Checks that the nominal current and voltage system for this motor (as

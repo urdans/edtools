@@ -1,5 +1,9 @@
 package eecalcs.loads;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import eecalcs.systems.VoltageSystemAC;
+
 /**
  This class represents a nonlinear load.
  A non-linear load is rich in harmonics; triple harmonics (especially 3rd) do
@@ -89,5 +93,29 @@ package eecalcs.loads;
 
 
  */
-public class NonLinearLoad {
+public class NonLinearLoad extends GeneralLoad{
+	//private boolean _isNonlinear = false;
+
+	public NonLinearLoad(VoltageSystemAC voltageSystem, double nominalCurrent) {
+		super(voltageSystem, nominalCurrent);
+	}
+
+
+	@Override
+	@JsonIgnore
+	public Load getACopy() {
+		NonLinearLoad nonLinearLoad = new NonLinearLoad(voltageSystem,
+				nominalCurrent);
+		nonLinearLoad.type = type;
+		nonLinearLoad.powerFactor = powerFactor;
+		nonLinearLoad.MCA = MCA;
+		nonLinearLoad.description = description;
+		return nonLinearLoad;
+	}
+
+	@Override
+	@JsonProperty("isNonlinear")
+	public boolean isNonlinear(){
+		return true;
+	}
 }

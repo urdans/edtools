@@ -50,27 +50,28 @@ public class ConductorProperties {
 	private static final Map<TempRating, Insul[]> insulationTempMap;
 
 	private static class Properties {
-		public Size size;
-		public int areaCM;
-		public double nonMagXL;
-		public double magXL;
-		public double CuAmp60;
-		public double CuAmp75;
-		public double CuAmp90;
-		public double AlAmp60;
-		public double AlAmp75;
-		public double AlAmp90;
-		public double CuResInPVCCond;
-		public double CuResInALCond;
-		public double CuResInSteelCond;
-		public double ALResInPVCCond;
-		public double ALResInALCond;
-		public double ALResInSteelCond;
-		public double CuResDCUncoated;
-		public double CuResDCCoated;
-		public double ALResDC;
+		private final Size size;
+		private final int areaCM;
+		private final double nonMagXL;
+		private final double magXL;
+		private final double CuAmp60;
+		private final double CuAmp75;
+		private final double CuAmp90;
+		private final double AlAmp60;
+		private final double AlAmp75;
+		private final double AlAmp90;
+		private final double CuResInPVCCond;
+		private final double CuResInALCond;
+		private final double CuResInSteelCond;
+		private final double ALResInPVCCond;
+		private final double ALResInALCond;
+		private final double ALResInSteelCond;
+		private final double CuResDCUncoated;
+		private final double CuResDCCoated;
+		private final double ALResDC;
 
-		public Properties(Size size, int cuAmp60, int cuAmp75, int cuAmp90,
+		private Properties(Size size, int cuAmp60, int cuAmp75,
+		                        int cuAmp90,
 		                  int alAmp60, int alAmp75, int alAmp90,
 		                  double nonMagXL,
 		                  double magXL, double cuResInPVCCond,

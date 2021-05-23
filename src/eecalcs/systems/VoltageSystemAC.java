@@ -23,6 +23,7 @@ package eecalcs.systems;
  <li><b>v_other</b>: defaults to 120v, 1Ø, 2 wires, but values can be customized.</li>
  </ul>
  */
+//todo: to be renamed to SystemVoltageAC
 public enum VoltageSystemAC{									   //neutral is CCC
 	v120_1ph_2w("120v 1Ø 2W",120, 1, 2),//2w:yes
 	v208_1ph_2w("208v 1Ø 2W",208, 1, 2),//2w:no neutral
@@ -39,7 +40,7 @@ public enum VoltageSystemAC{									   //neutral is CCC
 	v480_1ph_3w("480v 1Ø 3W",480, 1, 3),//3w:yes
 	v480_3ph_3w("480v 3Ø 3W",480, 3, 3),//3w:no neutral
 	v480_3ph_4w("480v 3Ø 4W",480, 3, 4),//4w:no, but if load>50% harmonic:yes
-	v575_3ph_3w("575v 3Ø 3W",575, 3, 3),//4w:no, but if load>50% harmonic:yes
+	v575_3ph_3w("575v 3Ø 3W",575, 3, 3),//3w:no neutral
 	v_other("120v 1Ø 2W", 120,1,2);
 /*todo
    very important: i need to get rid of this mutability of v_other. It's not

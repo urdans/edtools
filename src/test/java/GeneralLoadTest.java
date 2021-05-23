@@ -5,15 +5,14 @@ import eecalcs.loads.Load;
 import eecalcs.systems.VoltageSystemAC;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 class GeneralLoadTest {
-	GeneralLoad generalLoad = new GeneralLoad();
 
 	@Test
 	void setNonContinuous() {
-		generalLoad.setNominalCurrent(200);
+		GeneralLoad generalLoad = new GeneralLoad(VoltageSystemAC.v120_1ph_2w
+				,200);
 		generalLoad.setNonContinuous();
 		assertEquals(200, generalLoad.getNominalCurrent());
 		assertEquals(200, generalLoad.getMCA());
@@ -23,7 +22,8 @@ class GeneralLoadTest {
 
 	@Test
 	void setContinuous() {
-		generalLoad.setNominalCurrent(100);
+		GeneralLoad generalLoad = new GeneralLoad(VoltageSystemAC.v120_1ph_2w
+				,100);
 		generalLoad.setContinuous();
 		assertEquals(100, generalLoad.getNominalCurrent());
 		assertEquals(125, generalLoad.getMCA());
@@ -33,6 +33,7 @@ class GeneralLoadTest {
 
 	@Test
 	void setMixed() {
+		GeneralLoad generalLoad = new GeneralLoad();
 		generalLoad.setMixed(321.0);
 		assertEquals(10, generalLoad.getNominalCurrent());
 		assertEquals(321, generalLoad.getMCA());
@@ -42,19 +43,20 @@ class GeneralLoadTest {
 
 	@Test
 	void setNominalCurrent() {
+		GeneralLoad generalLoad = new GeneralLoad();
 		assertEquals(10, generalLoad.getNominalCurrent());
 		assertEquals(Load.Type.NONCONTINUOUS, generalLoad.getLoadType());
 		assertEquals(0, generalLoad.getOverloadRating());
 		assertEquals(0, generalLoad.getDSRating());
 		assertEquals(10, generalLoad.getMCA());
 
-		generalLoad.setNominalCurrent(123);
+		generalLoad = new GeneralLoad(VoltageSystemAC.v120_1ph_2w,123);
 		assertEquals(123, generalLoad.getNominalCurrent());
 	}
 
 	/*Testing features of the base OldLoad class*/
 	@Test
-	void loadConstructor(){
+	void loadConstructor() {
 		GeneralLoad generalLoad = new GeneralLoad();
 		assertEquals(VoltageSystemAC.v120_1ph_2w, generalLoad.getVoltageSystem());
 		assertEquals(10.0, generalLoad.getNominalCurrent());
@@ -68,10 +70,13 @@ class GeneralLoadTest {
 		assertEquals(0, generalLoad.getDSRating());
 		assertEquals(0.0, generalLoad.getOverloadRating());
 		assertNull(generalLoad.getDescription());
+	}
 
+	@Test
+	void loadConstructor01() {
+		GeneralLoad generalLoad = new GeneralLoad(VoltageSystemAC.v208_3ph_4w
+				, 20);
 		generalLoad.setDescription("Induction heater");
-		generalLoad.setVoltageSystem(VoltageSystemAC.v208_3ph_4w);
-		generalLoad.setNominalCurrent(-20);
 		generalLoad.setPowerFactor(-0.8);
 		assertEquals(20.0, generalLoad.getNominalCurrent());
 		assertEquals(20.0, generalLoad.getNeutralCurrent());
@@ -102,5 +107,80 @@ class GeneralLoadTest {
 		assertEquals(0.0, generalLoad2.getMaxOCPDRating());
 		assertEquals(0, generalLoad2.getDSRating());
 		assertEquals(0.0, generalLoad2.getOverloadRating());
+	}
+
+	@Test
+	void getACopy() {
+		GeneralLoad load = new GeneralLoad(VoltageSystemAC.v480_3ph_4w,321);
+		load.setContinuous()/*.setNonlinear()*/.setPowerFactor(0.83);
+		assertEquals(Load.Type.CONTINUOUS, load.getLoadType());
+		assertFalse(load.isNonlinear());
+		assertEquals(0.83, load.getPowerFactor());
+
+		Load clonedLoad = load.getACopy();
+		assertTrue(clonedLoad instanceof GeneralLoad);
+		assertEquals(load.toJSON(), ((GeneralLoad)clonedLoad).toJSON());
+
+		assertFalse(load.isNeutralCurrentCarrying());
+	}
+
+	@Test
+	void testSetContinuous() {
+		GeneralLoad load = new GeneralLoad(VoltageSystemAC.v208_1ph_2w,100);
+		load.setContinuous();
+		assertEquals(100, load.getNominalCurrent());
+		assertEquals(125, load.getMCA());
+		assertEquals(1.25, load.getMCAMultiplier());
+		assertEquals(Load.Type.CONTINUOUS, load.getLoadType());
+		assertFalse(load.isNeutralCurrentCarrying());
+	}
+
+	@Test
+	void testSetNonContinuous() {
+		GeneralLoad load = new GeneralLoad(VoltageSystemAC.v208_3ph_4w,100);
+		load.setNonContinuous();
+		assertEquals(100, load.getNominalCurrent());
+		assertEquals(100, load.getMCA());
+		assertEquals(1.0, load.getMCAMultiplier());
+		assertEquals(Load.Type.NONCONTINUOUS, load.getLoadType());
+		assertFalse(load.isNeutralCurrentCarrying());
+	}
+
+	@Test
+	void testSetMixed() {
+		GeneralLoad load = new GeneralLoad(VoltageSystemAC.v208_3ph_4w,100);
+		load.setMixed(150);
+		assertEquals(100, load.getNominalCurrent());
+		assertEquals(150, load.getMCA());
+		assertEquals(1.5, load.getMCAMultiplier());
+		assertEquals(Load.Type.MIXED, load.getLoadType());
+		assertFalse(load.isNeutralCurrentCarrying());
+	}
+
+/*	@Test
+	void setNonlinear() {
+		GeneralLoad load = new GeneralLoad(VoltageSystemAC.v208_1ph_3w,100);
+		load.setNonlinear();
+		assertEquals(100, load.getNominalCurrent());
+		assertEquals(100, load.getMCA());
+		assertEquals(1.0, load.getMCAMultiplier());
+		assertEquals(Load.Type.NONCONTINUOUS, load.getLoadType());
+		assertTrue(load.isNonlinear());
+		assertTrue(load.isNeutralCurrentCarrying());
+	}*/
+
+	@Test
+	void setPowerFactor() {
+		GeneralLoad load = new GeneralLoad();
+		assertEquals(1.0, load.getPowerFactor());
+		assertEquals(10*120, load.getVoltAmperes());
+		assertEquals(10*120, load.getWatts());
+
+//		System.out.println(load);
+		load.setPowerFactor(0.8);
+//		System.out.println(load);
+		assertEquals(0.8, load.getPowerFactor());
+		assertEquals(10*120, load.getVoltAmperes());
+		assertEquals(10*120*0.8, load.getWatts());
 	}
 }

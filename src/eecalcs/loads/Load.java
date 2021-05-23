@@ -14,6 +14,12 @@ public interface Load {
 		NONCONTINUOUS,
 		MIXED
 	}
+
+	/**
+	 @return A copy of this load object.
+	 */
+	Load getACopy();
+
 	/**
 	 @return The type of circuit that this load requires. See
 	 {@link eecalcs.circuits.Circuit.CircuitType} for details.
@@ -131,6 +137,7 @@ public interface Load {
 	 @param description The description of the load. This should comply with the
 	 NEC requirements for describing loads in panel circuit identification.
 	 */
+	//todo is it ok to have this setter here?
 	void setDescription(String description);
 
 	/**
@@ -158,11 +165,11 @@ public interface Load {
 	 */
 	Type getLoadType();
 
-	/**
+	/*
 	 @return The {@link NotifierDelegate notifier delegate} object for this
 	 load.
 	 */
-	NotifierDelegate getNotifier();
+//	NotifierDelegate getNotifier();
 
 }
 /*

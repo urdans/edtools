@@ -105,4 +105,8 @@ public enum Size {
 	public boolean isLessThan(Size size){
 		return this.ordinal() < size.ordinal();
 	}
+
+	public boolean isGreaterThan(Size size){
+		return this.ordinal() > size.ordinal();
+	}
 }

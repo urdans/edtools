@@ -3,7 +3,11 @@ package eecalcs.conductors;
 import eecalcs.conduits.Conduit;
 import eecalcs.systems.TempRating;
 import eecalcs.systems.VoltageSystemAC;
-import tools.NotifierDelegate;
+import tools.JSONTools;
+import tools.ROResultMessages;
+import tools.ResultMessages;
+
+import static eecalcs.conductors.Conductor.*;
 
 /**
  This class encapsulates the properties of a cable.
@@ -12,8 +16,7 @@ import tools.NotifierDelegate;
  protective jacket.
  <p>
  The NEC recognizes the following group of cables as wiring methods for
- permanent
- installations:
+ permanent installations:
  <p>AC - Armored Cable (round)
  <p>MC - Metal Clad Cable (round)
  <p>FC - Flat Cable (flat, to be used in a surface metal raceway, not in
@@ -29,59 +32,273 @@ import tools.NotifierDelegate;
  <p>NM - Non metallic jacket
  <p>NMC - Non metallic corrosion resistant jacket.
  <p>NMS - Non metallic jacket, insulated power or control with signaling data.
- <p>TC - ACMotor and Control Tray Cable (rounds, for power, lighting, controls and
- signaling circuits), <b>not covered by this software.</b>.
+ <p>TC - AC Motor and Control Tray Cable (rounds, for power, lighting,
+ controls and signaling circuits), <b>not covered by this software.</b>.
  <p>
- Each cable type may have a slightly different method of ampacity calculation, o
- each cable must be created as one of the types covered by this software (AC,
- MC, NM, NMC, NMS). MC cable is the default type. p> he cable this class
- represents is made of:
+ Each cable type may have a slightly different method of ampacity
+ calculation, so each cable must be created as one of the types covered by
+ this software (AC, MC, NM, NMC, NMS). MC cable is the default type.
+ <p> The cable this class represents is made of:
  <ol>
- <li>- 1, 2 or 3 phase conductors. These are always considered current-carrying
+ <li>- 1, 2 or 3 phase conductors. They are always considered current-carrying
  conductors (CCC).</li>
- <li>- 0 or 1 neutral conductor. If the neutral is present, it can be a CCC
- depending of the system voltage and number of wires.</li>
+ <li>- 0 or 1 neutral conductor. If the neutral is present, it is
+ current-carrying by default, except for 3Ø 4W systems where it is
+ assumed not current-carrying.</li>
  <li>- 1 Equipment grounding conductor.</li>
  </ol>
- p>
- The constructor of this cable takes as parameters the voltage system, the
- number of wires, and the outer diameter. Based on those parameters, the class
- determines if the neutral is required and if it is, it will create it as a copy
- of the hot conductor.
- p>
- The grounding conductor is always created as a copy of the hot conductor as
- well.
- p>
- The size of all these conductors (hot, neutral and grounding) can be later
- adjusted if required calling the appropriate method.
- p>
+ <p>
  The outer diameter is used for conduit sizing. The number of CCC is used for
  determining the adjusted ampacity of this and other cables sharing the
  same conduit.
- p>
+ <p>
  A cable used for a 240/208/120 volts delta system can be created as using any 3
  phase voltage and 4 wires.
- p>
- The voltage system is used only to determined the presence of a neutral
- conductor and if it is initially a CCC.
- p>
- As cables can be used as the conductors in a Circuit object, the size of its
- conductors can be adjusted by the circuit based on the circuit
- characteristics. Refer to the {@link eecalcs.circuits.Circuit} class for
- more information.
+ <p>
+ The voltage system is used only to determined the presence of phases B and
+ C, and the neutral conductor.
+ <p>
  */
-public class Cable implements Conduitable, ROCable {
-	private CableType cableType = CableType.MC;
+public class Cable implements Conduitable {
+	/*To create a JSON out for this cable, these are parameters to be used:
+	size of phases, size of neutral, size of grounding, metal, insulation,
+	length, ambientTemperatureF, copperCoating, the role of the neutral,
+	jacketed, outerDiameter, roofTopDistance, type, voltageSystemAC,
+	neutralCarryingConductor, conduit and bundle.
+	The results of this cable are: getAdjustmentFactor, getCompoundFactor,
+	getCorrectedAndAdjustedAmpacity, getCorrectionFactor,
+	getCurrentCarryingCount, getDescription, getGroundingConductor,
+	getInsulatedAreaIn2, getNeutralConductor, getPhaseConductor,
+	getTemperatureRating, isRoofTopCondition*/
+/*
+* Todo: consider having this class without a reference to the conduit or
+*  bundle. The cable simply don't now directly. The class conduit and bundle
+*  must have a static list with all the created conduits/bundles. The cable
+*  or conductor can inquire a static method to check if the cable belongs to
+*  a conduit or bundle.
+*  An alternative is just not to expose getters to the conduit/bundle but
+*  just indicate if the cable has a conduit or bundle, that's it.
+*  It's decided: the bundle or conduit cannot be accessed via getters. Also,
+*  the weird thing of having a setConduit method that can only be called from
+*  inside the conduit can be avoided if implementing the method describe at
+*  the beginning of this paragraph.
+*
+* Todo: every time a conduit is created, it's added to the static list. So
+*  any conduit has access to this list. Also, there is a static method to
+*  return the conduit that owns the given conduitable:
+*  getConduitFor(Conduitable)
+* */
+	private final Conductor phaseAConductor = new Conductor();
+	private final Conductor phaseBConductor;
+	private final Conductor phaseCConductor;
+	private final Conductor neutralConductor;
+	private final Conductor groundingConductor = new Conductor().setRole(Role.GND);
 	private boolean jacketed = false;
-	private VoltageSystemAC voltageSystemAC = VoltageSystemAC.v120_1ph_2w;
-	private Conductor phaseAConductor = new Conductor();
-	private Conductor phaseBConductor;
-	private Conductor phaseCConductor;
-	private Conductor neutralConductor;
-	private Conductor groundingConductor = new Conductor();
 	private double outerDiameter = 0.5;
-	private boolean neutralCarryingConductor = false;
-	private final NotifierDelegate notifier = new NotifierDelegate(this);
+	private double roofTopDistance = -1.0;
+	private CableType type = CableType.MC;
+	private final VoltageSystemAC voltageSystemAC;
+	private Conduit conduit = null;
+	private Bundle bundle = null;
+	private final ResultMessages resultMessages = new ResultMessages();
+
+
+	public ROResultMessages getResultMessages() {
+		return resultMessages;
+	}
+
+	public Cable(VoltageSystemAC voltageSystemAC){
+		if(voltageSystemAC == null)
+			throw new IllegalArgumentException("System voltage parameter " +
+					"cannot be null.");
+		this.voltageSystemAC = voltageSystemAC;
+		phaseBConductor = createPhaseB();
+		phaseCConductor = createPhaseC();
+		neutralConductor = createNeutral();
+	}
+
+	public Cable setPhaseConductorSize(Size phaseConductorSize) {
+		phaseAConductor.setSize(phaseConductorSize);
+		if(phaseBConductor != null)
+			phaseBConductor.setSize(phaseConductorSize);
+		if(phaseCConductor != null)
+			phaseCConductor.setSize(phaseConductorSize);
+		if(phaseAConductor.getResultMessages().containsMessage(ERROR062))
+			resultMessages.add(ERROR062);
+		else
+			resultMessages.remove(ERROR062);
+		return this;
+	}
+
+	public Cable setNeutralConductorSize(Size neutralConductorSize) {
+		if(neutralConductor == null)
+			throw new IllegalArgumentException("This cable does not " +
+					"have a neutral conductor.");
+		neutralConductor.setSize(neutralConductorSize);
+		if(neutralConductor.getResultMessages().containsMessage(ERROR063))
+			resultMessages.add(ERROR063);
+		else
+			resultMessages.remove(ERROR063);
+		return this;
+	}
+
+	public Cable setGroundingConductorSize(Size groundingConductorSize) {
+		groundingConductor.setSize(groundingConductorSize);
+		if(groundingConductor.getResultMessages().containsMessage(ERROR064))
+			resultMessages.add(ERROR064);
+		else
+			resultMessages.remove(ERROR064);
+		return this;
+	}
+
+	public Cable setMetal(Metal metal) {
+		phaseAConductor.setMetal(metal);
+		if(phaseBConductor != null)
+			phaseBConductor.setMetal(metal);
+		if(phaseCConductor != null)
+			phaseCConductor.setMetal(metal);
+		if(neutralConductor != null)
+			neutralConductor.setMetal(metal);
+		if(groundingConductor != null)
+			groundingConductor.setMetal(metal);
+		if(phaseAConductor.getResultMessages().containsMessage(ERROR051))
+			resultMessages.add(ERROR051);
+		else
+			resultMessages.remove(ERROR051);
+		return this;
+	}
+
+	public Cable setInsulation(Insul insulation) {
+		phaseAConductor.setInsulation(insulation);
+		if(phaseBConductor != null)
+			phaseBConductor.setInsulation(insulation);
+		if(phaseCConductor != null)
+			phaseCConductor.setInsulation(insulation);
+		if(neutralConductor != null)
+			neutralConductor.setInsulation(insulation);
+		if(groundingConductor != null)
+			groundingConductor.setInsulation(insulation);
+		if(phaseAConductor.getResultMessages().containsMessage(ERROR052))
+			resultMessages.add(ERROR052);
+		else
+			resultMessages.remove(ERROR052);
+		return this;
+	}
+
+	public Cable setLength(double length) {
+		phaseAConductor.setLength(length);
+		if(phaseBConductor != null)
+			phaseBConductor.setLength(length);
+		if(phaseCConductor != null)
+			phaseCConductor.setLength(length);
+		if(neutralConductor != null)
+			neutralConductor.setLength(length);
+		if(groundingConductor != null)
+			groundingConductor.setLength(length);
+		if(phaseAConductor.getResultMessages().containsMessage(ERROR053))
+			resultMessages.add(ERROR053);
+		else
+			resultMessages.remove(ERROR053);
+		return this;
+	}
+
+	public Cable setAmbientTemperatureF(int ambientTemperatureF) {
+		if(getConduit() != null || getBundle() != null)
+			throw new IllegalArgumentException("Ambient temperature cannot be" +
+					" assigned to a cable that belongs to a conduit or " +
+					"to a bundle. Use the conduit or bundle to set the " +
+					"temperature of this cable.");
+		phaseAConductor.setAmbientTemperatureF(ambientTemperatureF);
+		if(phaseBConductor != null)
+			phaseBConductor.setAmbientTemperatureF(ambientTemperatureF);
+		if(phaseCConductor != null)
+			phaseCConductor.setAmbientTemperatureF(ambientTemperatureF);
+		if(neutralConductor != null)
+			neutralConductor.setAmbientTemperatureF(ambientTemperatureF);
+		if(groundingConductor != null)
+			groundingConductor.setAmbientTemperatureF(ambientTemperatureF);
+		if(phaseAConductor.getResultMessages().containsMessage(ERROR054))
+			resultMessages.add(ERROR054);
+		else
+			resultMessages.remove(ERROR054);
+		return this;
+	}
+
+	public Cable setCopperCoating(Coating coating) {
+		phaseAConductor.setCopperCoating(coating);
+		if(phaseBConductor != null)
+			phaseBConductor.setCopperCoating(coating);
+		if(phaseCConductor != null)
+			phaseCConductor.setCopperCoating(coating);
+		if(neutralConductor != null)
+			neutralConductor.setCopperCoating(coating);
+		if(groundingConductor != null)
+			groundingConductor.setCopperCoating(coating);
+		if(phaseAConductor.getResultMessages().containsMessage(ERROR055))
+			resultMessages.add(ERROR055);
+		else
+			resultMessages.remove(ERROR055);
+		return this;
+	}
+
+	public Cable setJacketed() {
+		this.jacketed = true;
+		return this;
+	}
+
+	public Cable setNonJacketed() {
+		this.jacketed = false;
+		return this;
+	}
+
+	public Cable setOuterDiameter(double outerDiameter) {
+		if(outerDiameter < 0.25) {
+			resultMessages.add(ERROR058);
+			this.outerDiameter = 0.25;
+			return this;
+		}
+		else
+			resultMessages.remove(ERROR058);
+		this.outerDiameter = outerDiameter;
+		return this;
+	}
+
+	public Cable setRoofTopDistance(double roofTopDistance) {
+		if(getConduit() != null)
+			throw new IllegalArgumentException("Rooftop distance cannot be" +
+					" assigned to a cable that belongs to a conduit. Use the" +
+					" conduit to set the rooftop distance of this cable.");
+		this.roofTopDistance = roofTopDistance;
+		return this;
+	}
+
+	public Cable setType(CableType type) {
+		if(type == null)
+			resultMessages.add(ERROR059);
+		else
+			resultMessages.remove(ERROR059);
+		this.type = type;
+		return this;
+	}
+
+	public Cable setNeutralCarryingConductor() {
+		if (neutralConductor != null)
+			neutralConductor.setRole(Role.NEUCC);
+		else
+			throw new IllegalArgumentException("Cable does not have a neutral" +
+					" conductor.");
+		return this;
+	}
+
+	public Cable setNeutralNonCarryingConductor() {
+		if (neutralConductor != null)
+			neutralConductor.setRole(Role.NEUNCC);
+		else
+			throw new IllegalArgumentException("Cable does not have a neutral" +
+					" conductor.");
+		return this;
+	}
+
 
 	/*TODO *************************
 	 *  URGENT: the outer diameter of a cable should adjust automatically to a
@@ -95,90 +312,37 @@ public class Cable implements Conduitable, ROCable {
 	 *  available in the market. Same should apply for grounding conductors.
 	 *  TO THINK ABOUT IT!!!!!!!!!! */
 
-	private Conduit conduit;
-	private double roofTopDistance = -1.0; //means no rooftop condition
-	private Bundle bundle;
-
+	/** Returns the number of hot conductors in this cable*/
 	private int getHotCount() {
 		return 1 + (phaseBConductor == null ? 0 : 1) + (phaseCConductor == null ? 0 : 1);
-	}
-
-	/**
-	 Creates an MC (default) cable object of the given system voltage,
-     number of
-	 wires and outer diameter. The conductors of this cable have default sizes,
-	 metal and insulation. Refer to {@link Conductor#Conductor()} default
-	 constructor for details.
-
-	 @param voltageSystemAC The voltage system intended to be used with this
-	 cable. It will define the existence of a neutral.
-	 @param outerDiameter The outer diameter of this cable in inches. If the
-	 cable sectional shape if not a circle, the longest diameter must be passed
-	 in. Also, if this parameter is less than 0.25 inches, a value of 0.25
-     inches
-	 is assumed.
-	 */
-	public Cable(VoltageSystemAC voltageSystemAC, double outerDiameter) {
-		setSystem(voltageSystemAC);
-		phaseAConductor.setRole(Conductor.Role.HOT);
-		groundingConductor.setRole(Conductor.Role.GND);
-		setOuterDiameter(outerDiameter);
-	}
-
-	/**
-	 Constructs a default cable:
-	 <p>MC type.
-	 <p>Non jacketed.
-	 <p>Voltage system 120V 1ph 2 wires.
-	 <p>One conductor for phase A, one for neutral and one for ground.
-	 <p>The neutral is CCC
-	 <p>Outer diameter = 0.539"
-	 <p>No conduit, no bundle.
-	 <p>No roof top condition
-	 */
-	public Cable() {
-		phaseAConductor.setRole(Conductor.Role.HOT);
-		neutralConductor = phaseAConductor.clone();
-		groundingConductor.setRole(Conductor.Role.GND);
 	}
 
 	/**
 	 @return Returns a deep copy of this Cable object. The new copy is
 	 exactly the same as this cable, except that it does not copy the conduit
 	 nor the bundle properties, that is, the new clone is assumed in free air
-	 (not in a conduit) and not bundled..
+	 (not in a conduit and not bundled).
 	 */
 	@Override
-	public Cable clone() {
-		Cable cable = new Cable();
-		cable.cableType = this.cableType;
+	public Cable clone() {//todo to be renamed to copy
+		Cable cable = new Cable(voltageSystemAC);
 		cable.jacketed = this.jacketed;
-		cable.voltageSystemAC = this.voltageSystemAC;
-		cable.phaseAConductor = this.phaseAConductor.clone();
-		cable.phaseBConductor = this.phaseBConductor == null ? null :
-                phaseBConductor.clone();
-		cable.phaseCConductor = this.phaseCConductor == null ? null :
-                phaseCConductor.clone();
-		cable.neutralConductor = this.neutralConductor == null ? null :
-                neutralConductor.clone();
-		cable.groundingConductor = this.groundingConductor.clone();
 		cable.outerDiameter = this.outerDiameter;
-		cable.conduit = null;
 		cable.roofTopDistance = this.roofTopDistance;
+		cable.type = this.type;
+		cable.phaseAConductor.copyFrom(this.phaseAConductor);
+		if(cable.phaseBConductor != null)
+			cable.phaseBConductor.copyFrom(this.phaseBConductor);
+		if(cable.phaseCConductor != null)
+			cable.phaseCConductor.copyFrom(this.phaseCConductor);
+		if(cable.neutralConductor != null)
+			cable.neutralConductor.copyFrom(this.neutralConductor);
+		cable.groundingConductor.copyFrom(this.groundingConductor);
+
 		return cable;
 	}
 
-	/**
-	 @return The string representation of this cable object.
-	 */
-	@Override
-	public String toString() {
-		return cableType + ", " + jacketed + ", " + voltageSystemAC + ", " + phaseAConductor + ", " + phaseBConductor + ", " + phaseCConductor + ", " +
-				neutralConductor + ", " + groundingConductor + ", " + outerDiameter +
-				", " + conduit + ", " + roofTopDistance;
-	}
-
-	@Override
+	/** Returns true if this cable is jacketed, false otherwise*/
 	public boolean isJacketed() {
 		return jacketed;
 	}
@@ -186,12 +350,13 @@ public class Cable implements Conduitable, ROCable {
 	@Override
 	public double getAdjustmentFactor() {
 		if (hasConduit()) //applying 310.15(B)(3)(a)(2)
-			return Factors.getAdjustmentFactor(conduit.getCurrentCarryingCount(), conduit.isNipple());
+			return Factors.getAdjustmentFactor(getConduit().getCurrentCarryingCount(),
+					getConduit().isNipple());
 		if (hasBundle()) {
-			if (bundle.complyWith310_15_B_3_a_4())
+			if (getBundle().compliesWith310_15_B_3_a_4())
 				return 1;
 
-			if (bundle.complyWith310_15_B_3_a_5())
+			if (getBundle().compliesWith310_15_B_3_a_5())
 				return 0.6;
             /*todo implement rule 310.15(B)(3)(a)(3) on which the adjustment
                factor do not apply for the following special condition:
@@ -203,7 +368,8 @@ public class Cable implements Conduitable, ROCable {
                - this protection does not exceed 10 ft.
                - there is no more than 4 current-carrying conductors.
             */
-			return Factors.getAdjustmentFactor(bundle.getCurrentCarryingCount(), bundle.getBundlingLength());
+			return Factors.getAdjustmentFactor(getBundle().getCurrentCarryingCount(),
+					getBundle().getBundlingLength());
 		}
 		return 1;
 	}
@@ -225,140 +391,45 @@ public class Cable implements Conduitable, ROCable {
 		else
 			temp_insul = Insul.THHW;
 
-		Insul old_insul = phaseAConductor.getInsulation();
-		boolean _enabled = phaseAConductor.getNotifier().isEnable();
-		phaseAConductor.getNotifier().enable(false);
-		phaseAConductor.setInsulation(temp_insul);
-
-		double compoundFactor = getCorrectionFactor() * getAdjustmentFactor();
-
-		phaseAConductor.setInsulation(old_insul);
-		phaseAConductor.getNotifier().enable(_enabled);
-
-		return compoundFactor;
+		return getCorrectionFactor(temp_insul) * getAdjustmentFactor();
 	}
 
-	@Override
-	public NotifierDelegate getNotifier() {
-		return notifier;
-	}
-
-	/**
-	 Sets the outer jacket condition for this cable as indicated in the given
-	 parameter. Jacketed condition is meaningful only for AC or MC type cables;
-	 that is, if the cable is non AC or MC type, the jacketed condition is
-	 always
-	 false; but if the cable is AC or MC type, the cable can be either jacketed
-	 or non-jacketed as assigned by this method. In other words, calling this
-	 method for cables other than AC or MC type will always set the non
-	 jacketed
-	 condition even if called with a True value parameter.
-
-	 @param jacketed The condition for this cable. True: sets this cable as
-	 having an outer jacket, False: the opposite case.
-	 */
-	public void setJacketed(boolean jacketed) {
-		if (cableType == CableType.AC | cableType == CableType.MC)
-			this.jacketed = jacketed;
-		else
-			this.jacketed = false;
-		notifier.notifyAllListeners();
-	}
-
-	@Override
-	public boolean getJacketed() {
-		return this.jacketed;
-	}
-
-	/**
-	 Sets the outer diameter of this cable. If the provided value is less
-	 than 0.5 inch, a 0.5 inch value is assumed.
-
-	 @param outerDiameter The outer diameter in inches.
-	 */
-	public void setOuterDiameter(double outerDiameter) {
-		if (outerDiameter < 0.5)
-			outerDiameter = 0.5;
-		this.outerDiameter = outerDiameter;
-		notifier.notifyAllListeners();
-	}
-
-	@Override
+	/**@return  the outer diameter of this cable, including the the
+	insulation*/
 	public double getOuterDiameter() {
 		return outerDiameter;
 	}
 
 	/**
-	 Sets the neutral conductor of this cable (if present) as a
-	 current-carrying
-	 conductor for 3-phase 4-wire systems.
-
-	 @param flag True if the neutral is a current-carrying conductor, false
-	 otherwise.
+	 @return True if the neutral of this cable (if present) is a
+	 current-carrying conductor, false otherwise.
 	 */
-	public void setNeutralCarryingConductor(boolean flag) {
-		if (neutralCarryingConductor == flag)
-			return;
-		neutralCarryingConductor = flag;
-		if (voltageSystemAC.getPhases() == 3)
-			setSystem(voltageSystemAC);//this will fire notifications
-		else
-			notifier.notifyAllListeners();
-	}
-
-	@Override
 	public boolean isNeutralCarryingConductor() {
 		if (neutralConductor != null)
-			return neutralConductor.getRole() == Conductor.Role.NEUCC;
+			return neutralConductor.getRole() == Role.NEUCC;
 		return false;
 	}
 
-	/**
-	 Sets the voltage system for this cable. Setting this property may change
-	 the existence of the phase and neutral conductors or their properties. In
-	 particular, the size of the neutral can be changed to the size of the
-	 phases; its role can be changed as well.
-	 @param voltage The voltage as defined in {@link VoltageSystemAC}
-	 */
-	public void setSystem(VoltageSystemAC voltage) {
-		this.voltageSystemAC = voltage;
-		if(voltage.hasHotAndNeutralOnly() || voltage.isHighLeg()) {
-			if (neutralConductor == null)
-				neutralConductor = new Conductor();
-			neutralConductor.setRole(Conductor.Role.NEUCC).setSize(phaseAConductor.getSize());
-			phaseBConductor = null;
-			phaseCConductor = null;
-		} else if (voltage.has2HotsOnly()){
-			if (phaseBConductor == null)
-				phaseBConductor = new Conductor();
-			phaseBConductor.setRole(Conductor.Role.HOT).setSize(phaseAConductor.getSize());
-			neutralConductor = null;
-			phaseCConductor = null;
-		} else if (voltage.has2HotsAndNeutralOnly()){
-			if (phaseBConductor == null)
-				phaseBConductor = new Conductor();
-			phaseBConductor.setRole(Conductor.Role.HOT).setSize(phaseAConductor.getSize());
-			if (neutralConductor == null)
-				neutralConductor = new Conductor();
-			neutralConductor.setRole(Conductor.Role.NEUCC).setSize(phaseAConductor.getSize());
-			phaseCConductor = null;
-		} else {//this account for all 3-phase systems.
-			if (phaseBConductor == null)
-				phaseBConductor = new Conductor();
-			phaseBConductor.setRole(Conductor.Role.HOT).setSize(phaseAConductor.getSize());
-			if (phaseCConductor == null)
-				phaseCConductor = new Conductor();
-			phaseCConductor.setRole(Conductor.Role.HOT).setSize(phaseAConductor.getSize());
-			if (voltage.hasNeutral()) {
-				if (neutralConductor == null)
-					neutralConductor = new Conductor();
-				Conductor.Role role = neutralCarryingConductor ?
-						Conductor.Role.NEUCC : Conductor.Role.NEUNCC;
-				neutralConductor.setRole(role).setSize(phaseAConductor.getSize());
-			} else //3 wires, no neutral
-				neutralConductor = null;
+	private Conductor createPhaseB(){
+		if (voltageSystemAC.has2HotsOnly() || voltageSystemAC.has2HotsAndNeutralOnly() ||
+				voltageSystemAC.getPhases() == 3)
+			return new Conductor().copyFrom(phaseAConductor);
+		return null;
+	}
+
+	private Conductor createPhaseC(){
+		if (voltageSystemAC.getPhases() == 3)
+			return new Conductor().copyFrom(phaseAConductor);
+		return null;
+	}
+
+	private Conductor createNeutral(){
+		if (voltageSystemAC.hasNeutral()) {
+			return new Conductor()
+					.copyFrom(phaseAConductor)
+					.setRole(voltageSystemAC.getWires() == 4? Role.NEUNCC : Role.NEUCC);
 		}
-		notifier.notifyAllListeners();
+		return null;
 	}
 
 	@Override
@@ -380,139 +451,67 @@ public class Cable implements Conduitable, ROCable {
 
 	@Override
 	public double getCorrectionFactor() {
+		return getCorrectionFactor(phaseAConductor.getInsulation());
+	}
+
+	private double getCorrectionFactor(Insul insulation) {
 		int adjustedTemp;
 		if (hasConduit())
-			adjustedTemp = Factors.getRoofTopTempAdjustment(conduit.getRoofTopDistance());
+			adjustedTemp = Factors.getRoofTopTempAdjustment(getConduit().getRoofTopDistance());
 		else
 			adjustedTemp = Factors.getRoofTopTempAdjustment(roofTopDistance);
 
-		return Factors.getTemperatureCorrectionF(phaseAConductor.getAmbientTemperatureF() + adjustedTemp,
-				phaseAConductor.getTemperatureRating());
+		return Factors.getTemperatureCorrectionF(phaseAConductor.getAmbientTemperatureF() + adjustedTemp, getTemperatureRating(insulation));
 	}
 
 	@Override
 	public double getCorrectedAndAdjustedAmpacity() {
 		return ConductorProperties.getStandardAmpacity(phaseAConductor.getSize(),
-                phaseAConductor.getMetal(),
-                phaseAConductor.getTemperatureRating())
+				phaseAConductor.getMetal(),
+				phaseAConductor.getTemperatureRating())
 				* getCorrectionFactor() * getAdjustmentFactor();
 	}
 
 	@Override
 	public boolean hasConduit() {
-		return conduit != null;
+		return getConduit() != null;
 	}
 
-	@Override
-	public Conduit getConduit() {
+	private Conduit getConduit() {
+		if(conduit == null)
+			conduit = Conduit.getConduitFor(this);
 		return conduit;
 	}
 
 	@Override
-	public void setConduit(Conduit conduit) {
-		if (conduit == null || conduit == this.conduit)
-			return;
-		leaveBundle();
-		leaveConduit();
-		conduit.add(this);
-		this.conduit = conduit;
-	}
-
-	@Override
-	public void leaveConduit() {
-		if (conduit == null)
-			return;
-		conduit.remove(this);
-		conduit = null;
-	}
-
-	@Override
 	public boolean hasBundle() {
-		return bundle != null;
+		return getBundle() != null;
 	}
 
-	@Override
-	public Bundle getBundle() {
+	//@Override
+	private Bundle getBundle() {
+		if(bundle == null)
+			bundle = Bundle.getBundleFor(this);
 		return bundle;
 	}
 
 	@Override
-	public void setBundle(Bundle bundle) {
-		if (bundle == null || bundle == this.bundle)
-			return;
-		leaveConduit();
-		leaveBundle();
-		bundle.add(this);
-		this.bundle = bundle;
+	public Size getSize(){
+		return getPhaseConductorSize();
 	}
 
-	@Override
-	public void leaveBundle() {
-		if (bundle == null)
-			return;
-		bundle.remove(this);
-		bundle = null;
-	}
-
-	@Override
 	public Size getPhaseConductorSize() {
 		return phaseAConductor.getSize();
 	}
 
-	/**
-	 Sets the size of the phase conductors.If the system voltage and wires
-	 are so that there is one phase and one neutral, this method will set the
-	 size of the neutral as well.
-	 @param size The new size.
-	 */
-	public void setPhaseConductorSize(Size size) {
-		if (size == null)
-			return;
-		phaseAConductor.setSize(size);
-		if (phaseBConductor != null)
-			phaseBConductor.setSize(size);
-		if (phaseCConductor != null)
-			phaseCConductor.setSize(size);
-		if(voltageSystemAC.hasHotAndNeutralOnly())
-			neutralConductor.setSize(size);
-		notifier.notifyAllListeners();
-	}
-
-	@Override
 	public Size getNeutralConductorSize() {
 		if (neutralConductor == null)
 			return null;
 		return neutralConductor.getSize();
 	}
 
-	/**
-	 Sets the size of the neutral conductor if present. If the system voltage
-	 and wires are so that there is one phase and one neutral, this method will
-	 set the size of the phase as well.
-	 @param size The new size.
-	 */
-	public void setNeutralConductorSize(Size size) {
-		if (neutralConductor != null) {
-			neutralConductor.setSize(size);
-			if(voltageSystemAC.hasHotAndNeutralOnly())
-				phaseAConductor.setSize(size);
-		}
-		notifier.notifyAllListeners();
-	}
-
-	@Override
 	public Size getGroundingConductorSize() {
 		return groundingConductor.getSize();
-	}
-
-	/**
-	 Sets the size of the grounding conductor.
-
-	 @param size The new size.
-	 */
-	public void setGroundingConductorSize(Size size) {
-		groundingConductor.setSize(size);
-		notifier.notifyAllListeners();
 	}
 
 	@Override
@@ -521,34 +520,8 @@ public class Cable implements Conduitable, ROCable {
 	}
 
 	@Override
-	public void setMetal(Metal metal) {
-		phaseAConductor.setMetal(metal);
-		if (phaseBConductor != null)
-			phaseBConductor.setMetal(metal);
-		if (phaseCConductor != null)
-			phaseCConductor.setMetal(metal);
-		if (neutralConductor != null)
-			neutralConductor.setMetal(metal);
-		groundingConductor.setMetal(metal);
-		notifier.notifyAllListeners();
-	}
-
-	@Override
 	public Insul getInsulation() {
 		return phaseAConductor.getInsulation();
-	}
-
-	@Override
-	public void setInsulation(Insul insul) {
-		phaseAConductor.setInsulation(insul);
-		if (phaseBConductor != null)
-			phaseBConductor.setInsulation(insul);
-		if (phaseCConductor != null)
-			phaseCConductor.setInsulation(insul);
-		if (neutralConductor != null)
-			neutralConductor.setInsulation(insul);
-		groundingConductor.setInsulation(insul);
-		notifier.notifyAllListeners();
 	}
 
 	@Override
@@ -557,52 +530,8 @@ public class Cable implements Conduitable, ROCable {
 	}
 
 	@Override
-	public void setLength(double length) {
-		phaseAConductor.setLength(length);
-		if (phaseBConductor != null)
-			phaseBConductor.setLength(length);
-		if (phaseCConductor != null)
-			phaseCConductor.setLength(length);
-		if (neutralConductor != null)
-			neutralConductor.setLength(length);
-		groundingConductor.setLength(length);
-		notifier.notifyAllListeners();
-	}
-
-	@Override
 	public int getAmbientTemperatureF() {
 		return phaseAConductor.getAmbientTemperatureF();
-	}
-
-	@Override
-	public void setAmbientTemperatureF(int ambientTemperatureF) {
-		if (conduit != null)
-			conduit.getConduitables().forEach(conduitable -> {
-				conduitable.notifierEnabled(false);
-				conduitable.setAmbientTemperatureWithoutPropagation(ambientTemperatureF);
-				conduitable.notifierEnabled(true);
-			});
-		else if (bundle != null)
-			bundle.getConduitables().forEach(conduitable -> {
-				conduitable.notifierEnabled(false);
-				conduitable.setAmbientTemperatureWithoutPropagation(ambientTemperatureF);
-				conduitable.notifierEnabled(true);
-			});
-		else
-			setAmbientTemperatureWithoutPropagation(ambientTemperatureF);
-	}
-
-	@Override
-	public void setAmbientTemperatureWithoutPropagation(int ambientTemperatureF) {
-		phaseAConductor.setAmbientTemperatureWithoutPropagation(ambientTemperatureF);
-		if (phaseBConductor != null)
-			phaseBConductor.setAmbientTemperatureWithoutPropagation(ambientTemperatureF);
-		if (phaseCConductor != null)
-			phaseCConductor.setAmbientTemperatureWithoutPropagation(ambientTemperatureF);
-		if (neutralConductor != null)
-			neutralConductor.setAmbientTemperatureWithoutPropagation(ambientTemperatureF);
-		groundingConductor.setAmbientTemperatureWithoutPropagation(ambientTemperatureF);
-		notifier.notifyAllListeners();
 	}
 
 	@Override
@@ -610,33 +539,19 @@ public class Cable implements Conduitable, ROCable {
 		return phaseAConductor.getCopperCoating();
 	}
 
-	/**
-	 Sets this cable conductor' copper coating if the conductors are copper,
-	 otherwise nothing is done.
-
-	 @param coating The new copper coating.
-	 */
-	public void setCopperCoating(Coating coating) {
-		phaseAConductor.setCopperCoated(coating);
-		if (phaseBConductor != null)
-			phaseBConductor.setCopperCoated(coating);
-		if (phaseCConductor != null)
-			phaseCConductor.setCopperCoated(coating);
-		if (neutralConductor != null)
-			neutralConductor.setCopperCoated(coating);
-		groundingConductor.setCopperCoated(coating);
-		notifier.notifyAllListeners();
-	}
-
 	@Override
 	public TempRating getTemperatureRating() {
-		return phaseAConductor.getTemperatureRating();
+		return getTemperatureRating(phaseAConductor.getInsulation());
+	}
+
+	private TempRating getTemperatureRating(Insul insulation) {
+		return ConductorProperties.getTempRating(insulation);
 	}
 
 	@Override
 	public String getDescription() {
 		String s1, s2, s3;
-		s1 = cableType + " Cable: (" + getHotCount() + ") " + phaseAConductor.getDescription();
+		s1 = type + " Cable: (" + getHotCount() + ") " + phaseAConductor.getDescription();
 		s2 = "";
 		if (neutralConductor != null)
 			s2 = " + (1) " + neutralConductor.getDescription();
@@ -644,92 +559,76 @@ public class Cable implements Conduitable, ROCable {
 		return s1 + s2 + s3;
 	}
 
-	@Override
-	public void notifierEnabled(boolean flag) {
-		notifier.enable(flag);
-	}
-
 	/**
-	 Sets the rooftop condition for this cable.
-
-	 @param roofTopDistance The distance in inches above roof to bottom of this
-	 cable. If a negative value is indicated, the behavior of this method is
-	 the
-	 same as when calling resetRoofTop, which eliminates the roof top condition
-	 from this cable.
+	 @return True if this cable has a rooftop condition, false otherwise.
+	 The rooftop condition is defined by 310.15(B)(3)(c).
+	 If a cable is inside a conduit, the rooftop condition of the cable will be
+	 the rooftop condition of the conduit. This means that, if this cable is
+	 inside a conduit that is in a rooftop condition, the cable will remain
+	 in a rooftop condition until the condition is reset in the conduit or
+	 the cable if pulled from the conduit.
 	 */
-	public void setRoofTopDistance(double roofTopDistance) {
-		this.roofTopDistance = roofTopDistance;
-		notifier.notifyAllListeners();
+	public boolean isRoofTopCondition() {
+		if (getConduit() != null)
+			return getConduit().isRoofTopCondition();
+		return (roofTopDistance > 0 && roofTopDistance <= 36);
 	}
 
 	/**
 	 Resets the rooftop condition for this cable, if the cable is not inside a
 	 conduit.
 	 */
-	public void resetRoofTop() {
+	public void resetRoofTopCondition() {
 		setRoofTopDistance(-1);
 	}
 
-	@Override
-	public boolean isRooftopCondition() {
-		if (conduit != null)
-			return conduit.isRooftopCondition();
-		return (roofTopDistance > 0 && roofTopDistance <= 36);
-	}
-
-	@Override
-	public double getRoofTopDistance() {
+	/**
+	 @return The rooftop distance of this cable.
+	 */
+	public double getRooftopDistance() {
 		return roofTopDistance;
 	}
 
-	@Override
+	/**
+	 @return Return the cable type as defined in {@link CableType}
+	 */
 	public CableType getType() {
-		return cableType;
+		return type;
 	}
 
 	/**
-	 Sets the type of cable for this cable. This method may change the value of
-	 the jacketed property as follow: if the cable changes from AC or MC
-	 type to
-	 a different type, the jacketed property is set to false; changing from
-	 other
-	 type of cable to MC or AC type will not change the value of the jacketed
-	 property.
-
-	 @param cableType The new cable type.
-	 @see CableType
+	 @return The voltage system of this cable.
+	 @see VoltageSystemAC
 	 */
-	public void setType(CableType cableType) {
-		if ((this.cableType == CableType.AC | this.cableType == CableType.MC) & cableType != CableType.AC & cableType != CableType.MC)
-			jacketed = false;
-		this.cableType = cableType;
-		notifier.notifyAllListeners();
-	}
-
-	@Override
 	public VoltageSystemAC getVoltageSystemAC() {
 		return voltageSystemAC;
 	}
 
-	@Override
-	public Conductor getPhaseConductorClone() {
-		return phaseAConductor.clone();
+	/**
+	 @return A deep copy of a conductor that represents the phase conductors
+	 in this cable.
+	 */
+	public Conduitable getPhaseConductor() {
+		return phaseAConductor;
 	}
 
 	/**
 	 @return Returns a deep copy of a conductor that represents the neutral
 	 conductor.
 	 */
-	public Conductor getNeutralConductorClone() {
-		return neutralConductor.clone();
+	public Conduitable getNeutralConductor() {
+		return neutralConductor;
 	}
 
 	/**
 	 @return A deep copy of a conductor that represents the grounding conductor.
 	 */
-	public Conductor getGroundingConductorClone() {
-		return groundingConductor.clone();
+	public Conduitable getGroundingConductor() {
+		return groundingConductor;
+	}
+
+	public String toJSON(){
+		return JSONTools.toJSON(this);
 	}
 
 }

@@ -5,110 +5,118 @@ import eecalcs.conductors.*;
 import eecalcs.conduits.Conduit;
 import eecalcs.conduits.Trade;
 import eecalcs.conduits.Type;
-import eecalcs.loads.GeneralLoad;
+//import eecalcs.loads.GeneralLoad;
 import eecalcs.systems.VoltageSystemAC;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class ConduitTest {
-    Conduit conduit = new Conduit(Type.EMT, false);
-    Conductor conductor = new Conductor();
-    Conductor conductor2;
-    Cable cable = new Cable();
-    Cable cable2;
+    @Test
+    void getConduitables() {
+        Conduit conduit = new Conduit(86).setType(Type.EMT).setNonNipple();
+        assertEquals(0, conduit.getConduitables().size());
 
-
-    void change1(){
+        Conductor conductor = new Conductor();
         conduit.add(conductor);
-        cable.setConduit(conduit);
-    }
+        Cable cable = new Cable(VoltageSystemAC.v120_1ph_2w);
+        conduit.add(cable);
+        assertEquals(2, conduit.getConduitables().size());
 
-    void change2(){
-        conductor2 = new Conductor(Size.AWG_4, Metal.ALUMINUM, Insul.XHHW2, 125);
-        cable2 = new Cable(VoltageSystemAC.v480_3ph_4w, 1.0);
+        Conductor conductor2 = new Conductor()
+                .setSize(Size.AWG_4)
+                .setMetal(Metal.ALUMINUM)
+                .setInsulation(Insul.XHHW2)
+                .setLength(125);
+        Cable cable2 = new Cable(VoltageSystemAC.v480_3ph_4w)
+                .setOuterDiameter(1.0);
         conduit.add(conductor.clone());
         conduit.add(conductor2);
         conduit.add(cable2);
-    }
-
-    @Test
-    void getConduitables() {
-        assertEquals(0, conduit.getConduitables().size());
-
-        change1();
-        assertEquals(2, conduit.getConduitables().size());
-
-        change2();
         assertEquals(5, conduit.getConduitables().size());
     }
 
     @Test
-    void remove() {
-        change1();
-        conduit.remove(conductor);
-        assertEquals(1, conduit.getConduitables().size());
-
-        change2();
-        conduit.remove(conductor2);
-        assertEquals(3, conduit.getConduitables().size());
-    }
-
-    @Test
-    void empty() {
-        assertEquals(0, conduit.getConduitables().size());
-
-        change1();
-        conduit.empty();
-        assertEquals(0, conduit.getConduitables().size());
-
-        change2();
-        conduit.empty();
-        assertEquals(0, conduit.getConduitables().size());
-    }
-
-    @Test
     void hasConduitable() {
-        change1();
+        Conduit conduit = new Conduit(86).setType(Type.EMT).setNonNipple();
+        Conductor conductor = new Conductor();
+        conduit.add(conductor);
+        Cable cable = new Cable(VoltageSystemAC.v120_1ph_2w);
+        conduit.add(cable);
         assertTrue(conduit.hasConduitable(conductor));
         assertTrue(conduit.hasConduitable(cable));
+    }
 
-        conduit.empty();
+    @Test
+    void hasConduitable01() {
+        Conduit conduit = new Conduit(86).setType(Type.EMT).setNonNipple();
+        Conductor conductor = new Conductor();
+        Cable cable = new Cable(VoltageSystemAC.v120_1ph_2w);
         assertFalse(conduit.hasConduitable(conductor));
         assertFalse(conduit.hasConduitable(cable));
 
-        change2();
+        Conductor conductor2 = new Conductor()
+                .setSize(Size.AWG_4)
+                .setMetal(Metal.ALUMINUM)
+                .setInsulation(Insul.XHHW2)
+                .setLength(125);
+        Cable cable2 = new Cable(VoltageSystemAC.v480_3ph_4w)
+                .setOuterDiameter(1.0);
+        conduit.add(conductor.clone());
+        conduit.add(conductor2);
+        conduit.add(cable2);
         assertTrue(conduit.hasConduitable(conductor2));
         assertTrue(conduit.hasConduitable(cable2));
-
-        conduit.empty();
-        assertFalse(conduit.hasConduitable(conductor2));
-        assertFalse(conduit.hasConduitable(cable2));
-        assertEquals(0, conduit.getConduitables().size());
     }
 
     @Test
     void getFillingConductorCount() {
+        Conduit conduit = new Conduit(86).setType(Type.EMT).setNonNipple();
         assertEquals(0, conduit.getFillingConductorCount());
 
-        change1();
+        Conductor conductor = new Conductor();
+        conduit.add(conductor);
+        Cable cable = new Cable(VoltageSystemAC.v120_1ph_2w);
+        conduit.add(cable);
         assertEquals(2, conduit.getFillingConductorCount());
 
-        change2();
+        Conductor conductor2 = new Conductor()
+                .setSize(Size.AWG_4)
+                .setMetal(Metal.ALUMINUM)
+                .setInsulation(Insul.XHHW2)
+                .setLength(125);
+        Cable cable2 = new Cable(VoltageSystemAC.v480_3ph_4w)
+                .setOuterDiameter(1.0);
+        conduit.add(conductor.clone());
+        conduit.add(conductor2);
+        conduit.add(cable2);
         assertEquals(5, conduit.getFillingConductorCount());
     }
 
     @Test
     void getCurrentCarryingNumber() {
+        Conduit conduit = new Conduit(86).setType(Type.EMT).setNonNipple();
         assertEquals(0, conduit.getCurrentCarryingCount());
 
-        change1();
+        Conductor conductor = new Conductor();
+        conduit.add(conductor);
+        Cable cable = new Cable(VoltageSystemAC.v120_1ph_2w);
+        conduit.add(cable);
         assertEquals(3, conduit.getCurrentCarryingCount());
 
-        change2();
+        Conductor conductor2 = new Conductor()
+                .setSize(Size.AWG_4)
+                .setMetal(Metal.ALUMINUM)
+                .setInsulation(Insul.XHHW2)
+                .setLength(125);
+        Cable cable2 = new Cable(VoltageSystemAC.v480_3ph_4w)
+                .setOuterDiameter(1.0);
+        conduit.add(conductor.clone());
+        conduit.add(conductor2);
+        conduit.add(cable2);
         assertEquals(8, conduit.getCurrentCarryingCount());
 
-        cable2.setNeutralCarryingConductor(true);
+        cable2.setNeutralCarryingConductor();
         assertEquals(9, conduit.getCurrentCarryingCount());
 
         conductor.setRole(Conductor.Role.GND);
@@ -118,23 +126,49 @@ class ConduitTest {
 
     @Test
     void getConduitablesArea() {
+        Conduit conduit = new Conduit(86).setType(Type.EMT).setNonNipple();
         assertEquals(0, conduit.getConduitablesArea());
 
-        change1();
+        Conductor conductor = new Conductor();
+        conduit.add(conductor);
+        Cable cable = new Cable(VoltageSystemAC.v120_1ph_2w);
+        conduit.add(cable);
         assertEquals(0.21444954084936207, conduit.getConduitablesArea(), 0.0001);
 
-        change2();
+        Conductor conductor2 = new Conductor()
+                .setSize(Size.AWG_4)
+                .setMetal(Metal.ALUMINUM)
+                .setInsulation(Insul.XHHW2)
+                .setLength(125);
+        Cable cable2 = new Cable(VoltageSystemAC.v480_3ph_4w)
+                .setOuterDiameter(1.0);
+        conduit.add(conductor.clone());
+        conduit.add(conductor2);
+        conduit.add(cable2);
         assertEquals(1.0993477042468105, conduit.getConduitablesArea(), 0.0001);
     }
 
     @Test
     void getTradeSize() {
+        Conduit conduit = new Conduit(86).setType(Type.EMT).setNonNipple();
         assertEquals(Trade.T1$2, conduit.getTradeSize());
 
-        change1();
+        Conductor conductor = new Conductor();
+        conduit.add(conductor);
+        Cable cable = new Cable(VoltageSystemAC.v120_1ph_2w);
+        conduit.add(cable);
         assertEquals(Trade.T1, conduit.getTradeSize());
 
-        change2();
+        Conductor conductor2 = new Conductor()
+                .setSize(Size.AWG_4)
+                .setMetal(Metal.ALUMINUM)
+                .setInsulation(Insul.XHHW2)
+                .setLength(125);
+        Cable cable2 = new Cable(VoltageSystemAC.v480_3ph_4w)
+                .setOuterDiameter(1.0);
+        conduit.add(conductor.clone());
+        conduit.add(conductor2);
+        conduit.add(cable2);
         assertEquals(Trade.T2, conduit.getTradeSize());
 
         conduit.add(conductor.clone());
@@ -164,36 +198,49 @@ class ConduitTest {
 
         conduit.setType(Type.ENT);
         assertNull(conduit.getTradeSize());
-        assertTrue(conduit.getResultMessages().containsMessage(-100));
+        assertTrue(conduit.getResultMessages().containsMessage(-104));
 
         conduit.setType(null);
         assertNull(conduit.getTradeSize());
-        assertTrue(conduit.getResultMessages().containsMessage(-120));
+        assertTrue(conduit.getResultMessages().containsMessage(-102));
 
         conduit.setMinimumTrade(null);
         assertNull(conduit.getTradeSize());
-        assertTrue(conduit.getResultMessages().containsMessage(-110));
+        assertTrue(conduit.getResultMessages().containsMessage(-101));
     }
 
     @Test
     void getAllowedFillPercentage() {
+        Conduit conduit = new Conduit(86).setType(Type.EMT).setNonNipple();
         assertFalse(conduit.isNipple());
 
-        conduit.setNipple(true);
+        conduit.setNipple();
         assertTrue(conduit.isNipple());
         assertEquals(60, conduit.getMaxAllowedFillPercentage());
 
-        conduit.setNipple(false);
+        conduit.setNonNipple();
         assertEquals(53, conduit.getMaxAllowedFillPercentage());
 
-        change1();
+        Conductor conductor = new Conductor();
+        conduit.add(conductor);
+        Cable cable = new Cable(VoltageSystemAC.v120_1ph_2w);
+        conduit.add(cable);
         assertEquals(31, conduit.getMaxAllowedFillPercentage());
 
-        change2();
+        Conductor conductor2 = new Conductor()
+                .setSize(Size.AWG_4)
+                .setMetal(Metal.ALUMINUM)
+                .setInsulation(Insul.XHHW2)
+                .setLength(125);
+        Cable cable2 = new Cable(VoltageSystemAC.v480_3ph_4w)
+                .setOuterDiameter(1.0);
+        conduit.add(conductor.clone());
+        conduit.add(conductor2);
+        conduit.add(cable2);
         assertEquals(40, conduit.getMaxAllowedFillPercentage());
     }
 
-    @Test
+    /*@Test
     void getBiggestOneEGC(){
         Conductor ground1 = new Conductor().setSize(Size.AWG_12).setRole(Conductor.Role.GND);
         Conductor ground2 = new Conductor().setSize(Size.AWG_10).setRole(Conductor.Role.GND);
@@ -203,7 +250,6 @@ class ConduitTest {
         conduit.add(ground3);
         assertEquals(Size.AWG_8, conduit.getBiggestEGC().getSize());
         assertEquals(Trade.T1$2, conduit.getTradeSizeForOneEGC());
-
 
         conduit.empty();
         conduit.add(ground2);
@@ -222,7 +268,7 @@ class ConduitTest {
 
         assertEquals(Size.AWG_3$0, circuit.getCircuitSize());
         assertEquals(Size.AWG_6, circuit.getGroundingConductor().getSize());
-        assertEquals(200, circuit.getOCPDRating());
+        assertEquals(200, circuit.getOCPDRating());*/
 
         /*the conduit contains 7 conductors: 1x12+1x10+2x8+2x3/0+1x6, out f
         which 5 are EGC, where the biggest one is the #6.
@@ -230,11 +276,11 @@ class ConduitTest {
         .8258/0.4 = 2.0645; For an EMT conduit, the trade size is 2" which
         is 3.356
         */
-        assertEquals(0.8258, conduit.getConduitablesArea());
+        /*assertEquals(0.8258, conduit.getConduitablesArea());
         assertEquals(Trade.T2, conduit.getTradeSize());
         assertEquals(Insul.THW,circuit.getPhaseConductor().getInsulation());
         assertEquals(40, conduit.getMaxAllowedFillPercentage());
-        assertEquals(Type.EMT, conduit.getType());
+        assertEquals(Type.EMT, conduit.getType());*/
 
         /*for this scenario, the conduit is assumed to contain only 3
         conductors: 2x3/0+1x6 (1 hot + 1neutral + EGC).
@@ -242,8 +288,8 @@ class ConduitTest {
         .696/0.4 = 1.74; For an EMT conduit, the trade size is 1-1/2" which
         is 2.036
         */
-        assertEquals(Size.AWG_6, conduit.getBiggestEGC().getSize());
+        /*assertEquals(Size.AWG_6, conduit.getBiggestEGC().getSize());
         assertEquals(Trade.T1_1$2, conduit.getTradeSizeForOneEGC());
 
-    }
+    }*/
 }

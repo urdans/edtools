@@ -1,6 +1,9 @@
 package eecalcs.conductors;
 
-import tools.NotifierDelegate;
+import eecalcs.conduits.Conduit;
+import tools.ROResultMessages;
+import tools.ResultMessage;
+import tools.ResultMessages;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,126 +20,55 @@ import java.util.List;
  the ampacity of the cable must be adjusted. The procedure to adjust the
  ampacity is described in <b>NEC-310.15(B)(3)</b>.<p>
 
- A bundle of insulated conductors are not common. The NEC does not prohibit it
- and rules 310.15(B)(a)(4) and (5) mention conductors as possible members of a
- bundle, therefore recognizing they can also form bundles. But, because of its
- rareness (insulated conductors not in raceway), it is subject to AHJ approval.
- Having insulated conductors in free air would be considered a bad
- practice but since it is not forbidden by the code, it is considered in this
- software.<p><br>
-
- This class provides the methods to set up a bundle of cables or conductors and
- to calculate its ampacity adjustment factor. */
-public class Bundle implements ROBundle {
-	private final List<Conduitable> conduitables = new ArrayList<>();
+ A bundle of insulated conductors are not common. The NEC 2014 does not
+ prohibit it and rules 310.15(B)(a)(4) and (5) mention conductors as possible
+ members of a bundle, therefore recognizing they can also form bundles. But,
+ because of its rareness (insulated conductors not in raceway), it is subject
+ to AHJ approval. Having insulated conductors in free air would be considered
+ a bad practice but since it is not forbidden by the code, it is considered
+ in this software.<p><br>
+ */
+public class Bundle implements ROBundle{
 	/*Distance in inches of the bundling (not the length of the
 	cable/conductors)*/
 	private double bundlingLength = 0;
-	protected final NotifierDelegate notifier = new NotifierDelegate(this);
+	private final int ambientTemperatureF;
 
-	/*
-	 Constructs a cable bundle. The cable bundle will contain the given
-	 number of
-	 copies of the given cable. If the given cable is null or if the given
-	 distance is equal or less than zero, an empty bundle will be created. An
-	 empty bundle is the container for start bundling a bundle of insulated
-	 conductors.
-	 @param cable The cable to be copied to create the bundle.
-	 @param number The number of new cables in the bundle.
-	 @param distance The distance along which the cables are bundled, in
-     inches.
-	 */
-/*	public Bundle(Cable cable, int number, double distance) {
-		if (distance < 0)
-			distance = 0;
-		this.bundlingLength = distance;
-		if (cable == null | number <= 0)
-			return;
+	private final List<Conduitable> conduitables = new ArrayList<>();
+	private final ResultMessages resultMessages = new ResultMessages();
 
-		for (int i = 0; i < number; i++)
-			add(cable.clone());
-	}*/
+	private static final List<Bundle> BUNDLE_LIST = new ArrayList<>();
 
-	/*
-	 Constructs a default bundle that contains no cables or conductors and the
-	 distance of the bundle is 0 inches. Conductors and cables can later be
-	 added
-	 and removed. The distance will define the core requirement of the NEC
-	 310.15(B)(3)(a), where a bundle distance longer than 24 inches will
-	 required
-	 adjustment factors. A bundle distance less or equal to 24 inches behaves
-	 like conductors in free air.
-	 */
-/*	public Bundle() {
-	}*/
+	//region predefined messages
+	public static final ResultMessage ERROR150 = new ResultMessage(
+		"Null conduitables cannot be added to this bundle.",-150);
+	public static final ResultMessage ERROR151 = new ResultMessage(
+		"Bundling length must be >=0.",-151);
+	//endregion
 
-	/**
-	 Add conduitable to this bundle. If the conduitable already has a
-	 conduit, it
-	 will be removed from it, or if the conduitable is already bundled, it will
-	 be removed from that bundle.
-	 <p>
-	 The ambient temperature of the conduitable will be set to the ambient
-	 temperature of any of the existing conduitables already in the bundle.
-	 @param conduitable The conduitable to be added to this bundle.
-	 */
-	public void add(Conduitable conduitable) {
-		if (conduitable == null)
-			return;
-
-		if (conduitables.contains(conduitable))
-			return;
-
-		conduitable.leaveBundle();
-		conduitable.leaveConduit();
-
-		/*the new conduitable is set the ambient temperature of the existing
-		conduitables in this bundle*/
-		if (conduitables.size() > 0)
-			conduitable.setAmbientTemperatureF(conduitables.get(0).getAmbientTemperatureF());
-
-		conduitables.add(conduitable);
-		conduitable.setBundle(this);
-
-		notifier.info.addFieldChange("conduitables", null, null);
-		notifier.notifyAllListeners();
+	public Bundle(int ambientTemperatureF){
+		if(ambientTemperatureF < 5 || ambientTemperatureF > 185)
+			throw new IllegalArgumentException("Ambient temperature parameter" +
+					" for a bundle must be >= 5°F and <= 185°F.");
+		this.ambientTemperatureF = ambientTemperatureF;
+		BUNDLE_LIST.add(this);
 	}
 
 	/**
-	 Removes the given conduitable from this bundle.
-	 @param conduitable The conduitable to be removed from this bundle.
+	 @return The bundle that contains the given conduitable or null if no
+	 bundle contains it.
+	 @param conduitable The conduitable whose bundle is requested.
 	 */
-	public void remove(Conduitable conduitable) {
-		if (conduitable == null)
-			return;
-
-		if (conduitables.remove(conduitable))
-			conduitable.leaveBundle();
-
-		notifier.info.addFieldChange("conduitables", null, null);
-		notifier.notifyAllListeners();
+	public static Bundle getBundleFor(Conduitable conduitable){
+		return BUNDLE_LIST.stream()
+				.filter(conduit -> conduit.hasConduitable(conduitable))
+				.findFirst().orElse(null);
 	}
 
-	/**
-	 Removes all conduitables from this bundle. After a call to this method,
-     this
-	 bundle will be empty.
-	 */
-	public void empty() {
-		Object[] c = conduitables.toArray();
-		for (Object o : c) ((Conduitable) o).leaveBundle();
-		notifier.info.addFieldChange("conduitables", null, null);
-		notifier.notifyAllListeners();
-	}
 
 	@Override
-	public boolean isEmpty() {
-		return conduitables.isEmpty();
-	}
-
-	@Override
-	public boolean hasConduitable(Conduitable conduitable) {
-		return conduitables.contains(conduitable);
+	public double getBundlingLength() {
+		return bundlingLength;
 	}
 
 	@Override
@@ -148,43 +80,65 @@ public class Bundle implements ROBundle {
 	}
 
 	@Override
+	public boolean isEmpty() {
+		return conduitables.isEmpty();
+	}
+
+	@Override
 	public int getConductorCount() {
 		return conduitables.size();
 	}
 
 	/**
-	 Returns the list of all conduitable objects that are part of this bundle
-	 (for instance, conductors and cables).
-	 @return The list of conduitable objects.
-	 @see Conduitable
+	 Asks if all the cables/conductor in the bundle comply with the the
+	 conditions prescribed in <b>310.15(B)(3)(a)(4)</b>, as follow:
+	 <ol type="a">
+	 <li>The cables are MC or AC type.</li>
+	 <li>The cables do not have an overall outer jacket.</li>
+	 <li>Each cable has not more than three current-carrying conductors.</li>
+	 <li>The conductors are 12 AWG copper.</li>
+	 <li>Not more than 20 current-carrying conductors are bundled.</li>
+	 </ol>
+	 Since the bundle can have different types of cables and even other single
+	 conductors, the conditions must be interpreted to account or/and ignore
+	 the presence of other conduitables in the bundle, as follow:
+	 <ol type="a">
+	 <li>Single conductors are ignored. All the cables in the bundle are
+	 evaluated to comply with a.</li>
+	 <li>Ignore other type of cables and all single conductors, as the only
+	 ones
+	 that can have an outer jacket are MC and AC cables.</li>
+	 <li>Account for all other cable types, but ignore single conductors.</li>
+	 <li>Account for all single conductors and conductors forming all cables
+	 .</li>
+	 <li>Account for all single conductors and conductors forming all cables
+	 .</li>
+	 </ol>
+	 @return True if all above conditions are met, false otherwise.
 	 */
-	public List<Conduitable> getConduitables() {
-		return conduitables;
-	}
-
 	@Override
-	public boolean complyWith310_15_B_3_a_4() {
-		//testing condition e. on all cables and conductors
+	public boolean compliesWith310_15_B_3_a_4() {
+		//checking condition e. on all cables and conductors
 		if (getCurrentCarryingCount() > 20)
 			return false;
-		for (Conduitable conduitable : conduitables/*getConduitables()*/) {
-			if (conduitable instanceof Cable) { //testing on cables only
+		for (Conduitable conduitable : conduitables) {
+			if (conduitable instanceof Cable) { //checking on cables only
 				Cable cable = (Cable) conduitable;
-				//testing condition a.
+				//checking condition a.
 				if (cable.getType() != CableType.AC && cable.getType() != CableType.MC)
 					return false;
-				//testing condition b.
+				//checking condition b.
 				if (cable.isJacketed())
 					return false;
-				//testing condition c.
+				//checking condition c.
 				if (cable.getCurrentCarryingCount() > 3)
 					return false;
-				//testing condition d. on cables
+				//checking condition d. on cables
 				if (cable.getPhaseConductorSize() != Size.AWG_12 | cable.getMetal() != Metal.COPPER)
 					return false;
 			} else if (conduitable instanceof Conductor) {
 				Conductor conductor = (Conductor) conduitable;
-				//testing condition d. on conductors
+				//checking condition d. on conductors
 				if (conductor.getSize() != Size.AWG_12 | conductor.getMetal() != Metal.COPPER)
 					return false;
 			}
@@ -192,22 +146,47 @@ public class Bundle implements ROBundle {
 		return true;
 	}
 
+	/**
+	 Asks if all the cables in the bundle comply with the the conditions
+	 prescribed in <b>310.15(B)(3)(a)(5)</b>, as follow:
+	 <ol type="a">
+	 <li>The cables are MC or AC type.</li>
+	 <li>The cables do not have an overall outer jacket.</li>
+	 <li>The number of current carrying conductors exceeds 20.</li>
+	 <li>The bundle is longer than 24 inches.</li>
+	 </ol>
+	 Since the bundle can have different types of cables and even other single
+	 conductors, the conditions must be interpreted to account or/and ignore
+	 the
+	 presence of those other conduitables in the bundle, as follow:
+	 <ol type="a">
+	 <li>Single conductors are ignored. All the cables in the bundle are
+	 evaluated to comply with a.</li>
+	 <li>Ignore other type of cables and all single conductors, as the only
+	 ones
+	 that can have an outer jacket are MC and AC cables.</li>
+	 <li>Account for all single conductors and conductors forming all cables
+	 .</li>
+	 <li>Ignore all conduitables in the bundle.</li>
+	 </ol>
+	 @return True if all above conditions are met, false otherwise.
+	 */
 	@Override
-	public boolean complyWith310_15_B_3_a_5() {
-		//testing condition d.
-		if (getBundlingLength() <= 24)
+	public boolean compliesWith310_15_B_3_a_5() {
+		//checking condition d.
+		if (bundlingLength <= 24)
 			return false;
-		//testing condition c. on all cables and conductors
+		//checking condition c. on all cables and conductors
 		if (getCurrentCarryingCount() <= 20)
 			return false;
-		//testing condition a and b on cables only.
-		for (Conduitable conduitable : conduitables/*getConduitables()*/) {
+		//checking condition a and b on cables only.
+		for (Conduitable conduitable : conduitables) {
 			if (conduitable instanceof Cable) {
 				Cable cable = (Cable) conduitable;
-				//testing condition a.
+				//checking condition a.
 				if (cable.getType() != CableType.AC && cable.getType() != CableType.MC)
 					return false;
-				//testing condition b.
+				//checking condition b.
 				if (cable.isJacketed())
 					return false;
 			}
@@ -216,26 +195,64 @@ public class Bundle implements ROBundle {
 	}
 
 	@Override
-	public double getBundlingLength() {
-		return bundlingLength;
+	public ROResultMessages getResultMessages() {
+		return resultMessages;
+	}
+
+	public Bundle add(Conduitable conduitable){
+		if(conduitable == null){
+			resultMessages.add(ERROR150);
+			return this;
+		}
+		resultMessages.remove(ERROR150);
+		if (conduitables.contains(conduitable))
+			return this;
+
+		if(conduitable.hasConduit() || conduitable.hasBundle())
+			throw new IllegalArgumentException("Cannot add to this bundle a " +
+					"conduitable that belongs to another conduit or bundle.");
+
+		if(conduitable instanceof Conductor)
+			((Conductor)conduitable).setAmbientTemperatureF(ambientTemperatureF);
+		else
+			((Cable)conduitable).setAmbientTemperatureF(ambientTemperatureF);
+
+		conduitables.add(conduitable);//this has to be called prior to
+		return this;
 	}
 
 	/**
-	 Sets the distance of the bundling (not the length of the cable/conductors)
-	 @param bundlingLength The length of the bundling in inches.
+	 Sets the length of the bundling (not the length of the cable/conductors).
+	 @param bundlingLength The length in inches.
 	 */
-	public void setBundlingLength(double bundlingLength) {
-		if(this.bundlingLength == bundlingLength)
-			return;
-		notifier.info.addFieldChange("bundlingLength", this.bundlingLength, bundlingLength);
+	public Bundle setBundlingLength(double bundlingLength){
+		if(bundlingLength < 0)
+			resultMessages.add(ERROR151);
+		else
+			resultMessages.remove(ERROR151);
 		this.bundlingLength = bundlingLength;
-		notifier.notifyAllListeners();
+		return this;
 	}
 
 	/**
-	 @return The notifier delegate object for this object.
+	 Asks if this bundle already contains the given conduitable.
+	 @param conduitable The conduitable to check if it is already contained by
+	 this bundle.
+	 @return True if this bundle contains it, false otherwise.
+	 @see Conduitable
 	 */
-	public NotifierDelegate getNotifier() {
-		return notifier;
+	@Override
+	public boolean hasConduitable(Conduitable conduitable) {
+		return conduitables.contains(conduitable);
 	}
+
+	/**
+	 @return A copy of the list of all conduitable objects that are part of this
+	 bundle.
+	 @see Conduitable
+	 */
+	public List<Conduitable> getConduitables() {
+		return new ArrayList<>(conduitables);
+	}
+
 }

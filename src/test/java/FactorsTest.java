@@ -10,7 +10,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 class FactorsTest {
-    private static Conduit conduit;
 
     @Test
     void getTemperatureCorrectionF() {
@@ -25,7 +24,7 @@ class FactorsTest {
 
     @Test
     void getAdjustmentFactor() {
-        conduit = new Conduit(Type.EMT, false);
+        Conduit conduit = new Conduit(86).setType(Type.EMT).setNonNipple();
         assertEquals(1.0, Factors.getAdjustmentFactor(conduit.getCurrentCarryingCount(), conduit.isNipple()));
     }
 }

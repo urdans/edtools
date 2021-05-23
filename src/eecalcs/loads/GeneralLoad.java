@@ -1,8 +1,15 @@
 package eecalcs.loads;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import eecalcs.circuits.Circuit;
 import eecalcs.systems.VoltageSystemAC;
-import tools.NotifierDelegate;
+import tools.JSONTools;
 //quedé aquí: review this java doc and move it to the BaseLoad class.
 
 /**This is a generic and base class load for all type of loads.
@@ -107,9 +114,9 @@ import tools.NotifierDelegate;
  modify the internals. Descendant classes can provided specialized methods
  and implement extra behaviors.
   */
-public final class GeneralLoad extends BaseLoad implements Load {
+public class GeneralLoad extends BaseLoad implements Load {
 	/**Defines artificially if this load is a linear or a nonlinear load.*/
-	private boolean _isNonlinear = false;
+//	private boolean _isNonlinear = false;
 
 	/**
 	 Construct a load object with the given parameters.
@@ -121,16 +128,7 @@ public final class GeneralLoad extends BaseLoad implements Load {
 	 @see VoltageSystemAC
 	 */
 	public GeneralLoad(VoltageSystemAC voltageSystem, double nominalCurrent) {
-		type = Type.NONCONTINUOUS;
-		powerFactor = 1.0;
-		notifier = new NotifierDelegate(this);
-		if(voltageSystem == null)
-			this.voltageSystem = VoltageSystemAC.v120_1ph_2w;
-		if(nominalCurrent == 0)
-			this.nominalCurrent = 10.0;
-		this.voltageSystem = voltageSystem;
-		this.nominalCurrent = Math.abs(nominalCurrent);
-		MCA = nominalCurrent;
+		super(voltageSystem, nominalCurrent);
 	}
 
 	/**
@@ -140,6 +138,18 @@ public final class GeneralLoad extends BaseLoad implements Load {
 	 */
 	public GeneralLoad(){
 		this(VoltageSystemAC.v120_1ph_2w, 10);
+	}
+
+	@Override
+	@JsonIgnore
+	public Load getACopy() {
+		GeneralLoad generalLoad = new GeneralLoad(voltageSystem, nominalCurrent);
+		generalLoad.type = type;
+		generalLoad.powerFactor = powerFactor;
+		generalLoad.MCA = MCA;
+		generalLoad.description = description;
+//		generalLoad._isNonlinear = _isNonlinear;
+		return generalLoad;
 	}
 
 	@Override
@@ -163,13 +173,15 @@ public final class GeneralLoad extends BaseLoad implements Load {
 	}
 
 	@Override
+	@JsonProperty("overloadRating")
 	public double getOverloadRating(){
 		return 0;
 	}
 
 	@Override
+	@JsonProperty("isNonlinear")
 	public boolean isNonlinear(){
-		return _isNonlinear;
+		return false/*_isNonlinear*/;
 	}
 
 	/**
@@ -177,10 +189,9 @@ public final class GeneralLoad extends BaseLoad implements Load {
 	 1.25*nominalCurrent. The load type changes to CONTINUOUS. Registered
 	 listeners are notified of this change.
 	 */
-	public void setContinuous() {
-		if(type == Type.CONTINUOUS)
-			return;
+	public GeneralLoad setContinuous() {
 		_setContinuousness(Type.CONTINUOUS, -1);
+		return this;
 	}
 
 	/**
@@ -188,10 +199,9 @@ public final class GeneralLoad extends BaseLoad implements Load {
 	 to the same value of nominalCurrent. Registered listeners are notified
 	 of this change.
 	 */
-	public void setNonContinuous() {
-		if(type == Type.NONCONTINUOUS)
-			return;
+	public GeneralLoad setNonContinuous() {
 		_setContinuousness(Type.NONCONTINUOUS, -1);
+		return this;
 	}
 
 	/**
@@ -204,21 +214,20 @@ public final class GeneralLoad extends BaseLoad implements Load {
 	 listeners are notified of this change.
 	 @param MCA The new minimum circuit ampacity (MCA) for this load.
 	 */
-	public void setMixed(double MCA) {
-		if(this.MCA == MCA && type == Type.MIXED)
-			return;
-		if(MCA <= nominalCurrent) {
+	public GeneralLoad setMixed(double MCA) {
+		if(MCA < nominalCurrent)
+			throw new IllegalArgumentException("The MCA parameter for a " +
+					"general load cannot lesser that the nominal current.");
+		if(MCA == nominalCurrent)
 			setNonContinuous();
-			return;
-		}
-		_setContinuousness(Type.MIXED, MCA);
+		else
+			_setContinuousness(Type.MIXED, MCA);
+		return this;
 	}
 
 	/**Sets the new behavior of the load and notifies its listeners about it.
 	 If the parameter is null nothing is set.*/
-	private void _setContinuousness(Type type, double mca){
-		Type oldType = this.type;
-		double oldMCA = MCA;
+	private GeneralLoad _setContinuousness(Type type, double mca){
 		this.type = type;
 		if(type == Type.CONTINUOUS)
 			MCA = 1.25 * nominalCurrent;
@@ -226,43 +235,68 @@ public final class GeneralLoad extends BaseLoad implements Load {
 			MCA = nominalCurrent;
 		else //MIXED
 			MCA = mca;
-		notifier.info.addFieldChange("type", oldType,
-				this.type);
-		notifier.info.addFieldChange("MCA", oldMCA, MCA);
-		notifier.notifyAllListeners();
+		return this;
 	}
 
-	/**
-	 Sets the nonlinear behavior of this load.
-	 @param flag If true, the load is set to nonlinear (load with harmonics).
-	 If false, the load is set as a linear one (the default).<br>
-	 "*************************"<br>
-	 Future: This is a temporary method.
+	/*
+	 Sets the nonlinear behavior of this load (load with harmonics).
+	 "*************************"
+	 Futuree: This is a temporary method.
 	 A nonlinear load must be a descendant class that returns true for
 	 its isNonLinear() method. A load is just linear like this load or
 	 nonlinear as a descendant specialized load.<br>
 	 "*************************"
 	 */
-	public void setNonlinear(boolean flag){
-		if(_isNonlinear == flag)
-			return;
-		notifier.info.addFieldChange("_isNonlinear", _isNonlinear, flag);
-		_isNonlinear = flag;
-		notifier.notifyAllListeners();
-	}
-
-	@Override
-	public void setNominalCurrent(double nominalCurrent){
-		super.setNominalCurrent(nominalCurrent);
-	}
-
-	@Override
-	public void setVoltageSystem(VoltageSystemAC voltageSystem){
-		super.setVoltageSystem(voltageSystem);
-	}
+/*	public GeneralLoad setNonlinear(){
+		_isNonlinear = true;
+		return this;
+	}*/
 
 	@Override
 	public void setPowerFactor(double powerFactor) {
 		super.setPowerFactor(powerFactor);
+	}
+
+	public String toJSON() {
+		//ObjectMapper mapper = new ObjectMapper();
+/*		ObjectNode root = mapper.createObjectNode();
+		root.with("voltageSystem").put("voltage", voltageSystem.getVoltage());
+		root.with("voltageSystem").put("phases", voltageSystem.getPhases());
+		root.with("voltageSystem").put("wires", voltageSystem.getWires());
+		root.put("nominalCurrent", nominalCurrent);
+		root.put("powerFactor", powerFactor);
+		root.put("MCA", MCA);
+		String typeS = type.toString();
+		root.put("type", typeS);
+		root.put("description", description);
+
+		root.put("DSRating", getDSRating());
+		root.put("maxOCPDRating", getMaxOCPDRating());
+		root.put("overloadRating", getOverloadRating());
+
+		String reqType = getRequiredCircuitType().toString();
+		root.put("requiredCircuitType", reqType);
+		root.put("isNonlinear", isNonlinear());
+		root.put("NHSRRuleApplies", NHSRRuleApplies());*/
+
+/*		mapper.enable(SerializationFeature.INDENT_OUTPUT);
+		mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+		mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+		try {
+			return mapper
+//					.writerWithDefaultPrettyPrinter()
+					.writeValueAsString(*//*root*//*this);
+
+		} catch (JsonProcessingException e) {
+			System.out.println(e.getMessage());
+			return "{ error ! }";
+		}*/
+
+		return JSONTools.toJSON(this);
+	}
+
+	@Override
+	public String toString() {
+		return "GeneralLoad{" + "voltageSystem=" + voltageSystem + ", type=" + type + ", powerFactor=" + powerFactor + ", description='" + description + '\'' + ", nominalCurrent=" + nominalCurrent + ", MCA=" + MCA + '}';
 	}
 }

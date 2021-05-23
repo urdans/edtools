@@ -1,26 +1,26 @@
 package eecalcs.loads;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import eecalcs.circuits.Circuit;
 import eecalcs.systems.VoltageSystemAC;
-import tools.NotifierDelegate;
 
 public abstract class BaseLoad implements Load{
 	protected VoltageSystemAC voltageSystem;
 	protected Type type;
 	protected double powerFactor;
-	protected NotifierDelegate notifier;
 	protected String description;
 	/**The nominal current of a load, in amperes. Along with the power factor
 	 and voltage it defines this load real and apparent power.*/
 	protected double nominalCurrent;
 	/**The Minimum Circuit Ampacity that is required for the conductor
 	 feeding this load. For this class, it's a read-only property whose value
-	 is defines as follows:<br>
-	 for a noncontinuous load, MCA = nominal current<br>
-	 for a continuous load, MCA = 1.25 x nominal current.<br>
-	 Descendant classes add a setter to this property and override its getter
-	 to detach the relationship between these two values based on the
-	 continuousness behavior of the load but must keep it equal or bigger
+	 is defined as follows:<br>
+	 - for a noncontinuous load, MCA = nominal current<br>
+	 - for a continuous load, MCA = 1.25 x nominal current.<br>
+	 Descendant classes might add a setter to this property (or add it as a
+	 parameter in the constructor) and override its getter to detach the
+	 relationship between these two values based on the continuousness
+	 behavior of the load but must keep it equal or bigger
 	 than the nominal current.<br>
 	 For example, a piece of refrigerant equipment could not be a continuous
 	 load and still have an MCA value above the nominal current.*/
@@ -29,19 +29,22 @@ public abstract class BaseLoad implements Load{
 	@Override
 	public abstract Circuit.CircuitType getRequiredCircuitType();
 
-	/**
-	 Sets the voltage system of this load.
-	 Registered listeners receive notification of this change.
-	 @param voltageSystem The new voltage system for this load. If this
-	 parameter is null, nothing is set.
-	 @see VoltageSystemAC
-	 */
-	protected void setVoltageSystem(VoltageSystemAC voltageSystem) {
-		if(this.voltageSystem == voltageSystem || voltageSystem == null)
-			return;
-		notifier.info.addFieldChange("voltageSystem", this.voltageSystem, voltageSystem );
+	public BaseLoad(VoltageSystemAC voltageSystem, double nominalCurrent) {
+		if (voltageSystem == null)
+			throw new IllegalArgumentException("System voltage parameter for " +
+					"a general load cannot be null.");
+		if (nominalCurrent <= 0)
+			throw new IllegalArgumentException("Nominal current parameter for" +
+					" a general load cannot be null.");
 		this.voltageSystem = voltageSystem;
-		notifier.notifyAllListeners();
+		this.nominalCurrent = nominalCurrent;
+		type = Type.NONCONTINUOUS;
+		powerFactor = 1.0;
+		MCA = nominalCurrent;
+	}
+
+	public BaseLoad(){
+		this(VoltageSystemAC.v120_1ph_2w, 10);
 	}
 
 	@Override
@@ -62,7 +65,7 @@ public abstract class BaseLoad implements Load{
 		return 0;
 	}
 
-	/**
+	/*
 	 Sets a non-zero positive value for this load nominal current. If this
 	 load is non-continuous, MCA is updated to this value; if this load is
 	 continuous, MCA is updated to 1.25 times this value. If the load is
@@ -73,11 +76,10 @@ public abstract class BaseLoad implements Load{
 	 @param nominalCurrent The new current of the load, in amperes. If this
 	 value is zero, nothing is set.
 	 */
-	protected void setNominalCurrent(double nominalCurrent) {
+/*	protected void setNominalCurrent(double nominalCurrent) {
 		if(this.nominalCurrent == nominalCurrent || nominalCurrent == 0)
 			return;
 		nominalCurrent = Math.abs(nominalCurrent);
-		double oldMCA = MCA;
 
 		if(type == Type.NONCONTINUOUS)
 			MCA = nominalCurrent;
@@ -90,12 +92,8 @@ public abstract class BaseLoad implements Load{
 			}
 		}
 
-		notifier.info.addFieldChange("nominalCurrent", this.nominalCurrent,
-				nominalCurrent);
-		notifier.info.addFieldChange("MCA", oldMCA, MCA);
 		this.nominalCurrent = nominalCurrent;
-		notifier.notifyAllListeners();
-	}
+	}*/
 
 	@Override
 	public double getVoltAmperes() {
@@ -123,11 +121,7 @@ public abstract class BaseLoad implements Load{
 			powerFactor = 0.7;
 		else if(powerFactor > 1.0)
 			powerFactor = 1.0;
-		double oldWatts = getWatts();
-		notifier.info.addFieldChange("powerFactor", this.powerFactor, powerFactor);
 		this.powerFactor = powerFactor;
-		notifier.info.addFieldChange("watts", oldWatts, getWatts());
-		notifier.notifyAllListeners();
 	}
 
 	@Override
@@ -136,11 +130,13 @@ public abstract class BaseLoad implements Load{
 	}
 
 	@Override
+	@JsonProperty("MCA")
 	public double getMCA() {
 		return MCA;
 	}
 
 	@Override
+	@JsonProperty("MCAMultiplier")
 	public double getMCAMultiplier() {
 		return MCA / nominalCurrent;
 	}
@@ -149,6 +145,7 @@ public abstract class BaseLoad implements Load{
 	public abstract double getMaxOCPDRating();
 
 	@Override
+	@JsonProperty("DSRating")
 	public abstract double getDSRating();
 
 	@Override
@@ -162,9 +159,7 @@ public abstract class BaseLoad implements Load{
 		if(this.description != null)
 			if(this.description.equals(description))
 				return;
-		notifier.info.addFieldChange("description", this.description, description);
 		this.description = description;
-		notifier.notifyAllListeners();
 	}
 
 	@Override
@@ -190,8 +185,4 @@ public abstract class BaseLoad implements Load{
 		return type;
 	}
 
-	@Override
-	public NotifierDelegate getNotifier() {
-		return notifier;
-	}
 }

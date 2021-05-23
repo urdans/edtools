@@ -25,14 +25,7 @@ public class ConduitProperties {
 	private static final Map<Trade, Double> areaHDPE;
 	private static final Map<Trade, Double> areaPVCA;
 	private static final Map<Trade, Double> areaPVCEB;
-	private static Map<Trade, Double> areaINVALID;
 	private static final Map<Type, Map<Trade, Double>> dimensions;
-	private static final ResultMessage ERROR40 = new ResultMessage("Invalid conduit type" +
-			".", -40);
-	private static final ResultMessage ERROR41 = new ResultMessage("Trade size not " +
-			"available for this conduit type.", -41);
-	private static final ResultMessage ERROR42 = new ResultMessage("Area of conduit " +
-			"not available.", -42);
 
 	static {
 		//region EMT

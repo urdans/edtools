@@ -2,8 +2,133 @@
 	✓a. fix problems in the circuit class.
 	✓b. don't make profound changes, only the necessary ones.
 
-2. Start making the classes immutable; do it by package basis.
-	✓a. voltagedrop. DONE
+What I have tried to do so far, converting my classes to immutable ones have been crap. After watching a lot of videos I
+trusted immutability so much that I went closed eyes to recode everything. In the beginning I was optimistic but the
+more I recoded the more the challenges I was facing. After a lot or time coding, deleting, recoding, starting-over, I
+have come across the conclusion that immutability is good but it's not the rule. People tend to speak about it as if it was a
+religion.
+So, I'm writing now the principles under which I am going to refactor this piece of software. My main goal is to keep
+everything simple (KISS principle). The following might be seen as the architecture for this code but is also applicable
+to other programs.
+
+Mutable objects are necessary. When used appropriately they result in code that is clear and simple. But, it is not
+easy to use them correctly, a lot of planing, thinking and discipline are necessary. What is important, it to keep in
+mind at all times, how to avoid side effects. Here is my strategy/architecture:
+
+1. Objects use objects.
+A class can have private field object that the class uses "privately". There are two scenarios:
+	1.1. The class does not expose the object to the exterior. There is no getter. In that case, the object can be
+	mutable and the class can handle the change of state for that single object. The class consumes behavior and state
+	from this object. For example a private-no-getter-field object TList.
+	1.2. The class exposes the object to the exterior. There are three scenarios here:
+		1.2.1. The getter to the object returns a copy of the object. Any change to that object outside of the class
+		will not affect the container class.
+		1.2.2. The getter returns a read-only interface to that object, so the exterior can read the state of the object
+		but cannot make changes. This is achieved by placing all the getters in an interface. For example, a class Point
+		might have getters and setters. So we make the class Point to implement ROPoint and we move all the getter
+		definitions to the interface ROPoint.
+		1.2.3. The getter returns the object reference. THERE WILL BE SIDE EFFECTS!. This is what I think the cult of
+		anti-mutability fears of. Well, this scenario is needed for GUI interfaces where you want you GUI to update once
+		you change something somewhere. For other cases, we need to avoid exposing object references. However, if you
+		really need to expose that object you can do two things to keep control over your code:
+			- Use listeners: this add a lot of complexity.
+			- Do not trust that object. That is, everytime your class is requested to provide state (which happens
+			through getters), your class must assume that the object has changed. That is, recompute your state
+			everytime it is requested and provide all the class state at once (we do not want the state to change in
+			between calls to getters, since the value obtained from one getter might be not compatible with the value
+			returned by another getter later in the code, so the state must be picked all at once).
+
+2. A container class is passed an external object.
+A class manages a list of objects. Every object is added in bulk or one by one. The class has the methods "add" and
+"remove". There are two cases:
+	2.1. We do not need to change the state of the owned objects. In that case the objects can be immutable or be
+	represented by an immutable interface.
+	2.2. We need to change the state of the owned objects. How do we know this object is not being used by another
+	object that also can change its state? There are two approaches:
+		2.2.1. The "add" method makes a copy of the passed object.
+		2.2.2. The object has a field that references the container class. So, the "add" method checks if the passed
+		object has that field null before actually adding it to the list. If that field is not null there can be two
+		scenarios:
+			2.2.2.1. The "add" method throws an exception if the object is own by another object. That is, we do not
+			want to change this object and produce a side effect in the other container. This is the best approach.
+			2.2.2.2. The "add" method detach the object from its container by calling
+			myObject.getContainer().remove(myObject). Of course, this produces side effect in the other container that
+			in some cases might be desired. In other circumstances, do not use this approach.
+
+3. Strategies applicable only to this software:
+-ResultMessage is immutable.
+-ResultMessages is mutable and has a RO interface. When returning the actual list of errors, it returns a copy.
+-VoltageDropAC and DC are immutable.
+-Conductor is mutable and implements Conduitable which is readonly.
+-If a conductor is set its ambient temperature: if its conduit or bundle property is null the temperature is set.
+Otherwise it rises an exception.
+-Any object using a Conductor must make a copy of the parameter passed.
+-Conduit is mutable, but its conductors and cables are exposed as Conduitables (as immutable objects). When adding a
+conductor to a conduit if the conductor's conduit field is not null and not the same as the conduit that is adding it,
+it must throw an exception.
+-Conduit must have a method to set the ambient temperature of all its conductors. all conductors added to the conduit
+are set the same ambient temperature of the conduit.
+-The circuit class shout not change the ambient temperature of an external conduit.
+
+
+
+Applying this architecture to all classes:
+- VoltageDropAC (immutable, builder) todo: make it mutable
+- VoltageDropDC (immutable, builder)
+- ResultMessage (immutable)
+- ResultMessages (mutable, implements an immutable interface)
+- Conductor (mutable, implements the immutable interface Conduitable)
+- Cable (mutable except for system voltage, implements the immutable interface Conduitable)
+- Conduit (mutable except for ambient temperature)
+- Bundle (mutable except for ambient temperature)
+- Circuit (mutable, except for system voltage, internal or external conduit, internal or external bundle, if is on free
+air or not)
+
+
+Todo:
+1. There should not be setters for parameters that are passed in the constructors. Those parameters are meant to make
+that object immutable in regard to those parameters.
+
+2. The ResultMessages should ONLY contain errors and warnings that occur after the object is constructed. Any error
+occurring during construction MUST throw an IllegalArgumentException. When used in a REST API that error must be
+captured and sent back to client. Errors occurring due to a "presupposition failure" must also throw exceptions. For
+example, trying o set a property of the neutral conductor of a cable that does not have a cable should throw an
+exception. All other errors occurring during a call to a setter or when computing a value, must be put inside the
+ResultMessage object.
+
+3. Make VoltageDropAC 100% mutable with no constructors. It should not use the Conductor class. All setters should be
+chainable. Each result is compute in real time, accounting for the actual values of all its parameters.
+
+4. Consider creating a CircuitPhaseConductor interface to return a conductor representing the phase conductors. Through
+this interface certain changes can be done. Same for a CircuitNeutralConductor, but limiting even more the access to
+certain setters. Same for CircuitGroundingConductor. What about cables?
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+2. Start making the classes immutable; do it by package basis. The class needs to be tested for converting it to a JSON
+string, and then recreating the class from a JSON string
+
+	✓a. voltagedrop ac and dc. DONE
+	b. ResultMessages
 	b. conduits
 	c. conductors.
 	d. loads.
@@ -21,8 +146,11 @@ ResultMessages
 This class is used as composition by other classes. ResultMessages is a container and so it is
 mutable. The owner class can add or remove messages from it. However, the owner class returns a
 ROResultMessages which does not have any setter and as such the container cannot be changed.
-It only has getters. One of the getters returns a list of ResultMessage objects. The ResultMessage
-class is completely immutable.
+It only has getters. One of the getters returns a list of ResultMessage objects. The ROResultMessage
+class is completely immutable, but it's a fake immutability.
+It will be converted to immutable completely, by adding a builder class that:
+- has the two variants of the add method.
+
 
 Bundle
 This class is a container of conduitables. It will be transformed into an immutable class.
@@ -46,3 +174,22 @@ boolean complyWith310_15_B_3_a_5()
 double getBundlingLength()
 List<Conduitables> getConduitables() -> returning
 
+Design architecture:************************************************************
+0. All classes must be immutable.
+1. The calculator class must implement the Builder pattern when the number of
+   parameters is four or more. For up to three parameters, the class will use
+   a constructor.
+
+Completed:
+ResultMessage
+ResultMessages
+VoltageDropDC
+
+
+
+ Error & warning numbers schedule:
+ 001->049: VoltageDrop class
+ 050->099: Conductor & Cable class
+ 100->149: Conduit class
+ 150->199: Bundle class
+ 200->299: Circuit class

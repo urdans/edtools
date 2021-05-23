@@ -1,5 +1,7 @@
 package eecalcs.conductors;
 
+import tools.ROResultMessages;
+
 /**
  This interface defines the read-only properties of the {@link Bundle}
  class.
@@ -33,7 +35,7 @@ public interface ROBundle {
 	 </ol>
 	 @return True if all above conditions are met, false otherwise.
 	 */
-	boolean complyWith310_15_B_3_a_4();
+	boolean compliesWith310_15_B_3_a_4();
 
 	/**
 	 Asks if all the cables in the bundle comply with the the conditions
@@ -60,20 +62,22 @@ public interface ROBundle {
 	 </ol>
 	 @return True if all above conditions are met, false otherwise.
 	 */
-	boolean complyWith310_15_B_3_a_5();
+	boolean compliesWith310_15_B_3_a_5();
+
+	/**
+	 @return The distance or length of the bundle.
+	 */
+	double getBundlingLength();
+
+	/**@return The number of conductors inside this bundle.*/
+	int getConductorCount();
 
 	/**
 	 @return The number of current-carrying conductors inside this bundle.
 	 */
 	int getCurrentCarryingCount();
 
-	/**@return The number of conductors inside this bundle.*/
-	int getConductorCount();
-
-	/**
-	 @return The distance or length of the bundle.
-	 */
-	double getBundlingLength();
+	ROResultMessages getResultMessages();
 
 	/**
 	 Asks if this bundle already contains the given conduitable.
