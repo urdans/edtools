@@ -453,8 +453,8 @@ class VoltageDropTest {
 				.setPowerFactor(1.0)
 				.setConduitMaterial(Material.STEEL)
 				.setConduitMaterial(null);
-		//result message should contain the current state of the class. So
-		//this assertion should be true. The ResultMessages object must
+		//result message should contain the current state of the class. The
+		//following assertion should be true. The ResultMessages object must
 		//contain the messages -20 indicating the size is too small for the
 		//current and -2 indicating the conduit material cannot be null.
 		assertTrue(voltDrop2.getResultMessages().containsMessage(-20));

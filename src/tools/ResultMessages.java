@@ -22,135 +22,182 @@ import java.util.List;
 
  */
 public class ResultMessages implements ROResultMessages{
-	private final List<ResultMessage> resultMessages = new ArrayList<>();
+	private final List<ContextResultMessage> resultMessages = new ArrayList<>();
+	private final String defaultContext;
+
+	public ResultMessages(String defaultContext) {
+		this.defaultContext = defaultContext;
+	}
 
 	/**
-	 Adds a message object to this result message container.
+	 Adds a message object (using the default context) to this result message
+	 container.
 	 @param msg The existing message object to be added to this result message
 	 container.
 	 @see ResultMessage
 	 */
 	public void add(ResultMessage msg){
-		if(resultMessages.contains(msg))
-			return;
-		resultMessages.add(msg);
+		add(defaultContext, msg);
 	}
 
 	/**
-	 @return The string message that correspond to the given message number.
-	 @param number A message number.
+	 Adds a message object (using the given context) to this result message
+	 container.
+	 @param context The context to which the given result message belongs.
+	 @param msg The existing message object to be added to this result message
+	 container.
+	 @see ResultMessage
 	 */
+	public void add(String context, ResultMessage msg){
+		if(containsMessage(context, msg))
+			return;
+		resultMessages.add(new ContextResultMessage(context, msg));
+	}
+
 	@Override
 	public String getMessage(int number) {
+		return getMessage(defaultContext, number);
+	}
+
+	@Override
+	public String getMessage(String context, int number) {
 		return resultMessages.stream()
-				.filter(msg -> msg.getNumber() == number)
-				.map(ResultMessage::getMessage)
+				.filter(crm -> crm.context == context
+						&& crm.resultMessage.getNumber() == number)
+				.map(crm -> crm.resultMessage.getMessage())
 				.findFirst().orElse("");
 	}
 
-	/**
-	 Asks if this result message container already contains a message with
-	 the given number.
-	 @param number The message number to check.
-	 @return True if this container contains that message number, false
-	 otherwise.
-	 */
 	@Override
 	public boolean containsMessage(int number){
-		return !getMessage(number).equals("");
+		return containsMessage(defaultContext, number);
+	}
+
+	@Override
+	public boolean containsMessage(String context, int number){
+		return resultMessages.stream()
+				.anyMatch(crm -> crm.context == context
+						&& crm.resultMessage.getNumber() == number);
 	}
 
 	@Override
 	public boolean containsMessage(ResultMessage msg) {
-		return resultMessages.contains(msg);
+		return containsMessage(defaultContext, msg);
 	}
 
-	/**
-	 Asks if the container has messages.
-	 @return True if there is at least one message in the container, false
-	 otherwise.
-	 */
+	@Override
+	public boolean containsMessage(String context, ResultMessage msg) {
+		return resultMessages.stream()
+				.anyMatch(crm -> crm.context == context
+						&& crm.resultMessage == msg);
+	}
+
 	@Override
 	public boolean hasMessages() {
-		return resultMessages.size() > 0;
+		return hasMessages(defaultContext);
 	}
 
-	/**
-	 Asks if the container has error messages, that is, any message whose number
-	 is negative.
-	 @return True if there is at least one error message, false otherwise.
-	 */
+	@Override
+	public boolean hasMessages(String context) {
+		return resultMessages.stream()
+				.anyMatch(crm -> crm.context == context);
+	}
+
 	@Override
 	public boolean hasErrors() {
-		return errorCount() > 0;
+		return hasErrors(defaultContext);
 	}
 
-	/**
-	 Asks if the container has warning messages, that is, any message whose
-	 number is positive.
-	 @return True if there is at least one warning message, false otherwise.
-	 */
+	@Override
+	public boolean hasErrors(String context) {
+		return errorCount(context) > 0;
+	}
+
 	@Override
 	public boolean hasWarnings() {
-		return warningCount() > 0;
+		return warningCount(defaultContext) > 0;
 	}
 
-	/**
-	 Returns the number of error messages in this container.
-	 @return The number of error messages in this container.
-	 */
+	@Override
+	public boolean hasWarnings(String context) {
+		return warningCount(context) > 0;
+	}
+
 	@Override
 	public int errorCount() {
+		return errorCount(defaultContext);
+	}
+
+	@Override
+	public int errorCount(String context) {
 		return (int) resultMessages.stream()
-				.filter(msg -> msg.getNumber() < 0)
+				.filter(crm -> crm.resultMessage.getNumber() < 0)
 				.count();
 	}
 
-	/**
-	 Returns the number of warning messages in this container.
-	 @return The number of warning messages in this container.
-	 */
 	@Override
 	public int warningCount() {
+		return warningCount(defaultContext);
+	}
+
+	@Override
+	public int warningCount(String context) {
 		return (int) resultMessages.stream()
-				.filter(msg -> msg.getNumber() > 0)
+				.filter(crm -> crm.resultMessage.getNumber() > 0)
 				.count();
 	}
 
-	/**
-	 @return a list with copies of the messages that this object contains.
-	 */
 	@Override
-	public List<ResultMessage> getMessages() {
-		//todo: there is no need to make a deep copy. Returning a new container (an ArrayList) is enough. The container can grow
-		// in the number of elements or even delete some of them, but this will not affect the container for this class.
-		// Also, each ResultMessage is immutable. MAKE TESTS.
+	public List<ContextResultMessage> getMessages() {
 		return new ArrayList<>(resultMessages);
 	}
 
 	/**
 	 Removes from this result message container the message identified with the
-	 given number.
+	 given number, under the default context.
 	 @param number The number of the message to be removed from this container.
 	 */
 	public void remove(int number){
-		for(ResultMessage msg : resultMessages){
-			if(msg.getNumber() == number) {
-				resultMessages.remove(msg);
+		remove(defaultContext, number);
+	}
+
+	/**
+	 Removes from this result message container the message identified with the
+	 given number, under the given context.
+	 @param context The context of the message.
+	 @param number The number of the message to be removed from this container.
+	 */
+	public void remove(String context, int number){
+		for(ContextResultMessage crm : resultMessages){
+			if(crm.context == context && crm.resultMessage.getNumber() == number) {
+				resultMessages.remove(crm);
 				break;
 			}
 		}
 	}
 
 	/**
-	 Removes the message objects from this result message container.
+	 Removes the message objects from this result message container, under
+	 the default context.
 	 @param msg The existing message objects to be removed from this result
 	 message container.
 	 @see ResultMessage
 	 */
 	public void remove(ResultMessage...msg){
+		remove(defaultContext, msg);
+	}
+
+	/**
+	 Removes the message objects from this result message container, under
+	 the given context.
+	 @param context The context of the message.
+	 @param msg The existing message objects to be removed from this result
+	 message container.
+	 @see ResultMessage
+	 */
+	public void remove(String context, ResultMessage...msg){
 		for (ResultMessage message : msg) {
-			resultMessages.remove(message);
+			remove(context, message.getNumber());
 		}
 	}
 

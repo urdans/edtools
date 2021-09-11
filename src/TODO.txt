@@ -12,7 +12,7 @@ everything simple (KISS principle). The following might be seen as the architect
 to other programs.
 
 Mutable objects are necessary. When used appropriately they result in code that is clear and simple. But, it is not
-easy to use them correctly, a lot of planing, thinking and discipline are necessary. What is important, it to keep in
+easy to use them correctly, a lot of planing, thinking and discipline are necessary. What is important, is to keep in
 mind at all times, how to avoid side effects. Here is my strategy/architecture:
 
 1. Objects use objects.
@@ -28,9 +28,9 @@ A class can have private field object that the class uses "privately". There are
 		might have getters and setters. So we make the class Point to implement ROPoint and we move all the getter
 		definitions to the interface ROPoint.
 		1.2.3. The getter returns the object reference. THERE WILL BE SIDE EFFECTS!. This is what I think the cult of
-		anti-mutability fears of. Well, this scenario is needed for GUI interfaces where you want you GUI to update once
-		you change something somewhere. For other cases, we need to avoid exposing object references. However, if you
-		really need to expose that object you can do two things to keep control over your code:
+		anti-mutability fears of. Well, this scenario is needed for GUI interfaces where you want your GUI to update
+		once you change something somewhere. For other cases, we need to avoid exposing object references. However, if
+		you really need to expose that object you can do two things to keep control over your code:
 			- Use listeners: this add a lot of complexity.
 			- Do not trust that object. That is, everytime your class is requested to provide state (which happens
 			through getters), your class must assume that the object has changed. That is, recompute your state

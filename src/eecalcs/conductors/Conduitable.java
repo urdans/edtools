@@ -6,14 +6,14 @@ import eecalcs.systems.TempRating;
 /**
  A Conduitable object is a conductor or a cable. Any of these objects can be
  installed inside a Conduit object, therefore the name Conduitable. This
- interface is intended to provided a common contract for conductors and
- cables.
+ interface provides read only properties. Methods that returns a conductor or
+ a cable should return a conduitable instead. This will avoid side effects
+ since there is no way to change the conductor or the cable through this
+ interface (this interface has only getters, no setters).
  */
-//todo: llok for a better name for this. Maybe Cord, Wire, CordWire,
+//todo: Look for a better name for this. Maybe Cord, Wire, CordWire,
 // Line, WireLine...
 public interface Conduitable {
-
-//	int getGroupId();
 
 	/**
 	 @return The size of this conduitable. For a conductor, it refers to the

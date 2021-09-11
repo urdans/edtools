@@ -46,7 +46,7 @@ public class VoltageDropAC {
 	private double maxVoltageDropPercent = 3.0;
 	//endregion
 
-	private final ResultMessages resultMessages = new ResultMessages();
+	private final ResultMessages resultMessages = new ResultMessages("VoltageDropAC");
 
 	//region Predefined messages
 	public static final ResultMessage ERROR01 = new ResultMessage(
@@ -114,6 +114,7 @@ public class VoltageDropAC {
 		return maxVoltageDropPercent;
 	}
 
+
 	public double getVoltageDropPercentage() {
 //		resultMessages.clearMessages("VoltageDropPercentage");
 		if(goodParamsVD())
@@ -149,7 +150,7 @@ public class VoltageDropAC {
 	public Size getMinSizeForMaxVD() {
 //		resultMessages.clearMessages("MinSizeForMaxVD");
 		//todo: do not clear all messages, only the context one
-		resultMessages.clearMessages();
+		//resultMessages.clearMessages();
 		if(goodParamsSize())
 			return calcMinSizeForMaxVD();
 		else
@@ -296,8 +297,8 @@ public class VoltageDropAC {
 	}
 
 	/**
-	 Returns the AC voltage in volts at the load terminals, fed by the
-	 parameter conductor, when using the given size.
+	 Returns the AC voltage in volts at the load terminals, for a
+	 Conduitable of the given size.
 	 */
 	private double calcVoltageAtLoad(Size size) {
 		double k = sourceVoltageSystem.getPhases() == 1 ? 2 :

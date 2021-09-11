@@ -100,7 +100,7 @@ public class Cable implements Conduitable {
 	private final VoltageSystemAC voltageSystemAC;
 	private Conduit conduit = null;
 	private Bundle bundle = null;
-	private final ResultMessages resultMessages = new ResultMessages();
+	private final ResultMessages resultMessages = new ResultMessages("Cable");
 
 
 	public ROResultMessages getResultMessages() {

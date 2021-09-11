@@ -39,7 +39,7 @@ public class VoltageDropDC {
 	private double maxVoltageDropPercent = 3.0;
 	//endregion
 
-	private final ResultMessages resultMessages =  new ResultMessages();
+	private final ResultMessages resultMessages =  new ResultMessages("VoltageDropDC");
 
 	public Conduitable getConduitable() {
 		return conduitable;

@@ -47,7 +47,7 @@ public class Conductor implements Conduitable {
 	private Bundle bundle = null;
 	//endregion
 
-	private final ResultMessages resultMessages = new ResultMessages();
+	private final ResultMessages resultMessages = new ResultMessages("Conductor");
 
 	//region Predefined messages
 	public static final ResultMessage ERROR050 = new ResultMessage("Size " +

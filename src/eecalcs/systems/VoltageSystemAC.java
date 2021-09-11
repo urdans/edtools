@@ -206,7 +206,7 @@ public enum VoltageSystemAC{									   //neutral is CCC
 		this.voltage = Math.abs(voltage);
 		this.phases = Math.abs(phases);
 		this.wires = Math.abs(wires);
-		this.name = String.format("%dv %dØ %dW", voltage, phases, wires);
+		this.name = String.format("%dV %dØ %dW", voltage, phases, wires);
 		return this;
 	}
 }

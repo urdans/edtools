@@ -35,7 +35,7 @@ public class Bundle implements ROBundle{
 	private final int ambientTemperatureF;
 
 	private final List<Conduitable> conduitables = new ArrayList<>();
-	private final ResultMessages resultMessages = new ResultMessages();
+	private final ResultMessages resultMessages = new ResultMessages("Bundle");
 
 	private static final List<Bundle> BUNDLE_LIST = new ArrayList<>();
 
