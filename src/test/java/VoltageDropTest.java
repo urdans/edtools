@@ -7,6 +7,7 @@ import eecalcs.systems.VoltageSystemAC;
 import eecalcs.voltagedrop.VoltageDropDC;
 import org.junit.jupiter.api.Test;
 
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -49,6 +50,36 @@ class VoltageDropTest {
 				.setNumberOfSets(2)
 				.setLoadCurrent(460)
 				.setMaxVoltageDropPercent(2.0);
+	}
+
+	@Test
+	void getMaxLengthForMaxVD_AC(){
+		conductor.setLength(250).setSize(Size.AWG_1);
+		voltDrop.setLoadCurrent(95).setMaxVoltageDropPercent(10);
+		assertEquals(423.276, voltDrop.getMaxLengthForMaxVD(), 0.001);
+
+		voltDrop.setLoadCurrent(110);
+		conductor.setInsulation(Insul.TW);
+		assertEquals(365.557, voltDrop.getMaxLengthForMaxVD(), 0.001);
+
+		voltDrop.setLoadCurrent(145);
+		conductor.setInsulation(Insul.XHHW2);
+		assertEquals(277.319, voltDrop.getMaxLengthForMaxVD(), 0.001);
+	}
+
+	@Test
+	void getMaxLengthForMaxVD_DC(){
+		conductor.setLength(225).setSize(Size.AWG_1$0);
+		voltDropDC.setLoadCurrent(95).setMaxVoltageDropPercent(15);
+		assertEquals(776.532, voltDropDC.getMaxLengthForMaxVD(), 0.001);
+
+		voltDropDC.setLoadCurrent(110);
+		conductor.setInsulation(Insul.TW);
+		assertEquals(670.64, voltDropDC.getMaxLengthForMaxVD(), 0.001);
+
+		voltDropDC.setLoadCurrent(145);
+		conductor.setInsulation(Insul.XHHW2);
+		assertEquals(508.762, voltDropDC.getMaxLengthForMaxVD(), 0.001);
 	}
 
 	@Test
@@ -107,18 +138,18 @@ class VoltageDropTest {
 	}
 
 	@Test
-	void getCalculatedSizeDC01() {
+	void getMinSizeForMaxVD01() {
 		assertEquals(Size.AWG_10, voltDropDC.getMinSizeForMaxVD());
 	}
 
 	@Test
-	void getCalculatedSizeDC02() {
+	void getMinSizeForMaxVD02() {
 		change1();
 		assertEquals(Size.AWG_1$0, voltDropDC.getMinSizeForMaxVD());
 	}
 
 	@Test
-	void getCalculatedSizeDC03() {
+	void getMinSizeForMaxVD03() {
 		change2();
 		assertEquals(Size.AWG_4$0, voltDropDC.getMinSizeForMaxVD());
 	}
@@ -292,6 +323,7 @@ class VoltageDropTest {
 		VoltageDropAC voltDrop2 = new VoltageDropAC(conductor2)
 				.setNumberOfSets(2);
 		assertEquals(0, voltDrop2.getVoltageDropVolts(), 0.0001);
+
 		assertTrue(voltDrop2.getResultMessages().containsMessage(-21));
 	}
 
@@ -375,8 +407,13 @@ class VoltageDropTest {
 				.setLoadCurrent(20)
 				.setPowerFactor(0.9)
 				.setMaxVoltageDropPercent(0.4);
-		assertEquals(0, voltDrop2.getVoltageDropVolts(), 0.0001);
+		//the rule for maxVoltageDropPercent applies for getMaxLengthForMaxVD
+		assertEquals(0, voltDrop2.getMaxLengthForMaxVD());
 		assertTrue(voltDrop2.getResultMessages().containsMessage(-8));
+		//however, the rule for maxVoltageDropPercent does not apply for
+		//getVoltageDropVolts
+		assertEquals(7.24606, voltDrop2.getVoltageDropVolts(), 0.0001);
+		assertFalse(voltDrop2.getResultMessages().containsMessage(-8));
 	}
 
 	@Test
@@ -387,8 +424,14 @@ class VoltageDropTest {
 				.setLoadCurrent(20)
 				.setPowerFactor(0.9)
 				.setMaxVoltageDropPercent(26);
-		assertEquals(0, voltDrop2.getVoltageDropVolts(), 0.0001);
+		//the rule for maxVoltageDropPercent applies for getMaxLengthForMaxVD
+		assertEquals(0, voltDrop2.getMaxLengthForMaxVD());
 		assertTrue(voltDrop2.getResultMessages().containsMessage(-8));
+		//however, the rule for maxVoltageDropPercent does not apply for
+		//getVoltageDropVolts
+		assertEquals(7.24606, voltDrop2.getVoltageDropVolts(), 0.0001);
+		assertFalse(voltDrop2.getResultMessages().containsMessage(-8));
+
 	}
 
 	@Test
@@ -453,37 +496,48 @@ class VoltageDropTest {
 				.setPowerFactor(1.0)
 				.setConduitMaterial(Material.STEEL)
 				.setConduitMaterial(null);
-		//result message should contain the current state of the class. The
-		//following assertion should be true. The ResultMessages object must
-		//contain the messages -20 indicating the size is too small for the
-		//current and -2 indicating the conduit material cannot be null.
-		assertTrue(voltDrop2.getResultMessages().containsMessage(-20));
+		//resultMessages should contain messages that correspond with the
+		//current state of the class. The following assertion should be true.
+		//The ResultMessages object must contain the messages -2 indicating the
+		//the conduit material cannot be null.
+		assertFalse(voltDrop2.getResultMessages().containsMessage(-20));
+		assertTrue(voltDrop2.getResultMessages().containsMessage(-2));
 		//this also should be true.
 		assertTrue(voltDrop2.getResultMessages().hasErrors());
-		//This JSON shows the messages are present in the ResultMessage object.
-		System.out.println(voltDrop2.toJSON());
+		//This JSON shows the message is present in the ResultMessage object
+		//at the class level and at the methods level where the message
+		//applies, that is, where the conduit material is required to be non
+		//null.
+		//System.out.println(voltDrop2.toJSON());
 		//this removes the error -2 from the class level
 		voltDrop2.setConduitMaterial(Material.PVC);
-		//which is shown here
-		System.out.println(voltDrop2.toJSON());
-		//conductor2.setSize(Size.KCMIL_1000);
-		//This assertion fails because getMinSizeForMaxVD checks if there are
-		//errors for the wrong context (the class level, the default context)
-		//but it could determine the result with the current state of
-		//the voltDrop2 object.
-		//So, calling a calculator method should not clear the messages of the
-		//class level (the default context), it should only clear the
-		//messages of its own context. The setter of the class should update
-		//the ResultMessage object after setting the value.
-		//The calculator method should only check for errors related to its
-		//context.
+		//which is shown here. But the ampacity exceeded error persists for
+		//the methods that require it to be good.
+		//System.out.println(voltDrop2.toJSON());
+		/*
+		OLD: This assertion fails because getMinSizeForMaxVD checks if there are
+		errors for the wrong context (the class level, the default context)
+		but it could determine the result with the current state of
+		the voltDrop2 object.
+		So, calling a calculator method should not clear the messages of the
+		class level (the default context), it should only clear the
+		messages of its own context. The setter of the class should update
+		the ResultMessage object after setting the value.
+		The calculator method should only check for errors related to its
+		context.*/
+		/*
+		UPDATE: This works now. No need for a context. Implementing a context
+		is too complicated. To overcome the context requirement, we just need
+		to produce a JSON object manually which contains all the
+		resultMessages and the results for each calculation method.
+		 */
 		assertEquals(Size.AWG_3$0, voltDrop2.getMinSizeForMaxVD());
-		System.out.println(voltDrop2.toJSON());
+		//System.out.println(voltDrop2.toJSON());
 		//the error should still be there but it's not if I do not call toJSON()
-//		assertTrue(voltDrop2.getResultMessages().hasErrors());
-/*Todo:
-There is an issue with the way the results messages are returned.
-A class usually provides several calculation methods. Each calculation method
+
+/*Done:
+ There is an issue with the way the results messages are returned.
+ A class usually provides several calculation methods. Each calculation method
  can have its own associated result messages. The ResultMessage class is
  designed to provide result messages at the class level, not a the method
  level. At the class level, the ResultMessages class can provide with useful
@@ -497,15 +551,17 @@ A class usually provides several calculation methods. Each calculation method
  current state of the class and be sent to the client, but the current
  implementation of ResultMessages does not handle this well.
  How to solve it?
- 1. ResultMessage must implement a sort of context indicator. So,
- ResultMessage will contain the messages at the class level into the
- "Default" context. Every calculation method that can produce a result
- message must add a context which could be the name of the method. The
+ 1. THIS DOESN'T WORK, TOO COMPLICATED: ResultMessage must implement a sort of
+ context indicator. So, ResultMessage will contain the messages at the class
+ level into the "Default" context. Every calculation method that can produce
+ a result message must add a context which could be the name of the method. The
  ResultMessage object returned by the calculator class will contain messages
  for both levels, the class and the method levels.
- 2. The JSON representation of the class (probably) will need to be built by
- hand, calling the methods in a certain order. This has to be tested to see
- if this can be avoided, so leaving all the burden to the JSON helper class.
+ 2. The JSON representation of the class needs to be built by
+ hand, calling the methods in a certain order. This JSON is not a
+ representation of the class, but a container representing the class state
+ plus all the results of the calculations performed by the class along with
+ their respective result messages.
  */
 
 	}
@@ -518,11 +574,18 @@ A class usually provides several calculation methods. Each calculation method
 				.setLoadCurrent(200)
 				.setPowerFactor(1.0)
 				.setConduitMaterial(Material.STEEL);
+		//no error at the class level
+		assertFalse(voltDrop.getResultMessages().hasErrors());
+		assertEquals(0, voltDrop.getResultMessages().errorCount());
+
+		//but, when calling getVoltageDropVolts, the "ampacity exceeded"
+		//error appears.
+		assertEquals(0, voltDrop.getVoltageDropVolts());
 		assertTrue(voltDrop.getResultMessages().hasErrors());
 		assertEquals(1, voltDrop.getResultMessages().errorCount());
-		assertEquals(0, voltDrop.getVoltageDropVolts());
-/*
-		System.out.println(voltDrop);
+		assertTrue(voltDrop.getResultMessages().containsMessage(-20));
+
+		/*System.out.println(voltDrop);
 		System.out.println(voltDrop.toJSON());
 
 		change2();
@@ -530,5 +593,26 @@ A class usually provides several calculation methods. Each calculation method
 		System.out.println(voltDropDC.toJSON());*/
 	}
 
+	@Test
+	void toJSONCustomAC(){
+		Conductor conductor2 = new Conductor();
+		VoltageDropAC voltDrop = new VoltageDropAC(conductor2)
+				.setNumberOfSets(1)
+				.setLoadCurrent(200)
+				.setPowerFactor(1.0)
+				.setConduitMaterial(Material.STEEL)
+				.setMaxVoltageDropPercent(0.4);
+		System.out.println(voltDrop.toJSON());
+	}
+
+	@Test
+	void toJSONCustomDC(){
+		Conductor conductor2 = new Conductor();
+		VoltageDropDC voltDrop = new VoltageDropDC(conductor2)
+				.setNumberOfSets(1)
+				.setLoadCurrent(20)
+				.setMaxVoltageDropPercent(0.5);
+		System.out.println(voltDrop.toJSON());
+	}
 
 }

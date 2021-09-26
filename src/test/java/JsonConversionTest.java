@@ -29,7 +29,7 @@ public class JsonConversionTest {
 
 	//@Test
 	void jsonResultMessages() {
-		ResultMessages resultMessages = new ResultMessages("jsonResultMessages");
+		ResultMessages resultMessages = new ResultMessages();
 		resultMessages.add(new ResultMessage("Error message No 21", -21));
 		resultMessages.add(new ResultMessage("warning message No 22", 22));
 

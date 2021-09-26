@@ -31,7 +31,7 @@ public class Conduit implements ROConduit{
 	private final int ambientTemperatureF;
 
 	private final List<Conduitable> conduitables = new ArrayList<>();
-	private final ResultMessages resultMessages = new ResultMessages("Conduit");
+	private final ResultMessages resultMessages = new ResultMessages();
 
 	private static final List<Conduit> CONDUIT_LIST = new ArrayList<>();
 

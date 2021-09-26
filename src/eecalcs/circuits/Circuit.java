@@ -195,7 +195,7 @@ public class Circuit {
 	private final Conductor groundingConductor;
 	private final Cable cable;
 	private final VoltageDropAC voltageDrop;
-	private final ResultMessages resultMessages = new ResultMessages("Circuit");
+	private final ResultMessages resultMessages = new ResultMessages();
 	private final String CALCULATE_PHASE = "calculatePhase";
 
 	/**the ampacity of this circuit size under the installation conditions*/
@@ -955,9 +955,10 @@ public class Circuit {
 				sizePerVoltageDrop);
 		if(phaseSize == sizePerVoltageDrop)
 		//todo check this works
-			voltageDrop.getResultMessages()
+		voltageDrop.getResultMessages().getMessages().forEach(resultMessages::add);
+/*			voltageDrop.getResultMessages()
 					.getMessages()
-					.forEach(crm -> resultMessages.add(CALCULATE_PHASE, crm.resultMessage));
+					.forEach(crm -> resultMessages.add(CALCULATE_PHASE, crm.resultMessage));*/
 		//update the size of all phase conductors
 		setCircuitSize(phaseSize);
 		return true;

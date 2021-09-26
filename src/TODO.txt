@@ -58,22 +58,22 @@ A class manages a list of objects. Every object is added in bulk or one by one. 
 3. Strategies applicable only to this software:
 -ResultMessage is immutable.
 -ResultMessages is mutable and has a RO interface. When returning the actual list of errors, it returns a copy.
--VoltageDropAC and DC are immutable.
+-VoltageDropAC and DC are mutable.
 -Conductor is mutable and implements Conduitable which is readonly.
 -If a conductor is set its ambient temperature: if its conduit or bundle property is null the temperature is set.
 Otherwise it rises an exception.
--Any object using a Conductor must make a copy of the parameter passed.
+-Any object using/consuming an external Conductor must be passed a Conduitable.
 -Conduit is mutable, but its conductors and cables are exposed as Conduitables (as immutable objects). When adding a
 conductor to a conduit if the conductor's conduit field is not null and not the same as the conduit that is adding it,
 it must throw an exception.
 -Conduit must have a method to set the ambient temperature of all its conductors. all conductors added to the conduit
 are set the same ambient temperature of the conduit.
--The circuit class shout not change the ambient temperature of an external conduit.
+-The circuit class must not change the ambient temperature of an external conduit.
 
-
+///////everything down from here is deprecated///////////////////////////
 
 Applying this architecture to all classes:
-- VoltageDropAC (immutable, builder) todo: make it mutable
+- VoltageDropAC (mutable, builder) todo: make it mutable
 - VoltageDropDC (immutable, builder)
 - ResultMessage (immutable)
 - ResultMessages (mutable, implements an immutable interface)

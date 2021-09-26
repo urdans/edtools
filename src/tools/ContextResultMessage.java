@@ -1,4 +1,4 @@
-package tools;
+/*package tools;
 
 public class ContextResultMessage {
 	public String context;
@@ -8,4 +8,4 @@ public class ContextResultMessage {
 		this.context = context;
 		this.resultMessage = resultMessage;
 	}
-}
+}*/
