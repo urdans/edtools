@@ -1,6 +1,10 @@
 package eecalcs.circuits;
 
 import eecalcs.conductors.*;
+import eecalcs.conductors.raceways.Bundle;
+import eecalcs.conductors.raceways.Cable;
+import eecalcs.conductors.raceways.Conductor;
+import eecalcs.conductors.raceways.Conduit;
 import eecalcs.conduits.*;
 import eecalcs.loads.Load;
 import eecalcs.systems.TempRating;
@@ -602,15 +606,15 @@ public class Circuit {
 		conduitables.add(groundingConductor);
 		//add the other sets as clones
 		for(int i = 1; i < getListBound(); i++){
-			conduitables.add(phaseAConductor.clone());
+			conduitables.add(phaseAConductor.copy());
 			if(phaseBConductor != null)
-				conduitables.add(phaseBConductor.clone());
+				conduitables.add(phaseBConductor.copy());
 			if(phaseCConductor != null)
-				conduitables.add(phaseCConductor.clone());
+				conduitables.add(phaseCConductor.copy());
 			if(neutralConductor != null)
-				conduitables.add(neutralConductor.clone());
+				conduitables.add(neutralConductor.copy());
 			if(!usingOneEGC)
-				conduitables.add(groundingConductor.clone());
+				conduitables.add(groundingConductor.copy());
 		}
 	}
 
@@ -623,7 +627,7 @@ public class Circuit {
 		conduitables.add(cable); //add the model cable to index 0
 		//add the other cables as clones.
 		while (conduitables.size() < getListBound())
-			conduitables.add(cable.clone());
+			conduitables.add(cable.copy());
 	}
 
 	/** @return The number of times a set of conductors or a cable must be

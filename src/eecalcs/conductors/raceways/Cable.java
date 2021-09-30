@@ -1,13 +1,13 @@
-package eecalcs.conductors;
+package eecalcs.conductors.raceways;
 
-import eecalcs.conduits.Conduit;
+import eecalcs.conductors.*;
 import eecalcs.systems.TempRating;
-import eecalcs.systems.VoltageSystemAC;
+import eecalcs.systems.VoltageAC;
 import tools.JSONTools;
 import tools.ROResultMessages;
 import tools.ResultMessages;
 
-import static eecalcs.conductors.Conductor.*;
+import static eecalcs.conductors.raceways.Conductor.*;
 
 /**
  This class encapsulates the properties of a cable.
@@ -63,7 +63,7 @@ public class Cable implements Conduitable {
 	/*To create a JSON out for this cable, these are parameters to be used:
 	size of phases, size of neutral, size of grounding, metal, insulation,
 	length, ambientTemperatureF, copperCoating, the role of the neutral,
-	jacketed, outerDiameter, roofTopDistance, type, voltageSystemAC,
+	jacketed, outerDiameter, roofTopDistance, type, voltageAC,
 	neutralCarryingConductor, conduit and bundle.
 	The results of this cable are: getAdjustmentFactor, getCompoundFactor,
 	getCorrectedAndAdjustedAmpacity, getCorrectionFactor,
@@ -76,6 +76,7 @@ public class Cable implements Conduitable {
 *  must have a static list with all the created conduits/bundles. The cable
 *  or conductor can inquire a static method to check if the cable belongs to
 *  a conduit or bundle.
+*
 *  An alternative is just not to expose getters to the conduit/bundle but
 *  just indicate if the cable has a conduit or bundle, that's it.
 *  It's decided: the bundle or conduit cannot be accessed via getters. Also,
@@ -97,7 +98,7 @@ public class Cable implements Conduitable {
 	private double outerDiameter = 0.5;
 	private double roofTopDistance = -1.0;
 	private CableType type = CableType.MC;
-	private final VoltageSystemAC voltageSystemAC;
+	private final VoltageAC voltageAC;
 	private Conduit conduit = null;
 	private Bundle bundle = null;
 	private final ResultMessages resultMessages = new ResultMessages();
@@ -107,11 +108,11 @@ public class Cable implements Conduitable {
 		return resultMessages;
 	}
 
-	public Cable(VoltageSystemAC voltageSystemAC){
-		if(voltageSystemAC == null)
+	public Cable(VoltageAC voltageAC){
+		if(voltageAC == null)
 			throw new IllegalArgumentException("System voltage parameter " +
 					"cannot be null.");
-		this.voltageSystemAC = voltageSystemAC;
+		this.voltageAC = voltageAC;
 		phaseBConductor = createPhaseB();
 		phaseCConductor = createPhaseC();
 		neutralConductor = createNeutral();
@@ -203,7 +204,7 @@ public class Cable implements Conduitable {
 	}
 
 	public Cable setAmbientTemperatureF(int ambientTemperatureF) {
-		if(getConduit() != null || getBundle() != null)
+		if(hasConduit() || hasBundle())
 			throw new IllegalArgumentException("Ambient temperature cannot be" +
 					" assigned to a cable that belongs to a conduit or " +
 					"to a bundle. Use the conduit or bundle to set the " +
@@ -264,7 +265,7 @@ public class Cable implements Conduitable {
 	}
 
 	public Cable setRoofTopDistance(double roofTopDistance) {
-		if(getConduit() != null)
+		if(hasConduit())
 			throw new IllegalArgumentException("Rooftop distance cannot be" +
 					" assigned to a cable that belongs to a conduit. Use the" +
 					" conduit to set the rooftop distance of this cable.");
@@ -299,7 +300,13 @@ public class Cable implements Conduitable {
 		return this;
 	}
 
+	void setConduit(Conduit conduit){
+		this.conduit = conduit;
+	}
 
+	void setBundle(Bundle bundle){
+		this.bundle = bundle;
+	}
 	/*TODO *************************
 	 *  URGENT: the outer diameter of a cable should adjust automatically to a
 	 *  minimum value once its phase conductors or neutral or ground
@@ -320,12 +327,11 @@ public class Cable implements Conduitable {
 	/**
 	 @return Returns a deep copy of this Cable object. The new copy is
 	 exactly the same as this cable, except that it does not copy the conduit
-	 nor the bundle properties, that is, the new clone is assumed in free air
+	 nor the bundle properties, that is, the new copy is assumed in free air
 	 (not in a conduit and not bundled).
 	 */
-	@Override
-	public Cable clone() {//todo to be renamed to copy
-		Cable cable = new Cable(voltageSystemAC);
+	public Cable copy() {
+		Cable cable = new Cable(voltageAC);
 		cable.jacketed = this.jacketed;
 		cable.outerDiameter = this.outerDiameter;
 		cable.roofTopDistance = this.roofTopDistance;
@@ -350,13 +356,13 @@ public class Cable implements Conduitable {
 	@Override
 	public double getAdjustmentFactor() {
 		if (hasConduit()) //applying 310.15(B)(3)(a)(2)
-			return Factors.getAdjustmentFactor(getConduit().getCurrentCarryingCount(),
-					getConduit().isNipple());
+			return Factors.getAdjustmentFactor(conduit.getCurrentCarryingCount(),
+					conduit.isNipple());
 		if (hasBundle()) {
-			if (getBundle().compliesWith310_15_B_3_a_4())
+			if (bundle.compliesWith310_15_B_3_a_4())
 				return 1;
 
-			if (getBundle().compliesWith310_15_B_3_a_5())
+			if (bundle.compliesWith310_15_B_3_a_5())
 				return 0.6;
             /*todo implement rule 310.15(B)(3)(a)(3) on which the adjustment
                factor do not apply for the following special condition:
@@ -368,8 +374,8 @@ public class Cable implements Conduitable {
                - this protection does not exceed 10 ft.
                - there is no more than 4 current-carrying conductors.
             */
-			return Factors.getAdjustmentFactor(getBundle().getCurrentCarryingCount(),
-					getBundle().getBundlingLength());
+			return Factors.getAdjustmentFactor(bundle.getCurrentCarryingCount(),
+					bundle.getBundlingLength());
 		}
 		return 1;
 	}
@@ -411,23 +417,23 @@ public class Cable implements Conduitable {
 	}
 
 	private Conductor createPhaseB(){
-		if (voltageSystemAC.has2HotsOnly() || voltageSystemAC.has2HotsAndNeutralOnly() ||
-				voltageSystemAC.getPhases() == 3)
+		if (voltageAC.has2HotsOnly() || voltageAC.has2HotsAndNeutralOnly() ||
+				voltageAC.getPhases() == 3)
 			return new Conductor().copyFrom(phaseAConductor);
 		return null;
 	}
 
 	private Conductor createPhaseC(){
-		if (voltageSystemAC.getPhases() == 3)
+		if (voltageAC.getPhases() == 3)
 			return new Conductor().copyFrom(phaseAConductor);
 		return null;
 	}
 
 	private Conductor createNeutral(){
-		if (voltageSystemAC.hasNeutral()) {
+		if (voltageAC.hasNeutral()) {
 			return new Conductor()
 					.copyFrom(phaseAConductor)
-					.setRole(voltageSystemAC.getWires() == 4? Role.NEUNCC : Role.NEUCC);
+					.setRole(voltageAC.getWires() == 4? Role.NEUNCC : Role.NEUCC);
 		}
 		return null;
 	}
@@ -457,7 +463,7 @@ public class Cable implements Conduitable {
 	private double getCorrectionFactor(Insul insulation) {
 		int adjustedTemp;
 		if (hasConduit())
-			adjustedTemp = Factors.getRoofTopTempAdjustment(getConduit().getRoofTopDistance());
+			adjustedTemp = Factors.getRoofTopTempAdjustment(conduit.getRoofTopDistance());
 		else
 			adjustedTemp = Factors.getRoofTopTempAdjustment(roofTopDistance);
 
@@ -474,26 +480,26 @@ public class Cable implements Conduitable {
 
 	@Override
 	public boolean hasConduit() {
-		return getConduit() != null;
+		return conduit != null;
 	}
 
-	private Conduit getConduit() {
-		if(conduit == null)
-			conduit = Conduit.getConduitFor(this);
+/*	private Conduit conduit {
+*//*		if(conduit == null)
+			conduit = Conduit.getConduitFor(this);*//*
 		return conduit;
-	}
+	}*/
 
 	@Override
 	public boolean hasBundle() {
-		return getBundle() != null;
+		return bundle != null;
 	}
 
 	//@Override
-	private Bundle getBundle() {
+/*	private Bundle bundle {
 		if(bundle == null)
 			bundle = Bundle.getBundleFor(this);
 		return bundle;
-	}
+	}*/
 
 	@Override
 	public Size getSize(){
@@ -569,8 +575,8 @@ public class Cable implements Conduitable {
 	 the cable if pulled from the conduit.
 	 */
 	public boolean isRoofTopCondition() {
-		if (getConduit() != null)
-			return getConduit().isRoofTopCondition();
+		if (hasConduit())
+			return conduit.isRoofTopCondition();
 		return (roofTopDistance > 0 && roofTopDistance <= 36);
 	}
 
@@ -598,10 +604,10 @@ public class Cable implements Conduitable {
 
 	/**
 	 @return The voltage system of this cable.
-	 @see VoltageSystemAC
+	 @see VoltageAC
 	 */
-	public VoltageSystemAC getVoltageSystemAC() {
-		return voltageSystemAC;
+	public VoltageAC getVoltageSystemAC() {
+		return voltageAC;
 	}
 
 	/**

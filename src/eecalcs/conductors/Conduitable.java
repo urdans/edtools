@@ -1,6 +1,5 @@
 package eecalcs.conductors;
 
-import eecalcs.conduits.Conduit;
 import eecalcs.systems.TempRating;
 
 /**
@@ -11,8 +10,6 @@ import eecalcs.systems.TempRating;
  since there is no way to change the conductor or the cable through this
  interface (this interface has only getters, no setters).
  */
-//todo: Look for a better name for this. Maybe Cord, Wire, CordWire,
-// Line, WireLine...
 public interface Conduitable {
 
 	/**

@@ -23,8 +23,7 @@ package eecalcs.systems;
  <li><b>v_other</b>: defaults to 120v, 1Ø, 2 wires, but values can be customized.</li>
  </ul>
  */
-//todo: to be renamed to SystemVoltageAC
-public enum VoltageSystemAC{									   //neutral is CCC
+public enum VoltageAC {									   //neutral is CCC
 	v120_1ph_2w("120v 1Ø 2W",120, 1, 2),//2w:yes
 	v208_1ph_2w("208v 1Ø 2W",208, 1, 2),//2w:no neutral
 	v208_1ph_2wN("208v 1Ø 2W High leg",208, 1, 2),//2w:yes
@@ -69,7 +68,7 @@ public enum VoltageSystemAC{									   //neutral is CCC
 			names[i] = values()[i].getName();
 	}
 
-	VoltageSystemAC(String name, int voltage, int phases, int wires){
+	VoltageAC(String name, int voltage, int phases, int wires){
 		this.name = name;
 		this.voltage = voltage;
 		this.phases = phases;
@@ -193,7 +192,7 @@ public enum VoltageSystemAC{									   //neutral is CCC
 	 or 3; the valid number of wires is 2, 3 & 4; a voltage parameter of zero
 	 is not accepted,; etc.
 	 */
-	public VoltageSystemAC setValues(int voltage, int phases, int wires){
+	public VoltageAC setValues(int voltage, int phases, int wires){
 		if(this != v_other)
 			throw new UnsupportedOperationException(this + " cannot change state. Use v_other instead.");
 		if(voltage == 0 || phases == 0 || wires ==0)

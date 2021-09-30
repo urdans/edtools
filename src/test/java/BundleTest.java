@@ -1,7 +1,10 @@
 package test.java;
 
 import eecalcs.conductors.*;
-import eecalcs.systems.VoltageSystemAC;
+import eecalcs.conductors.raceways.Bundle;
+import eecalcs.conductors.raceways.Cable;
+import eecalcs.conductors.raceways.Conductor;
+import eecalcs.systems.VoltageAC;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -13,14 +16,14 @@ class BundleTest {
     void add() {
         bundle = new Bundle(86);
         Conductor conductor = new Conductor();
-        Cable cable = new Cable(VoltageSystemAC.v120_1ph_2w);
+        Cable cable = new Cable(VoltageAC.v120_1ph_2w);
         assertEquals(0, bundle.getConduitables().size());
 
         bundle.add(conductor);
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
         bundle.add(cable);
-        bundle.add(cable.clone());
+        bundle.add(cable.copy());
         assertEquals(5, bundle.getConduitables().size());
     }
 
@@ -28,10 +31,10 @@ class BundleTest {
     void remove() {
         bundle = new Bundle(86);
         Conductor conductor = new Conductor();
-        Cable cable = new Cable(VoltageSystemAC.v120_1ph_2w);
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(cable.clone());
+        Cable cable = new Cable(VoltageAC.v120_1ph_2w);
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(cable.copy());
         assertEquals(3, bundle.getConduitables().size());
     }
 
@@ -39,12 +42,12 @@ class BundleTest {
     void empty() {
         bundle = new Bundle(86);
         Conductor conductor = new Conductor();
-        Cable cable = new Cable(VoltageSystemAC.v120_1ph_2w);
+        Cable cable = new Cable(VoltageAC.v120_1ph_2w);
         bundle.add(conductor);
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
         bundle.add(cable);
-        bundle.add(cable.clone());
+        bundle.add(cable.copy());
         assertEquals(5, bundle.getConduitables().size());
     }
 
@@ -52,14 +55,14 @@ class BundleTest {
     void isEmpty() {
         bundle = new Bundle(86);
         Conductor conductor = new Conductor();
-        Cable cable = new Cable(VoltageSystemAC.v120_1ph_2w);
+        Cable cable = new Cable(VoltageAC.v120_1ph_2w);
         assertTrue(bundle.isEmpty());
 
         bundle.add(conductor);
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
         bundle.add(cable);
-        bundle.add(cable.clone());
+        bundle.add(cable.copy());
         assertFalse(bundle.isEmpty());
     }
 
@@ -67,17 +70,17 @@ class BundleTest {
     void hasConduitable() {
         bundle = new Bundle(86);
         Conductor conductor = new Conductor();
-        Cable cable = new Cable(VoltageSystemAC.v120_1ph_2w);
+        Cable cable = new Cable(VoltageAC.v120_1ph_2w);
         assertTrue(bundle.isEmpty());
 
         bundle.add(conductor);
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
         bundle.add(cable);
-        bundle.add(cable.clone());
+        bundle.add(cable.copy());
         assertTrue(bundle.hasConduitable(cable));
         assertTrue(bundle.hasConduitable(conductor));
-        assertFalse(bundle.hasConduitable(conductor.clone()));
+        assertFalse(bundle.hasConduitable(conductor.copy()));
         assertFalse(bundle.hasConduitable(null));
     }
 
@@ -85,12 +88,12 @@ class BundleTest {
     void getCurrentCarryingNumber() {
         bundle = new Bundle(86);
         Conductor conductor = new Conductor();
-        Cable cable = new Cable(VoltageSystemAC.v480_3ph_4w);
+        Cable cable = new Cable(VoltageAC.v480_3ph_4w);
         bundle.add(conductor);
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
         bundle.add(cable);
-        bundle.add(cable.clone());
+        bundle.add(cable.copy());
         assertEquals(9, bundle.getCurrentCarryingCount());
 
         cable.setNeutralCarryingConductor();
@@ -101,12 +104,12 @@ class BundleTest {
     void complyWith310_15_B_3_a_4() {
         bundle = new Bundle(86);
         Conductor conductor = new Conductor();
-        Cable cable = new Cable(VoltageSystemAC.v480_3ph_4w);
+        Cable cable = new Cable(VoltageAC.v480_3ph_4w);
         bundle.add(conductor);
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
         bundle.add(cable);
-        bundle.add(cable.clone());
+        bundle.add(cable.copy());
         assertEquals(9, bundle.getCurrentCarryingCount());
         assertTrue(bundle.compliesWith310_15_B_3_a_4());
 
@@ -166,23 +169,23 @@ class BundleTest {
         assertTrue(bundle.compliesWith310_15_B_3_a_4());
 
         //case 7
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
         assertEquals(20, bundle.getCurrentCarryingCount());
         assertEquals(0.5, conductor.getAdjustmentFactor()); //because d>24", #ccc=20 and conductors don't have
         // exceptions
         assertEquals(1.0, cable.getAdjustmentFactor()); //because d>24" and the exception is satisfied
 
-        bundle.add(conductor.clone());
+        bundle.add(conductor.copy());
         assertEquals(0.45, conductor.getAdjustmentFactor()); //because d>24", #ccc=21 and conductors don't have
         // exceptions
         assertEquals(0.60, cable.getAdjustmentFactor()); //because d>24" and the exception is NOT satisfied (#ccc>20)
@@ -191,29 +194,29 @@ class BundleTest {
 
 
         bundle = new Bundle(86);
-        cable = new Cable(VoltageSystemAC.v480_3ph_4w);
+        cable = new Cable(VoltageAC.v480_3ph_4w);
         cable.setType(CableType.AC);
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
         bundle.add(cable);
-        bundle.add(cable.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
+        bundle.add(cable.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
         assertTrue(bundle.compliesWith310_15_B_3_a_4());
 
         //case 8
         bundle.setBundlingLength(24);
-        bundle.add(conductor.clone());
+        bundle.add(conductor.copy());
         conductor = new Conductor();
         conductor.setSize(Size.AWG_8);
         conductor.setMetal(Metal.ALUMINUM);
@@ -229,25 +232,25 @@ class BundleTest {
     void complyWith310_15_B_3_a_5() {
         bundle = new Bundle(86);
         Conductor conductor = new Conductor();
-        Cable cable = new Cable(VoltageSystemAC.v480_3ph_4w);
+        Cable cable = new Cable(VoltageAC.v480_3ph_4w);
         bundle.setBundlingLength(25);
         bundle.add(conductor);
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
         bundle.add(cable);
-        bundle.add(cable.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
+        bundle.add(cable.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
         assertEquals(21, bundle.getCurrentCarryingCount());
         assertEquals(25, bundle.getBundlingLength());
 
@@ -261,24 +264,24 @@ class BundleTest {
     void complyWith310_15_B_3_a_5_01() {
         bundle = new Bundle(86);
         Conductor conductor = new Conductor();
-        Cable cable = new Cable(VoltageSystemAC.v480_3ph_4w);
+        Cable cable = new Cable(VoltageAC.v480_3ph_4w);
         bundle.setBundlingLength(25);
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
         bundle.add(cable);
-        bundle.add(cable.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
+        bundle.add(cable.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
         assertFalse(bundle.compliesWith310_15_B_3_a_5());
 
         bundle.add(conductor);

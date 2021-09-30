@@ -4,9 +4,8 @@ import eecalcs.circuits.Circuit;
 import eecalcs.circuits.DSProperties;
 import eecalcs.circuits.OCPD;
 import eecalcs.loads.MotorProperties.DesignLetter;
-import eecalcs.systems.VoltageSystemAC;
+import eecalcs.systems.VoltageAC;
 import org.jetbrains.annotations.Nullable;
-import tools.NotifierDelegate;
 
 import static eecalcs.circuits.OCPD.Type.INVERSE_TIME_BREAKER;
 import static eecalcs.loads.MotorProperties.DesignLetter.DESIGN_A;
@@ -30,14 +29,14 @@ public class ACMotor extends BaseLoad implements Load{
 
 	//delete later
 /*	public ACMotor(){
-		super(VoltageSystemAC.v120_1ph_2w, 10);
+		super(VoltageAC.v120_1ph_2w, 10);
 	}*/
 
 
 	/**
 	 @return The standard voltage system that correspond to the voltage
 	 rating of this motor. A motor can have a rating of 200 volts but since
-	 that's not a standard voltage as defined in {@link VoltageSystemAC} that
+	 that's not a standard voltage as defined in {@link VoltageAC} that
 	 motor will be fed from a 208 volt system; that's the voltage allowed by
 	 the code on each title of the respective motor FLC table.
 	 @param motorType The type of motor. Could be any type except DC (in which
@@ -45,19 +44,19 @@ public class ACMotor extends BaseLoad implements Load{
 	 @param motorVoltage The standard voltage rating of he motor as recognized by
 	 any of the FLC tables in the NEC. The voltage must be a standard value
 	 and also be compatible with the standard system voltages.
-	 @param voltageSystemAC The proposed voltage system that will feed this
+	 @param voltageAC The proposed voltage system that will feed this
 	 motor.
 	 */
-	private VoltageSystemAC prepareVoltageSystemAC(MotorProperties.Type motorType,
-			int motorVoltage, VoltageSystemAC voltageSystemAC){
+	private VoltageAC prepareVoltageSystemAC(MotorProperties.Type motorType,
+	                                         int motorVoltage, VoltageAC voltageAC){
 		if(motorType == MotorProperties.Type.AC1P)
-			return getVoltageSystemACForAC1P(motorVoltage, voltageSystemAC);
+			return getVoltageSystemACForAC1P(motorVoltage, voltageAC);
 		else if(motorType == MotorProperties.Type.AC2P || motorType == MotorProperties.Type.AC2P_WR)
-			return getVoltageSystemACForAC2P(motorVoltage, voltageSystemAC);
+			return getVoltageSystemACForAC2P(motorVoltage, voltageAC);
 		else if(motorType == MotorProperties.Type.AC3P || motorType == MotorProperties.Type.AC3P_WR)
-			return getVoltageSystemACForAC3P(motorVoltage, voltageSystemAC);
+			return getVoltageSystemACForAC3P(motorVoltage, voltageAC);
 		else //motorType == MotorProperties.Type.AC3PS
-			return getVoltageSystemACForAC3PS(motorVoltage, voltageSystemAC);
+			return getVoltageSystemACForAC3PS(motorVoltage, voltageAC);
 	}
 
 	/**
@@ -66,15 +65,15 @@ public class ACMotor extends BaseLoad implements Load{
 	 voltage system AC is returned, otherwise null is returned.
 	 */
 	@Nullable
-	private VoltageSystemAC getVoltageSystemACForAC3PS(int motorVoltage,
-			VoltageSystemAC voltageSystemAC) {
-		int voltageRating = voltageSystemAC.getVoltage();
-		if (voltageSystemAC.getPhases() == 3) {
+	private VoltageAC getVoltageSystemACForAC3PS(int motorVoltage,
+	                                             VoltageAC voltageAC) {
+		int voltageRating = voltageAC.getVoltage();
+		if (voltageAC.getPhases() == 3) {
 			if ((voltageRating == motorVoltage) ||
 				(voltageRating >= 220 && voltageRating <= 240 && motorVoltage == 230) ||
 				(voltageRating >= 440 && voltageRating <= 480 && motorVoltage == 460) ||
 				(voltageRating >= 550 && voltageRating <= 1000 && motorVoltage == 575))
-				return voltageSystemAC;
+				return voltageAC;
 		}
 		return null;
 	}
@@ -85,16 +84,16 @@ public class ACMotor extends BaseLoad implements Load{
 	 the given voltage system AC is returned, otherwise null is returned.
 	 */
 	@Nullable
-	private VoltageSystemAC getVoltageSystemACForAC3P(int motorVoltage,
-			VoltageSystemAC voltageSystemAC) {
-		int voltageRating = voltageSystemAC.getVoltage();
-		if (voltageSystemAC.getPhases() == 3){
+	private VoltageAC getVoltageSystemACForAC3P(int motorVoltage,
+	                                            VoltageAC voltageAC) {
+		int voltageRating = voltageAC.getVoltage();
+		if (voltageAC.getPhases() == 3){
 			if ((voltageRating == motorVoltage) ||
 				(voltageRating >= 110 && voltageRating <= 120 && motorVoltage == 115) ||
 				(voltageRating >= 220 && voltageRating <= 240 && motorVoltage == 230) ||
 				(voltageRating >= 440 && voltageRating <= 480 && motorVoltage == 460) ||
 				(voltageRating >= 550 && voltageRating <= 1000 && motorVoltage == 575))
-				return voltageSystemAC;
+				return voltageAC;
 		}
 		return null;
 	}
@@ -105,16 +104,16 @@ public class ACMotor extends BaseLoad implements Load{
 	 the given voltage system AC is returned, otherwise null is returned.
 	 */
 	@Nullable
-	private VoltageSystemAC getVoltageSystemACForAC2P(int motorVoltage,
-			VoltageSystemAC voltageSystemAC) {
-		int voltageRating = voltageSystemAC.getVoltage();
-		if(voltageSystemAC.getPhases() == 1){
+	private VoltageAC getVoltageSystemACForAC2P(int motorVoltage,
+	                                            VoltageAC voltageAC) {
+		int voltageRating = voltageAC.getVoltage();
+		if(voltageAC.getPhases() == 1){
 			if ((voltageRating == motorVoltage) ||
 				(voltageRating >= 110 && voltageRating <= 120 && motorVoltage == 115) ||
 				(voltageRating >= 220 && voltageRating <= 240 && motorVoltage == 230) ||
 				(voltageRating >= 440 && voltageRating <= 480 && motorVoltage == 460) ||
 				(voltageRating >= 550 && voltageRating <= 1000 && motorVoltage == 575))
-				return voltageSystemAC;
+				return voltageAC;
 		}
 		return null;
 	}
@@ -125,14 +124,14 @@ public class ACMotor extends BaseLoad implements Load{
 	 system AC is returned, otherwise null is returned.
 	 */
 	@Nullable
-	private VoltageSystemAC getVoltageSystemACForAC1P(int motorVoltage,
-			VoltageSystemAC voltageSystemAC) {
-		int voltageRating = voltageSystemAC.getVoltage();
-		if(voltageSystemAC.getPhases() == 1){
+	private VoltageAC getVoltageSystemACForAC1P(int motorVoltage,
+	                                            VoltageAC voltageAC) {
+		int voltageRating = voltageAC.getVoltage();
+		if(voltageAC.getPhases() == 1){
 			if ((voltageRating == motorVoltage) ||
 				(voltageRating >= 110 && voltageRating <= 120 && motorVoltage == 115) ||
 				(voltageRating >= 220 && voltageRating <= 240 && motorVoltage == 230))
-				return voltageSystemAC;
+				return voltageAC;
 		}
 		return null;
 	}
@@ -140,7 +139,7 @@ public class ACMotor extends BaseLoad implements Load{
 	/**
 	 Constructs an AC motor load for the specified voltage system. Notice
 	 that voltage system must be compatible with the motor voltage rating.
-	 Refer to {@link VoltageSystemAC} for typical and custom values.
+	 Refer to {@link VoltageAC} for typical and custom values.
 	 Notice also that DC motor type is not supported.
 	 @param motorType The type of motor.
 	 @param motorVoltageRating The voltage rating of the motor.
@@ -150,7 +149,7 @@ public class ACMotor extends BaseLoad implements Load{
 	 */
 /*	public ACMotor(MotorProperties.Type motorType,
 	               int motorVoltageRating, Horsepower motorHorsepower,
-	               VoltageSystemAC voltageSystemAC){
+	               VoltageAC voltageSystemAC){
 		checkNull(motorType, motorHorsepower, voltageSystemAC);
 		checkDC(motorType);
 		motorVoltage = MotorProperties.getNormalizedVoltage(motorVoltageRating);
@@ -202,8 +201,8 @@ public class ACMotor extends BaseLoad implements Load{
 	 */
 	private void checkNull(MotorProperties.Type motorType,
 	                       Horsepower motorHorsepower,
-	                       VoltageSystemAC voltageSystemAC) {
-		if(motorType == null || motorHorsepower == null || voltageSystemAC == null)
+	                       VoltageAC voltageAC) {
+		if(motorType == null || motorHorsepower == null || voltageAC == null)
 			throw new IllegalArgumentException("ACMotor: parameters " +
 					"cannot be null.");
 	}

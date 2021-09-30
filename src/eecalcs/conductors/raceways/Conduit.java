@@ -1,6 +1,10 @@
-package eecalcs.conduits;
+package eecalcs.conductors.raceways;
 
 import eecalcs.conductors.*;
+import eecalcs.conduits.ConduitProperties;
+import eecalcs.conduits.ROConduit;
+import eecalcs.conduits.Trade;
+import eecalcs.conduits.Type;
 import tools.ROResultMessages;
 import tools.ResultMessage;
 import tools.ResultMessages;
@@ -23,7 +27,7 @@ import java.util.List;
  of the conductors or the outer diameter of the cable) the size of the
  conduit is
  updated accordingly. */
-public class Conduit implements ROConduit{
+public class Conduit implements ROConduit {
 	private Trade minimumTrade = Trade.T1$2;
 	private boolean nipple = false;
 	private Type type = Type.PVC40;
@@ -33,7 +37,7 @@ public class Conduit implements ROConduit{
 	private final List<Conduitable> conduitables = new ArrayList<>();
 	private final ResultMessages resultMessages = new ResultMessages();
 
-	private static final List<Conduit> CONDUIT_LIST = new ArrayList<>();
+//	private static final List<Conduit> CONDUIT_LIST = new ArrayList<>();
 
 	//region predefined messages
 	public static final ResultMessage ERROR101 = new ResultMessage(
@@ -54,19 +58,19 @@ public class Conduit implements ROConduit{
 			throw new IllegalArgumentException("Ambient temperature parameter" +
 					" for a conduit must be >= 5°F and <= 185°F.");
 		this.ambientTemperatureF = ambientTemperatureF;
-		CONDUIT_LIST.add(this);
+//		CONDUIT_LIST.add(this);
 	}
 
-	/**
+	/*
 	 @return The conduit that contains the given conduitable or null if no
 	 conduit contains it.
 	 @param conduitable The conduitable whose conduit is requested.
 	 */
-	public static Conduit getConduitFor(Conduitable conduitable){
+/*	public static Conduit getConduitFor(Conduitable conduitable){
 		return CONDUIT_LIST.stream()
 				.filter(conduit -> conduit.hasConduitable(conduitable))
 				.findFirst().orElse(null);
-	}
+	}*/
 
 	@Override
 	public Trade getMinimumTrade() {
@@ -205,12 +209,19 @@ public class Conduit implements ROConduit{
 			throw new IllegalArgumentException("Cannot add to this conduit a " +
 					"conduitable that belongs to another conduit or bundle.");
 
-		if(conduitable instanceof Conductor)
-			((Conductor)conduitable).setAmbientTemperatureF(ambientTemperatureF);
-		else
-			((Cable)conduitable).setAmbientTemperatureF(ambientTemperatureF);
+		if(conduitable instanceof Conductor) {
+			//the order of this is important
+			((Conductor) conduitable).setAmbientTemperatureF(ambientTemperatureF);
+			((Conductor) conduitable).setConduit(this);
+		}
+		else {
+			//the order of this is important
+			((Cable) conduitable).setAmbientTemperatureF(ambientTemperatureF);
+			((Cable) conduitable).setConduit(this);
+		}
 
 		conduitables.add(conduitable);
+
 		return this;
 	}
 

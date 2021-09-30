@@ -6,8 +6,7 @@ import eecalcs.conductors.Conduitable;
 import eecalcs.conductors.Size;
 import eecalcs.conduits.ConduitProperties;
 import eecalcs.conduits.Material;
-import eecalcs.systems.VoltageSystemAC;
-import org.jetbrains.annotations.Contract;
+import eecalcs.systems.VoltageAC;
 import org.apache.commons.math3.complex.Complex;
 import tools.JSONTools;
 import tools.ROResultMessages;
@@ -40,7 +39,7 @@ public class VoltageDropAC {
 	private double loadCurrent = 10;
 	private double powerFactor = 1.0;
 	private int numberOfSets = 1;
-	private VoltageSystemAC sourceVoltageSystem = VoltageSystemAC.v120_1ph_2w;
+	private VoltageAC sourceVoltageSystem = VoltageAC.v120_1ph_2w;
 	private double maxVoltageDropPercent = 3.0;
 	//endregion
 
@@ -123,9 +122,9 @@ public class VoltageDropAC {
 
 	/**
 	 @return The voltage system supplying power to the circuit.
-	 @see VoltageSystemAC
+	 @see VoltageAC
 	 */
-	public VoltageSystemAC getSourceVoltageSystem() {
+	public VoltageAC getSourceVoltageSystem() {
 		return sourceVoltageSystem;
 	}
 
@@ -292,7 +291,7 @@ public class VoltageDropAC {
 	 be non-null and the voltage value must be greater than zero, otherwise
 	 errors #1 and #10 would be stored, respectively.
 	 */
-	public VoltageDropAC setSourceVoltageSystem(VoltageSystemAC sourceVoltageSystem){
+	public VoltageDropAC setSourceVoltageSystem(VoltageAC sourceVoltageSystem){
 		this.sourceVoltageSystem = sourceVoltageSystem;
 		rule01Fails();
 		return this;
@@ -508,8 +507,6 @@ public class VoltageDropAC {
 	private Size calcMinSizeForMaxVD() {
 		resultMessages.remove(ERROR30, ERROR31);
 		for(Size size : Size.values()) {
-			//todo why am I taking into account the ampacity of the conductor?
-			//this is for voltage drop, not per ampacity!!! think about it
 			if(loadCurrent > numberOfSets *
 							ConductorProperties.getStandardAmpacity(size,
 									conduitable.getMetal(),

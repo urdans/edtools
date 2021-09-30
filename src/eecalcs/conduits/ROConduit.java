@@ -1,6 +1,7 @@
 package eecalcs.conduits;
 
 import eecalcs.conductors.Conduitable;
+import eecalcs.conductors.raceways.Conduit;
 import tools.ROResultMessages;
 
 /**

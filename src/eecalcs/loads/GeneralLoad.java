@@ -2,13 +2,8 @@ package eecalcs.loads;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import eecalcs.circuits.Circuit;
-import eecalcs.systems.VoltageSystemAC;
+import eecalcs.systems.VoltageAC;
 import tools.JSONTools;
 //quedé aquí: review this java doc and move it to the BaseLoad class.
 
@@ -18,7 +13,7 @@ import tools.JSONTools;
  <ol>
  <li>Voltage, phases and number of wires (voltage system).</li>
  <dd>(R&W). Expressed in volts. Like 120 volts, single phase, 2-wire.
- It's a non-null field. Refer to {@link VoltageSystemAC} for details.</dd>
+ It's a non-null field. Refer to {@link VoltageAC} for details.</dd>
  <li>Nominal current.</li>
  <dd>(R&W). In amperes, apply only for the phase (hot) conductors. It's a
  non-zero positive value.
@@ -125,9 +120,9 @@ public class GeneralLoad extends BaseLoad implements Load {
 	 @param nominalCurrent The nominal current of the load in amperes. If a
 	 negative value is provided, its absolute value will be taken. If a zero
 	 value is provided, the default value will be assumed.
-	 @see VoltageSystemAC
+	 @see VoltageAC
 	 */
-	public GeneralLoad(VoltageSystemAC voltageSystem, double nominalCurrent) {
+	public GeneralLoad(VoltageAC voltageSystem, double nominalCurrent) {
 		super(voltageSystem, nominalCurrent);
 	}
 
@@ -137,7 +132,7 @@ public class GeneralLoad extends BaseLoad implements Load {
 	 - Nominal current = 10 amperes<br>
 	 */
 	public GeneralLoad(){
-		this(VoltageSystemAC.v120_1ph_2w, 10);
+		this(VoltageAC.v120_1ph_2w, 10);
 	}
 
 	@Override

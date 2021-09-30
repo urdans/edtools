@@ -1,9 +1,10 @@
 package test.java;
 
+import eecalcs.conductors.raceways.Conductor;
+import eecalcs.systems.VoltageAC;
 import eecalcs.voltagedrop.VoltageDropAC;
 import eecalcs.conductors.*;
 import eecalcs.conduits.Material;
-import eecalcs.systems.VoltageSystemAC;
 import eecalcs.voltagedrop.VoltageDropDC;
 import org.junit.jupiter.api.Test;
 
@@ -21,7 +22,7 @@ class VoltageDropTest {
 				.setSize(Size.AWG_1$0)
 				.setLength(350);
 
-		voltDrop.setSourceVoltageSystem(VoltageSystemAC.v208_3ph_3w)
+		voltDrop.setSourceVoltageSystem(VoltageAC.v208_3ph_3w)
 				.setConduitMaterial(Material.ALUMINUM)
 				.setNumberOfSets(2)
 				.setLoadCurrent(130)
@@ -39,7 +40,7 @@ class VoltageDropTest {
 				.setSize(Size.AWG_4$0)
 				.setLength(250);
 
-		voltDrop.setSourceVoltageSystem(VoltageSystemAC.v480_3ph_4w)
+		voltDrop.setSourceVoltageSystem(VoltageAC.v480_3ph_4w)
 				.setConduitMaterial(Material.ALUMINUM)
 				.setNumberOfSets(2)
 				.setLoadCurrent(460)
@@ -285,7 +286,7 @@ class VoltageDropTest {
 				.setInsulation(Insul.THW)
 				.setLength(80);
 		VoltageDropAC voltDrop2 = new VoltageDropAC(conductor2)
-				.setSourceVoltageSystem(VoltageSystemAC.v277_1ph_2w);
+				.setSourceVoltageSystem(VoltageAC.v277_1ph_2w);
 		assertEquals(0.3999, voltDrop2.getVoltageDropVolts(), 0.0001);
 		assertFalse(voltDrop2.getResultMessages().containsMessage(-1));
 	}
@@ -297,7 +298,7 @@ class VoltageDropTest {
 				.setInsulation(Insul.THW)
 				.setLength(80);
 		VoltageDropAC voltDrop2 = new VoltageDropAC(conductor2)
-				.setSourceVoltageSystem(VoltageSystemAC.v277_1ph_2w)
+				.setSourceVoltageSystem(VoltageAC.v277_1ph_2w)
 				.setNumberOfSets(11);
 		assertEquals(0, voltDrop2.getVoltageDropVolts(), 0.0001);
 		assertTrue(voltDrop2.getResultMessages().containsMessage(-4));
@@ -311,7 +312,7 @@ class VoltageDropTest {
 				.setInsulation(Insul.THW)
 				.setLength(80);
 		VoltageDropAC voltDrop2 = new VoltageDropAC(conductor2)
-				.setSourceVoltageSystem(VoltageSystemAC.v277_1ph_2w)
+				.setSourceVoltageSystem(VoltageAC.v277_1ph_2w)
 				.setNumberOfSets(8);
 		assertEquals(0, voltDrop2.getVoltageDropVolts(), 0.0001);
 		assertFalse(voltDrop2.getResultMessages().containsMessage(-4));
@@ -476,7 +477,7 @@ class VoltageDropTest {
 	void getErrorMessages22() {
 		Conductor conductor2 = new Conductor();
 		VoltageDropAC voltDrop2 = new VoltageDropAC(conductor2)
-				.setSourceVoltageSystem(VoltageSystemAC.v277_1ph_2w)
+				.setSourceVoltageSystem(VoltageAC.v277_1ph_2w)
 				.setNumberOfSets(1)
 				.setLoadCurrent(20)
 				.setPowerFactor(0.9)

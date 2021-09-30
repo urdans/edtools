@@ -2,7 +2,7 @@ package test.java;
 
 import eecalcs.loads.GeneralLoad;
 import eecalcs.loads.Load;
-import eecalcs.systems.VoltageSystemAC;
+import eecalcs.systems.VoltageAC;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -11,7 +11,7 @@ class GeneralLoadTest {
 
 	@Test
 	void setNonContinuous() {
-		GeneralLoad generalLoad = new GeneralLoad(VoltageSystemAC.v120_1ph_2w
+		GeneralLoad generalLoad = new GeneralLoad(VoltageAC.v120_1ph_2w
 				,200);
 		generalLoad.setNonContinuous();
 		assertEquals(200, generalLoad.getNominalCurrent());
@@ -22,7 +22,7 @@ class GeneralLoadTest {
 
 	@Test
 	void setContinuous() {
-		GeneralLoad generalLoad = new GeneralLoad(VoltageSystemAC.v120_1ph_2w
+		GeneralLoad generalLoad = new GeneralLoad(VoltageAC.v120_1ph_2w
 				,100);
 		generalLoad.setContinuous();
 		assertEquals(100, generalLoad.getNominalCurrent());
@@ -50,7 +50,7 @@ class GeneralLoadTest {
 		assertEquals(0, generalLoad.getDSRating());
 		assertEquals(10, generalLoad.getMCA());
 
-		generalLoad = new GeneralLoad(VoltageSystemAC.v120_1ph_2w,123);
+		generalLoad = new GeneralLoad(VoltageAC.v120_1ph_2w,123);
 		assertEquals(123, generalLoad.getNominalCurrent());
 	}
 
@@ -58,7 +58,7 @@ class GeneralLoadTest {
 	@Test
 	void loadConstructor() {
 		GeneralLoad generalLoad = new GeneralLoad();
-		assertEquals(VoltageSystemAC.v120_1ph_2w, generalLoad.getVoltageSystem());
+		assertEquals(VoltageAC.v120_1ph_2w, generalLoad.getVoltageSystem());
 		assertEquals(10.0, generalLoad.getNominalCurrent());
 		assertEquals(10.0, generalLoad.getNeutralCurrent());
 		assertEquals(1200.0, generalLoad.getVoltAmperes());
@@ -74,7 +74,7 @@ class GeneralLoadTest {
 
 	@Test
 	void loadConstructor01() {
-		GeneralLoad generalLoad = new GeneralLoad(VoltageSystemAC.v208_3ph_4w
+		GeneralLoad generalLoad = new GeneralLoad(VoltageAC.v208_3ph_4w
 				, 20);
 		generalLoad.setDescription("Induction heater");
 		generalLoad.setPowerFactor(-0.8);
@@ -94,7 +94,7 @@ class GeneralLoadTest {
 		assertEquals(20.0*1.25, generalLoad.getMCA());
 		assertEquals(1.25, generalLoad.getMCAMultiplier());
 
-		GeneralLoad generalLoad2 = new GeneralLoad(VoltageSystemAC.v240_1ph_3w, 25);
+		GeneralLoad generalLoad2 = new GeneralLoad(VoltageAC.v240_1ph_3w, 25);
 		assertEquals( Load.Type.NONCONTINUOUS,
 				generalLoad2.getLoadType());
 		assertEquals(25.0, generalLoad2.getNominalCurrent());
@@ -111,7 +111,7 @@ class GeneralLoadTest {
 
 	@Test
 	void getACopy() {
-		GeneralLoad load = new GeneralLoad(VoltageSystemAC.v480_3ph_4w,321);
+		GeneralLoad load = new GeneralLoad(VoltageAC.v480_3ph_4w,321);
 		load.setContinuous()/*.setNonlinear()*/.setPowerFactor(0.83);
 		assertEquals(Load.Type.CONTINUOUS, load.getLoadType());
 		assertFalse(load.isNonlinear());
@@ -126,7 +126,7 @@ class GeneralLoadTest {
 
 	@Test
 	void testSetContinuous() {
-		GeneralLoad load = new GeneralLoad(VoltageSystemAC.v208_1ph_2w,100);
+		GeneralLoad load = new GeneralLoad(VoltageAC.v208_1ph_2w,100);
 		load.setContinuous();
 		assertEquals(100, load.getNominalCurrent());
 		assertEquals(125, load.getMCA());
@@ -137,7 +137,7 @@ class GeneralLoadTest {
 
 	@Test
 	void testSetNonContinuous() {
-		GeneralLoad load = new GeneralLoad(VoltageSystemAC.v208_3ph_4w,100);
+		GeneralLoad load = new GeneralLoad(VoltageAC.v208_3ph_4w,100);
 		load.setNonContinuous();
 		assertEquals(100, load.getNominalCurrent());
 		assertEquals(100, load.getMCA());
@@ -148,7 +148,7 @@ class GeneralLoadTest {
 
 	@Test
 	void testSetMixed() {
-		GeneralLoad load = new GeneralLoad(VoltageSystemAC.v208_3ph_4w,100);
+		GeneralLoad load = new GeneralLoad(VoltageAC.v208_3ph_4w,100);
 		load.setMixed(150);
 		assertEquals(100, load.getNominalCurrent());
 		assertEquals(150, load.getMCA());
@@ -159,7 +159,7 @@ class GeneralLoadTest {
 
 /*	@Test
 	void setNonlinear() {
-		GeneralLoad load = new GeneralLoad(VoltageSystemAC.v208_1ph_3w,100);
+		GeneralLoad load = new GeneralLoad(VoltageAC.v208_1ph_3w,100);
 		load.setNonlinear();
 		assertEquals(100, load.getNominalCurrent());
 		assertEquals(100, load.getMCA());

@@ -1,10 +1,13 @@
 package test.java;
 
 import eecalcs.conductors.*;
-import eecalcs.conduits.Conduit;
+import eecalcs.conductors.raceways.Bundle;
+import eecalcs.conductors.raceways.Cable;
+import eecalcs.conductors.raceways.Conductor;
+import eecalcs.conductors.raceways.Conduit;
 import eecalcs.conduits.Type;
 import eecalcs.systems.TempRating;
-import eecalcs.systems.VoltageSystemAC;
+import eecalcs.systems.VoltageAC;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -31,7 +34,7 @@ class ConductorTest {
                 ", "+cond1.getCurrentCarryingCount()+", "+cond1.getDescription()
                 +", "+cond1.getInsulatedAreaIn2()+", "+cond1.getInsulation().getName()+", "+cond1.getLength()+", "+cond1.getMetal().getSymbol()+", "+ cond1.getRole()+", "+cond1.getSize().getName()+", "+cond1.getTemperatureRating();
         //--cloning
-        Conductor cond2 = cond1.clone();
+        Conductor cond2 = cond1.copy();
         String cond2S = cond2.hasConduit()+", "+cond2.getCopperCoating()+", "+cond2.getCurrentCarryingCount()+", "+cond2.getDescription()
                 +", "+cond2.getInsulatedAreaIn2()+", "+cond2.getInsulation().getName()+", "+cond2.getLength()+", "+cond2.getMetal().getSymbol()+", "+ cond2.getRole()+", "+cond2.getSize().getName()+", "+cond2.getTemperatureRating();
         cond2.setAmbientTemperatureF(155);
@@ -64,9 +67,9 @@ class ConductorTest {
     @Test
     void setAmbientTemperatureF() {
         Bundle bundle1 = new Bundle(86);
-        Cable cable1 = new Cable(VoltageSystemAC.v120_1ph_2w);
-        Cable cable2 = new Cable(VoltageSystemAC.v120_1ph_2w);
-        Cable cable3 = new Cable(VoltageSystemAC.v120_1ph_2w);
+        Cable cable1 = new Cable(VoltageAC.v120_1ph_2w);
+        Cable cable2 = new Cable(VoltageAC.v120_1ph_2w);
+        Cable cable3 = new Cable(VoltageAC.v120_1ph_2w);
         bundle1.setBundlingLength(30);
         bundle1.add(cable1);
         bundle1.add(cable2);
@@ -75,7 +78,7 @@ class ConductorTest {
         assertEquals(86, cable2.getAmbientTemperatureF());
         assertEquals(86, cable3.getAmbientTemperatureF());
 
-        cable2 = cable2.clone().setAmbientTemperatureF(95);
+        cable2 = cable2.copy().setAmbientTemperatureF(95);
         assertEquals(86, cable1.getAmbientTemperatureF());
         assertEquals(95, cable2.getAmbientTemperatureF());
         assertEquals(86, cable3.getAmbientTemperatureF());
@@ -92,21 +95,21 @@ class ConductorTest {
                 .setType(Type.PVC80)
                 .setNonNipple();
         conduit.add(conductor);
-        conduit.add(conductor.clone());
-        conduit.add(conductor.clone());
-        conduit.add(conductor.clone());
+        conduit.add(conductor.copy());
+        conduit.add(conductor.copy());
+        conduit.add(conductor.copy());
         assertEquals(30*0.91*0.8, conductor.getCorrectedAndAdjustedAmpacity());
 
         bundle = new Bundle(100);
         bundle.setBundlingLength(25);
-        conductor = conductor.clone();
+        conductor = conductor.copy();
         bundle.add(conductor);
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
         assertEquals(30*0.91*0.7, conductor.getCorrectedAndAdjustedAmpacity());
     }
 
@@ -144,9 +147,9 @@ class ConductorTest {
                 .setType(Type.EMT)
                 .setNonNipple();
         conduit.add(conductor);
-        conduit.add(conductor.clone());
-        conduit.add(conductor.clone());
-        conduit.add(conductor.clone());
+        conduit.add(conductor.copy());
+        conduit.add(conductor.copy());
+        conduit.add(conductor.copy());
         assertEquals(0.8, conductor.getAdjustmentFactor());
         assertEquals(0.8, conduit.getConduitables().get(2).getAdjustmentFactor());
 
@@ -169,8 +172,8 @@ class ConductorTest {
                 .setType(Type.EMT)
                 .setNonNipple();
         conduit.add(conductor);
-        conduit.add(conductor.clone());
-        conduit.add(conductor.clone());
+        conduit.add(conductor.copy());
+        conduit.add(conductor.copy());
         assertEquals(1, conductor.getAdjustmentFactor());
         assertEquals(3, conduit.getCurrentCarryingCount());
     }
@@ -186,13 +189,13 @@ class ConductorTest {
                 .setType(Type.EMT)
                 .setNonNipple();
         conduit.add(conductor);
-        conduit.add(conductor.clone());
-        conduit.add(conductor.clone());
-        Conductor conductor1 = conductor.clone();
+        conduit.add(conductor.copy());
+        conduit.add(conductor.copy());
+        Conductor conductor1 = conductor.copy();
         conduit.add(conductor1);
-        conduit.add(conductor1.clone());
-        conduit.add(conductor1.clone());
-        conduit.add(conductor1.clone());
+        conduit.add(conductor1.copy());
+        conduit.add(conductor1.copy());
+        conduit.add(conductor1.copy());
         assertEquals(7, conduit.getCurrentCarryingCount());
         assertEquals(0.7, conductor.getAdjustmentFactor());
     }
@@ -207,13 +210,13 @@ class ConductorTest {
         conduit = new Conduit(86)
                 .setType(Type.EMT)
                 .setNonNipple();
-        conduit.add(conductor.clone());
-        conduit.add(conductor.clone());
-        Conductor conductor1 = conductor.clone();
+        conduit.add(conductor.copy());
+        conduit.add(conductor.copy());
+        Conductor conductor1 = conductor.copy();
         conduit.add(conductor1);
-        conduit.add(conductor1.clone());
-        conduit.add(conductor1.clone());
-        conduit.add(conductor1.clone());
+        conduit.add(conductor1.copy());
+        conduit.add(conductor1.copy());
+        conduit.add(conductor1.copy());
         assertEquals(6, conduit.getCurrentCarryingCount());
         assertEquals(0.8, conductor1.getAdjustmentFactor());
     }
@@ -228,7 +231,7 @@ class ConductorTest {
         conduit = new Conduit(86)
                 .setType(Type.EMT)
                 .setNonNipple();
-        Conductor conductor1 = conductor.clone();
+        Conductor conductor1 = conductor.copy();
         assertEquals(1, conductor.getAdjustmentFactor());
         assertEquals(1, conductor1.getAdjustmentFactor());
         assertFalse(conductor.hasConduit());
@@ -245,9 +248,9 @@ class ConductorTest {
         bundle = new Bundle(86);
         bundle.setBundlingLength(25);
         bundle.add(conductor);
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
         assertEquals(25, bundle.getBundlingLength());
         assertEquals(0.8, conductor.getAdjustmentFactor());
     }
@@ -259,12 +262,12 @@ class ConductorTest {
                 .setMetal(Metal.COPPER)
                 .setInsulation(Insul.THW)
                 .setLength(70);
-        Conductor conductor1 = conductor.clone();
+        Conductor conductor1 = conductor.copy();
         bundle = new Bundle(86);
         bundle.setBundlingLength(25);
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
-        bundle.add(conductor.clone());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
+        bundle.add(conductor.copy());
         assertEquals(3, bundle.getCurrentCarryingCount());
         assertEquals(1, conductor.getAdjustmentFactor());
 
@@ -286,7 +289,7 @@ class ConductorTest {
                 .setNonNipple();
         raceway.setRoofTopDistance(4);
         raceway.add(conductor2);
-        raceway.add(conductor2.clone());
+        raceway.add(conductor2.copy());
         assertEquals(1.0,conductor2.getAdjustmentFactor());
         assertEquals(0.71,conductor2.getCorrectionFactor());
         assertEquals(92.3,conductor2.getCorrectedAndAdjustedAmpacity());
@@ -304,7 +307,7 @@ class ConductorTest {
                 .setNonNipple();
         raceway.setRoofTopDistance(4);
         raceway.add(conductor2);
-        raceway.add(conductor2.clone());
+        raceway.add(conductor2.copy());
         assertEquals(1.0,conductor2.getAdjustmentFactor());
         assertEquals(0.87,conductor2.getCorrectionFactor());
         assertEquals(113.1,conductor2.getCorrectedAndAdjustedAmpacity());
@@ -321,11 +324,11 @@ class ConductorTest {
                 .setType(Type.PVC40)
                 .setNonNipple();
         raceway.add(conductor2);
-        raceway.add(conductor2.clone());
-        raceway.add(conductor2.clone());
-        raceway.add(conductor2.clone());
-        raceway.add(conductor2.clone());
-        raceway.add(conductor2.clone());
+        raceway.add(conductor2.copy());
+        raceway.add(conductor2.copy());
+        raceway.add(conductor2.copy());
+        raceway.add(conductor2.copy());
+        raceway.add(conductor2.copy());
     }*/
 
     @Test
@@ -339,11 +342,11 @@ class ConductorTest {
                 .setType(Type.PVC40)
                 .setNonNipple();
         raceway.add(conductor2);
-        raceway.add(conductor2.clone());
-        raceway.add(conductor2.clone());
-        raceway.add(conductor2.clone());
-        raceway.add(conductor2.clone());
-        raceway.add(conductor2.clone());
+        raceway.add(conductor2.copy());
+        raceway.add(conductor2.copy());
+        raceway.add(conductor2.copy());
+        raceway.add(conductor2.copy());
+        raceway.add(conductor2.copy());
         assertEquals(6, raceway.getCurrentCarryingCount());
         assertEquals(0.87, conductor2.getCorrectionFactor());
         assertEquals(0.8, conductor2.getAdjustmentFactor());
@@ -381,7 +384,7 @@ class ConductorTest {
     void copyAndClone(){
         Conductor phaseA = new Conductor();
         phaseA.setRole(Conductor.Role.HOT);
-        Conductor phaseB = phaseA.clone();
+        Conductor phaseB = phaseA.copy();
         phaseA.setInsulation(Insul.TBS);
         assertEquals(Insul.THW, phaseB.getInsulation());
 

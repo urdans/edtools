@@ -1,9 +1,8 @@
 package test.java;
 
-import eecalcs.conductors.Conductor;
+import eecalcs.conductors.raceways.Conductor;
 import eecalcs.conduits.Material;
 import eecalcs.voltagedrop.VoltageDropAC;
-import org.junit.jupiter.api.Test;
 import tools.JSONTools;
 import tools.ResultMessage;
 import tools.ResultMessages;

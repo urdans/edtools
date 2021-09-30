@@ -1,5 +1,6 @@
 package eecalcs.conductors;
 
+import eecalcs.conductors.raceways.Bundle;
 import tools.ROResultMessages;
 
 /**

@@ -1,8 +1,7 @@
 package eecalcs.loads;
 
 import eecalcs.circuits.Circuit;
-import eecalcs.systems.VoltageSystemAC;
-import tools.NotifierDelegate;
+import eecalcs.systems.VoltageAC;
 
 public interface Load {
 
@@ -28,9 +27,9 @@ public interface Load {
 
 	/**
 	 @return The voltage system of this load.
-	 @see VoltageSystemAC
+	 @see VoltageAC
 	 */
-	VoltageSystemAC getVoltageSystem();
+	VoltageAC getVoltageSystem();
 
 	/**
 	 @return The nominal current of this load, in amperes.

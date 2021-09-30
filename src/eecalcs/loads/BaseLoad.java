@@ -2,10 +2,10 @@ package eecalcs.loads;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import eecalcs.circuits.Circuit;
-import eecalcs.systems.VoltageSystemAC;
+import eecalcs.systems.VoltageAC;
 
 public abstract class BaseLoad implements Load{
-	protected VoltageSystemAC voltageSystem;
+	protected VoltageAC voltageSystem;
 	protected Type type;
 	protected double powerFactor;
 	protected String description;
@@ -29,7 +29,7 @@ public abstract class BaseLoad implements Load{
 	@Override
 	public abstract Circuit.CircuitType getRequiredCircuitType();
 
-	public BaseLoad(VoltageSystemAC voltageSystem, double nominalCurrent) {
+	public BaseLoad(VoltageAC voltageSystem, double nominalCurrent) {
 		if (voltageSystem == null)
 			throw new IllegalArgumentException("System voltage parameter for " +
 					"a general load cannot be null.");
@@ -44,11 +44,11 @@ public abstract class BaseLoad implements Load{
 	}
 
 	public BaseLoad(){
-		this(VoltageSystemAC.v120_1ph_2w, 10);
+		this(VoltageAC.v120_1ph_2w, 10);
 	}
 
 	@Override
-	public VoltageSystemAC getVoltageSystem() {
+	public VoltageAC getVoltageSystem() {
 		return voltageSystem;
 	}
 

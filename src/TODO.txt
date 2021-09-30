@@ -56,12 +56,17 @@ A class manages a list of objects. Every object is added in bulk or one by one. 
 			in some cases might be desired. In other circumstances, do not use this approach.
 
 3. Strategies applicable only to this software:
--ResultMessage is immutable.
--ResultMessages is mutable and has a RO interface. When returning the actual list of errors, it returns a copy.
--VoltageDropAC and DC are mutable.
--Conductor is mutable and implements Conduitable which is readonly.
+*-ResultMessage is immutable.
+*-ResultMessages is mutable and has a RO interface. When returning the actual list of errors, it returns a copy.
+*-VoltageDropAC and DC are mutable.
+*-Conductor is mutable and implements Conduitable which is readonly.
 -If a conductor is set its ambient temperature: if its conduit or bundle property is null the temperature is set.
-Otherwise it rises an exception.
+Otherwise, it rises an exception.
+
+
+
+
+
 -Any object using/consuming an external Conductor must be passed a Conduitable.
 -Conduit is mutable, but its conductors and cables are exposed as Conduitables (as immutable objects). When adding a
 conductor to a conduit if the conductor's conduit field is not null and not the same as the conduit that is adding it,
@@ -69,6 +74,90 @@ it must throw an exception.
 -Conduit must have a method to set the ambient temperature of all its conductors. all conductors added to the conduit
 are set the same ambient temperature of the conduit.
 -The circuit class must not change the ambient temperature of an external conduit.
+
+
+
+
+
+
+
+
+Progress list (updated on 9/26/2021)
+*- ResultMessage: ok.
+*- ResultMessages: ok. No context was implemented.
+*- VoltageDropAC: updated. all tests run fine.
+*- VoltageDropDC: updated. all tests run fine.
+- Conductor: TRY APPROACH #2.
+	- Interaction with the Conduit and the Bundle classes:
+	  The methods getAdjustmentFactor() and getCorrectionFactor need to know the conduit the conductor belongs to.
+	  The methods getAdjustmentFactor() needs to know the bundle the conductor belongs to.
+	  The class Conduit has the method add(Conduitable) which add the conductor to an internal list of conductors.
+	  Somehow, after calling Conduit.add() the conductor must have a reference to the conduit it belongs to.
+	  There are three approaches:
+	  1. The Conduit class maintain a static list of created conduits. When a conductor needs to know if it belongs to a
+	   conduit, the conductor calls Conduit.getConduitFor(this). Basically the conductor asks the Conduit class which
+	   conduit contains it. This is the actual implementation. The disadvantage of this is that the static list of
+	   conduits only grows. There is no way to take an unused conduit out that list. That means that the conduit object
+	   will never be garbage collected since there will be at list one reference to each created conduit. A way to solve
+	   this is to clear the list after we do not need any of these conduits, like after responding to a http request.
+	   But that call might be implicit. In a standalone app the list is empty once a new project is created for example.
+	  2. Put the Conduit, the Bundle, the Conductor and the Cable class in a separate package and make the methods
+	  Conductor.setConduit() package accessible only. The separate package could be conductors.raceways.
+	  3. The Conductor class has the method addConduit(Conduit). The disadvantage is that this method is public but
+	  should not be called by anyone except the class Conduit. To solve this, the class conduit has two private fields:
+	  boolean addingConductor and conductorBeingAdded. Right before the conduit.Add(Conductor) is called, these two
+	  fields are set to true and to the conductor object about to be added. When the method Conductor.addConduit
+	  (Conduit) is called the conductor calls back the method Conduit.checkIsAdding(this); like this:
+
+	  in the class Conduit:
+	  void add(Conductor conductor){
+	    addingConductor = true;
+	    conductorBeingAdded = conductor;
+	    conductor.setConduit(this);
+	    addingConductor = false;
+        conductorBeingAdded = null;
+	  }
+
+	  boolean checkIsAdding(Conductor conductor){
+	    return (addingConductor && conductor == conductorBeingAdded)
+	  }
+
+	  in the class Conductor:
+	  void setConduit(Conduit conduit){
+	    if(!conduit.checkIsAdding(this)
+	      throws new Exception("This method cannot be called from outside a conduit object. or something like that")
+	    this.conduit = conduit.
+	  }
+
+/*quedé aquí
+For conductor:
+-javadoc
+-flush comments.
+-run test with coverage.
+-implement toJSON or check the default conversion works (especially when using ResultMessages).
+
+Do the same for:
+    -cable
+    -conduit,
+	-VoltageDropAC
+	-VoltageDropDC
+	-OCPD
+	-all the other classes, except Circuit, the classes in package loads
+
+
+-continue with next step in TODO.txt which should be more tests in class
+ Circuit.
+
+
+ */
+
+
+
+
+
+
+
+
 
 ///////everything down from here is deprecated///////////////////////////
 

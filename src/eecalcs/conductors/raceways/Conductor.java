@@ -1,6 +1,6 @@
-package eecalcs.conductors;
+package eecalcs.conductors.raceways;
 
-import eecalcs.conduits.Conduit;
+import eecalcs.conductors.*;
 import eecalcs.systems.TempRating;
 import tools.JSONTools;
 import tools.ROResultMessages;
@@ -152,14 +152,26 @@ public class Conductor implements Conduitable {
 		}
 	}
 
+	/**
+	 @return The role of this conductor.
+	 */
 	public Role getRole() {
 		return role;
 	}
 
+	/**
+	 @return The read-only version of the contained for all the error and
+	 warning messages of this object.
+	 */
 	public ROResultMessages getResultMessages() {
 		return resultMessages;
 	}
 
+	/**
+	 Copy all the properties of the given conductor to this conductor.
+	 @param conductor The conductor to copy from.
+	 @return This conductor.
+	 */
 	public Conductor copyFrom(Conductor conductor){
 		size = conductor.size;
 		metal = conductor.metal;
@@ -171,6 +183,11 @@ public class Conductor implements Conduitable {
 		return this;
 	}
 
+	/**
+	 Sets the size of this conductor.
+	 @param size The given size.
+	 @return This conductor. If the given size is null an error #50 is stored.
+	 */
 	public Conductor setSize(Size size){
 		if(size == null)
 			resultMessages.add(ERROR050);
@@ -180,6 +197,11 @@ public class Conductor implements Conduitable {
 		return this;
 	}
 
+	/**
+	 Sets the metal of this conductor.
+	 @param metal The given metal type.
+	 @return This conductor. If the given metal is null an error #51 is stored.
+	 */
 	public Conductor setMetal(Metal metal){
 		if(metal == null)
 			resultMessages.add(ERROR051);
@@ -189,6 +211,12 @@ public class Conductor implements Conduitable {
 		return this;
 	}
 
+	/**
+	 Sets the insulation for this conductor.
+	 @param insulation The given insulation.
+	 @return This conductor. If the given insulation is ull an error #52 is
+	 stored.
+	 */
 	public Conductor setInsulation(Insul insulation){
 		if(insulation == null)
 			resultMessages.add(ERROR052);
@@ -198,6 +226,12 @@ public class Conductor implements Conduitable {
 		return this;
 	}
 
+	/**
+	 Sets the length of this conductor.
+	 @param length the given length
+	 @return This conductor. If the given length is less or equal to zero an
+	 error #53 is stored.
+	 */
 	public Conductor setLength(double length){
 		if(length <= 0)
 			resultMessages.add(ERROR053);
@@ -211,13 +245,14 @@ public class Conductor implements Conduitable {
 	 Sets the ambient temperature of this conductor. This parameter can only
 	 be assigned if the conductor does not belong to a conduit or bundle,
 	 otherwise an IllegalArgumentException is thrown. Keep in mind that a
-	 conduit/bundle object can assign this temperature before assigning a
-	 reference to the conduit/bundle itself.
+	 conduit/bundle object can assign this temperature when this conductor is
+	 added to the conduit/bundle.
 	 @param ambientTemperatureF The ambient temperature in degrees Fahrenheits.
-	 @return This conductor.
+	 @return This conductor. If the given temperature is less than 5 or
+	 greater than 185, an error #54 is stored.
 	 */
 	public Conductor setAmbientTemperatureF(int ambientTemperatureF){
-		if(getConduit() != null || getBundle() != null)
+		if(hasConduit() || hasBundle())
 			throw new IllegalArgumentException("Ambient temperature cannot be" +
 					" assigned to a conductor that belongs to a conduit or " +
 					"to a bundle. Use the conduit or bundle to set the " +
@@ -230,6 +265,11 @@ public class Conductor implements Conduitable {
 		return this;
 	}
 
+	/**
+	 Sets the copper coating for this conductor.
+	 @param coating A flag indicating this conductor is copper coated or not.
+	 @return This conductor. If the parameter is null, an error #55 is stored.
+	 */
 	public Conductor setCopperCoating(Coating coating){
 		if(copperCoating == null)
 			resultMessages.add(ERROR055);
@@ -239,6 +279,11 @@ public class Conductor implements Conduitable {
 		return this;
 	}
 
+	/**
+	 Sets the role for this conductor.
+	 @param role The given role
+	 @return This conductor. If the given role is null an error # 56 is stored.
+	 */
 	public Conductor setRole(Role role){
 		if(role == null)
 			resultMessages.add(ERROR056);
@@ -249,14 +294,32 @@ public class Conductor implements Conduitable {
 	}
 
 	/**
+	 Sets the conduit for this conductor. This method can only be called from
+	 the Conduit class.
+	 @param conduit The conduit to which this conductor will belong to.
+	 */
+	void setConduit(Conduit conduit){
+		this.conduit = conduit;
+	}
+
+	/**
+	 Sets the bundle for this conductor. This method can only be called from
+	 the Bundle class.
+	 @param bundle The bundle to which this conductor will belong to.
+	 */
+	void setBundle(Bundle bundle){
+		this.bundle = bundle;
+	}
+
+	/**
 	 Returns a deep and convenient copy of this Conductor object. The new copy
 	 is exactly the same as this conductor, except: (convenience)
-	 <p>- it does not copy the conduit property, that is, the new clone is
+	 <p>- it does not copy the conduit property, that is, the new copy is
 	 assumed in free air (not in a conduit).
-	 <p>- it does not copy the bundle property, that is, the new clone is
+	 <p>- it does not copy the bundle property, that is, the new copy is
 	 assumed not grouped with other conductors.
 	 */
-	public Conductor clone(){//todo: to be rename to getACopy
+	public Conductor copy(){
 		return new Conductor().copyFrom(this);
 	}
 
@@ -287,7 +350,6 @@ public class Conductor implements Conduitable {
 		return ConductorProperties.getInsulatedAreaIn2(size, insulation);
 	}
 
-
 	@Override
 	public double getCorrectedAndAdjustedAmpacity(){
 		if(resultMessages.hasErrors())
@@ -303,10 +365,15 @@ public class Conductor implements Conduitable {
 		return getCorrectionFactor(insulation);
 	}
 
+	/**
+	 @return The correction factor for this conductor when using the given
+	 insulation.
+	 */
 	private double getCorrectionFactor(Insul insulation){
 		int adjustedTemp = 0;
-		if(getConduit() != null) {
-			adjustedTemp = Factors.getRoofTopTempAdjustment(getConduit().getRoofTopDistance());
+		if(hasConduit()) {
+			adjustedTemp =
+					Factors.getRoofTopTempAdjustment(conduit.getRoofTopDistance());
 		}
 		if(insulation == Insul.XHHW2)
 			adjustedTemp = 0;
@@ -319,11 +386,11 @@ public class Conductor implements Conduitable {
 		if(resultMessages.hasErrors())
 			return 0;
 		if(hasConduit())
-			return Factors.getAdjustmentFactor(getConduit().getCurrentCarryingCount(),
-					getConduit().isNipple());
+			return Factors.getAdjustmentFactor(conduit.getCurrentCarryingCount(),
+					conduit.isNipple());
 		if(hasBundle()){
-			return Factors.getAdjustmentFactor(getBundle().getCurrentCarryingCount(),
-					getBundle().getBundlingLength());
+			return Factors.getAdjustmentFactor(bundle.getCurrentCarryingCount(),
+					bundle.getBundlingLength());
 		}
 		return 1;
 	}
@@ -362,18 +429,9 @@ public class Conductor implements Conduitable {
 		return copperCoating;
 	}
 
-	/**
-	 @return The conduit that contains this conduitable or null if there is any.
-	 */
-	private Conduit getConduit() {
-		if(conduit == null)
-			conduit = Conduit.getConduitFor(this);
-		return conduit;
-	}
-
 	@Override
 	public boolean hasConduit() {
-		return getConduit() != null;
+		return conduit != null;
 	}
 
 	@Override
@@ -383,7 +441,10 @@ public class Conductor implements Conduitable {
 		return getTemperatureRating(insulation);
 	}
 
-
+	/**
+	 @return The temperature rating of this conductor as it was using the given
+	 insulation.
+	 */
 	private TempRating getTemperatureRating(Insul insulation) {
 		if(resultMessages.hasErrors())
 			return null;
@@ -408,18 +469,9 @@ public class Conductor implements Conduitable {
 				" (" + getMetal().getSymbol() + ")(" + role + ")";
 	}
 
-	/**
-	 @return The bundle that contains this conduitable or null if there is any.
-	 */
-	private Bundle getBundle() {
-		if(bundle == null)
-			bundle = Bundle.getBundleFor(this);
-		return bundle;
-	}
-
 	@Override
 	public boolean hasBundle() {
-		return getBundle() != null;
+		return bundle != null;
 	}
 
 	public String toJSON(){

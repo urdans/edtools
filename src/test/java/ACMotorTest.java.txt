@@ -5,7 +5,7 @@ import eecalcs.circuits.OCPD;
 import eecalcs.loads.ACMotor;
 import eecalcs.loads.Horsepower;
 import eecalcs.loads.MotorProperties;
-import eecalcs.systems.VoltageSystemAC;
+import eecalcs.systems.VoltageAC;
 import org.junit.jupiter.api.Test;
 
 import static eecalcs.loads.MotorProperties.DesignLetter.DESIGN_B;

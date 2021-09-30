@@ -2,7 +2,7 @@ package eecalcs.loads;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import eecalcs.systems.VoltageSystemAC;
+import eecalcs.systems.VoltageAC;
 
 /**
  This class represents a nonlinear load.
@@ -96,7 +96,7 @@ import eecalcs.systems.VoltageSystemAC;
 public class NonLinearLoad extends GeneralLoad{
 	//private boolean _isNonlinear = false;
 
-	public NonLinearLoad(VoltageSystemAC voltageSystem, double nominalCurrent) {
+	public NonLinearLoad(VoltageAC voltageSystem, double nominalCurrent) {
 		super(voltageSystem, nominalCurrent);
 	}
 

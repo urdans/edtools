@@ -1,6 +1,6 @@
-package eecalcs.conductors;
+package eecalcs.conductors.raceways;
 
-import eecalcs.conduits.Conduit;
+import eecalcs.conductors.*;
 import tools.ROResultMessages;
 import tools.ResultMessage;
 import tools.ResultMessages;
@@ -28,7 +28,7 @@ import java.util.List;
  a bad practice but since it is not forbidden by the code, it is considered
  in this software.<p><br>
  */
-public class Bundle implements ROBundle{
+public class Bundle implements ROBundle {
 	/*Distance in inches of the bundling (not the length of the
 	cable/conductors)*/
 	private double bundlingLength = 0;
@@ -37,7 +37,7 @@ public class Bundle implements ROBundle{
 	private final List<Conduitable> conduitables = new ArrayList<>();
 	private final ResultMessages resultMessages = new ResultMessages();
 
-	private static final List<Bundle> BUNDLE_LIST = new ArrayList<>();
+//	private static final List<Bundle> BUNDLE_LIST = new ArrayList<>();
 
 	//region predefined messages
 	public static final ResultMessage ERROR150 = new ResultMessage(
@@ -51,19 +51,19 @@ public class Bundle implements ROBundle{
 			throw new IllegalArgumentException("Ambient temperature parameter" +
 					" for a bundle must be >= 5°F and <= 185°F.");
 		this.ambientTemperatureF = ambientTemperatureF;
-		BUNDLE_LIST.add(this);
+//		BUNDLE_LIST.add(this);
 	}
 
-	/**
+	/*
 	 @return The bundle that contains the given conduitable or null if no
 	 bundle contains it.
 	 @param conduitable The conduitable whose bundle is requested.
 	 */
-	public static Bundle getBundleFor(Conduitable conduitable){
+/*	public static Bundle getBundleFor(Conduitable conduitable){
 		return BUNDLE_LIST.stream()
 				.filter(conduit -> conduit.hasConduitable(conduitable))
 				.findFirst().orElse(null);
-	}
+	}*/
 
 
 	@Override
@@ -212,10 +212,14 @@ public class Bundle implements ROBundle{
 			throw new IllegalArgumentException("Cannot add to this bundle a " +
 					"conduitable that belongs to another conduit or bundle.");
 
-		if(conduitable instanceof Conductor)
-			((Conductor)conduitable).setAmbientTemperatureF(ambientTemperatureF);
-		else
-			((Cable)conduitable).setAmbientTemperatureF(ambientTemperatureF);
+		if(conduitable instanceof Conductor) {
+			((Conductor) conduitable).setAmbientTemperatureF(ambientTemperatureF);
+			((Conductor) conduitable).setBundle(this);
+		}
+		else {
+			((Cable) conduitable).setAmbientTemperatureF(ambientTemperatureF);
+			((Cable) conduitable).setBundle(this);
+		}
 
 		conduitables.add(conduitable);//this has to be called prior to
 		return this;

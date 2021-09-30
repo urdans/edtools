@@ -1,20 +1,13 @@
 package test.java;
 
 import eecalcs.circuits.Circuit;
-import eecalcs.circuits.CircuitMode;
 import eecalcs.conductors.*;
-import eecalcs.conduits.Conduit;
-import eecalcs.conduits.ConduitProperties;
+import eecalcs.conductors.raceways.Conduit;
 import eecalcs.conduits.Trade;
 import eecalcs.conduits.Type;
 import eecalcs.loads.GeneralLoad;
-import eecalcs.systems.TempRating;
-import eecalcs.systems.VoltageSystemAC;
+import eecalcs.systems.VoltageAC;
 import org.junit.jupiter.api.Test;
-import test.Tools;
-//import test.Tools;
-
-import java.text.NumberFormat;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -33,7 +26,7 @@ class CircuitTest {
 
     @Test
     void congruencyTest02() {
-        GeneralLoad generalLoad = new GeneralLoad(VoltageSystemAC.v120_1ph_2w, 100);
+        GeneralLoad generalLoad = new GeneralLoad(VoltageAC.v120_1ph_2w, 100);
         Circuit circuit = new Circuit.Builder(generalLoad).build();
         //the size of the phase conductor must correspond to that current
         assertEquals(Size.AWG_1, circuit.getPhaseConductor().getSize(), circuit.toString());
@@ -43,7 +36,7 @@ class CircuitTest {
 
     @Test
     void congruencyTest03() {
-        GeneralLoad generalLoad = new GeneralLoad(VoltageSystemAC.v208_3ph_3w, 100);
+        GeneralLoad generalLoad = new GeneralLoad(VoltageAC.v208_3ph_3w, 100);
         Circuit circuit = new Circuit.Builder(generalLoad).build();
         Conduit sharedConduit = new Conduit(86).setType(Type.RMC).setNonNipple();
         /*there must not be a neutral conductor anymore.*/

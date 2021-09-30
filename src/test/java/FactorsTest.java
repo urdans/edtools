@@ -1,7 +1,7 @@
 package test.java;
 
 import eecalcs.conductors.Factors;
-import eecalcs.conduits.Conduit;
+import eecalcs.conductors.raceways.Conduit;
 import eecalcs.conduits.Type;
 import eecalcs.systems.TempRating;
 import org.junit.jupiter.api.Test;
