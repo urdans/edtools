@@ -1,0 +1,2 @@
+Github access token for Intellij
+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

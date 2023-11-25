@@ -81,7 +81,7 @@ The following are the getters that expose such objects:
 *       ->setInsulation(Insul insul)                     -->hide&move to Circuit
 *       ->setLength(double length)                       -->hide&move to Circuit
 *            ->use setCircuitLength and rename it to setLength
-*       ->setMetal(Metal metal)                          -->hide&move to Circuit
+*       ->setMetalForPhaseAndNeutral(Metal metal)                          -->hide&move to Circuit
 *       ->setPhaseConductorSize(Size size)     ->WEIRD->### what is this for?###
 *            (why do I need to manually set the size of the circuit conductors?)
 *             Try not to use it.
@@ -90,7 +90,7 @@ The following are the getters that expose such objects:
 *       ->Conductor setSize(Size size)         ->WEIRD->### what is this for?###
 *            (why do I need to manually set the size of the circuit conductors?)
 *            Try not to use it.
-*       ->Conductor setMetal(Metal metal)                -->hide&move to Circuit
+*       ->Conductor setMetalForPhaseAndNeutral(Metal metal)                -->hide&move to Circuit
 *       ->setInsulation(Insul insulation)                -->hide&move to Circuit
 *       ->setLength(double length)                       -->hide&move to Circuit
 *       ->setAmbientTemperatureF(int ambientTemperatureF)-->hide&move to Circuit
