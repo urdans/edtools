@@ -3,7 +3,7 @@ package test.java;
 import eecalcs.conductors.Factors;
 import eecalcs.conductors.raceways.Conduit;
 import eecalcs.conduits.Type;
-import eecalcs.systems.TempRating;
+import eecalcs.conductors.TempRating;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

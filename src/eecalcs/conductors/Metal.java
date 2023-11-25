@@ -1,7 +1,7 @@
 package eecalcs.conductors;
 
 /**
- Defines the metal conductor types.
+ Defines the metal type for conductors.
  <br>
  <ul>
  <li><b>COPPER</b>: "CU"</li>
@@ -20,8 +20,8 @@ public enum Metal {
 			symbols[i] = values()[i].getSymbol();
 	}
 
-	Metal(String name){
-		this.symbol = name;
+	Metal(String symbol){
+		this.symbol = symbol;
 	}
 
 	/**

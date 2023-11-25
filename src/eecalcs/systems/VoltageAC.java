@@ -42,6 +42,9 @@ public enum VoltageAC {									   //neutral is CCC
 	v575_3ph_3w("575v 3Ø 3W",575, 3, 3),//3w:no neutral
 	v_other("120v 1Ø 2W", 120,1,2);
 /*todo
+   updated 11/26/21: simply, get rid of v_other. All system voltages are
+   standard values, not custom ones.
+   ---
    very important: i need to get rid of this mutability of v_other. It's not
    a good idea, since two classes could hold a reference to it. Changing one
    will change the other since v_other is static.

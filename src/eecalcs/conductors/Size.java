@@ -36,6 +36,7 @@ package eecalcs.conductors;
  </ul>
  */
 public enum Size {
+	//They have to be defined in ascending order of size.
 	AWG_14("14 AWG"),
 	AWG_12("12 AWG"),
 	AWG_10("10 AWG"),

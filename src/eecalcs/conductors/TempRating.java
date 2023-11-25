@@ -1,4 +1,4 @@
-package eecalcs.systems;
+package eecalcs.conductors;
 
 /**
  Container for standard temperature ratings, in degrees Celsius, of known
@@ -38,9 +38,9 @@ public enum TempRating {
     }
 
     /**
-     Converts the given temperature from fahrenheit degrees to celsius degrees.
+     Converts the given temperature from Fahrenheit degrees to Celsius degrees.
      @param fahrenheit The temperature to be converted
-     @return The celsius value of the given temperature.
+     @return The Celsius value of the given temperature.
      */
     public static int getCelsius(double fahrenheit){
         return (int) Math.round((fahrenheit - 32)/1.8);

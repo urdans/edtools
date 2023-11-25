@@ -152,8 +152,7 @@ public class VoltageDropDC {
 	}
 
 	/**
-	 @return The read-only version of the contained for all the error and
-	 warning messages of this object.
+	 @return A read-only version of the error and warning messages of this object.
 	 */
 	public ROResultMessages getResultMessages() {
 		return resultMessages;

@@ -134,7 +134,7 @@ public class Bundle implements ROBundle {
 				if (cable.getCurrentCarryingCount() > 3)
 					return false;
 				//checking condition d. on cables
-				if (cable.getPhaseConductorSize() != Size.AWG_12 | cable.getMetal() != Metal.COPPER)
+				if (cable.getPhaseConductor().getSize() != Size.AWG_12 | cable.getMetal() != Metal.COPPER)
 					return false;
 			} else if (conduitable instanceof Conductor) {
 				Conductor conductor = (Conductor) conduitable;

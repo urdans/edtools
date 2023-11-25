@@ -1,7 +1,8 @@
 package eecalcs.conductors.raceways;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import eecalcs.conductors.*;
-import eecalcs.systems.TempRating;
+import eecalcs.conductors.TempRating;
 import tools.JSONTools;
 import tools.ROResultMessages;
 import tools.ResultMessage;
@@ -53,7 +54,7 @@ public class Conductor implements Conduitable {
 	public static final ResultMessage ERROR050 = new ResultMessage("Size " +
 		"parameter cannot be null.",-50);
 	public static final ResultMessage ERROR051 = new ResultMessage("Metal " +
-		"parameter  cannot be null.",-51);
+		"parameter for phases and neutral conductors cannot be null.",-51);
 	public static final ResultMessage ERROR052 = new ResultMessage(
 		"Insulation parameter cannot be null.",-52);
 	public static final ResultMessage ERROR053 = new ResultMessage("Length " +
@@ -64,22 +65,20 @@ public class Conductor implements Conduitable {
 		"parameter cannot be null.",-55);
 	public static final ResultMessage ERROR056 = new ResultMessage("Role " +
 		"parameter cannot be null.",-56);
-	/*public static final ResultMessage ERROR057 = new ResultMessage("Conduit " +
-		"parameter cannot be null.",-57);*/
-	public static final ResultMessage ERROR058 = new ResultMessage("Outer " +
-		"diameter parameter must be > 0.25.",-58);
+	public static final ResultMessage ERROR057 = new ResultMessage("Conduit " +
+		"parameter cannot be null.",-57);
+	public static final ResultMessage ERROR058 = new ResultMessage("Metal " +
+		"parameter for grounding conductor cannot be null.", -58);
 	public static final ResultMessage ERROR059 = new ResultMessage("Cable " +
 		"type parameter cannot be null.",-59);
-	/*public static final ResultMessage ERROR060 = new ResultMessage("Cable " +
-		"type parameter cannot be null.",-60);*/
 	public static final ResultMessage ERROR061 = new ResultMessage("Bundle " +
 		"parameter cannot be null.",-61);
 	public static final ResultMessage ERROR062 = new ResultMessage(
-		"Phase parameter size cannot be null.",-62);
+		"Phase size parameter cannot be null.",-62);
 	public static final ResultMessage ERROR063 = new ResultMessage(
-		"Neutral parameter size cannot be null.",-63);
+		"Neutral size parameter cannot be null.",-63);
 	public static final ResultMessage ERROR064 = new ResultMessage(
-		"Ground parameter size cannot be null.",-64);
+		"Ground size parameter cannot be null.",-64);
 	//endregion
 
 	/**
@@ -160,9 +159,9 @@ public class Conductor implements Conduitable {
 	}
 
 	/**
-	 @return The read-only version of the contained for all the error and
-	 warning messages of this object.
+	 @return A read-only version of the error and warning messages of this object.
 	 */
+
 	public ROResultMessages getResultMessages() {
 		return resultMessages;
 	}
@@ -271,7 +270,7 @@ public class Conductor implements Conduitable {
 	 @return This conductor. If the parameter is null, an error #55 is stored.
 	 */
 	public Conductor setCopperCoating(Coating coating){
-		if(copperCoating == null)
+		if(coating == null)
 			resultMessages.add(ERROR055);
 		else
 			resultMessages.remove(ERROR055);
@@ -347,7 +346,7 @@ public class Conductor implements Conduitable {
 	public double getInsulatedAreaIn2() {
 		if(resultMessages.hasErrors())
 			return 0;
-		return ConductorProperties.getInsulatedAreaIn2(size, insulation);
+		return ConductorProperties.getInsulatedConductorAreaIn2(size, insulation);
 	}
 
 	@Override
@@ -430,6 +429,7 @@ public class Conductor implements Conduitable {
 	}
 
 	@Override
+	@JsonProperty("hasConduit")
 	public boolean hasConduit() {
 		return conduit != null;
 	}
@@ -446,8 +446,6 @@ public class Conductor implements Conduitable {
 	 insulation.
 	 */
 	private TempRating getTemperatureRating(Insul insulation) {
-		if(resultMessages.hasErrors())
-			return null;
 		return ConductorProperties.getTempRating(insulation);
 	}
 
@@ -470,10 +468,15 @@ public class Conductor implements Conduitable {
 	}
 
 	@Override
+	@JsonProperty("hasBundle")
 	public boolean hasBundle() {
 		return bundle != null;
 	}
 
+	/**
+	 @return A JSON string representing the class state plus all the results
+	 of the calculations performed by this class.
+	 */
 	public String toJSON(){
 		return JSONTools.toJSON(this);
 	}

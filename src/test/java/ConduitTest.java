@@ -117,7 +117,7 @@ class ConduitTest {
         conduit.add(cable2);
         assertEquals(8, conduit.getCurrentCarryingCount());
 
-        cable2.setNeutralCarryingConductor();
+        cable2.setNeutralAsCurrentCarrying();
         assertEquals(9, conduit.getCurrentCarryingCount());
 
         conductor.setRole(Conductor.Role.GND);

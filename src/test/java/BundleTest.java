@@ -96,7 +96,7 @@ class BundleTest {
         bundle.add(cable.copy());
         assertEquals(9, bundle.getCurrentCarryingCount());
 
-        cable.setNeutralCarryingConductor();
+        cable.setNeutralAsCurrentCarrying();
         assertEquals(10, bundle.getCurrentCarryingCount());
     }
 
@@ -120,13 +120,13 @@ class BundleTest {
 
 
         //case2
-        cable.setNeutralCarryingConductor();
+        cable.setNeutralAsCurrentCarrying();
         assertFalse(bundle.compliesWith310_15_B_3_a_4());
         assertEquals(0.5, conductor.getAdjustmentFactor()); //because d>24", #ccc=10 and conductors don't have exceptions
         assertEquals(0.5, cable.getAdjustmentFactor()); //because d>24" and the exception is not satisfied (one cable
 
         // has more than 3 ccc.
-        cable.setNeutralNonCarryingConductor();
+        cable.setNeutralAsNonCurrentCarrying();
         assertTrue(bundle.compliesWith310_15_B_3_a_4());
 
         //case 3

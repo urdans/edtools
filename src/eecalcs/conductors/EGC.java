@@ -1,5 +1,7 @@
 package eecalcs.conductors;
 
+import org.jetbrains.annotations.NotNull;
+
 public class EGC {
 	/**Table 250.122, rating of OCPD for sizing EGC*/
 	private static final int[] ocpdEGC = {
@@ -58,7 +60,7 @@ public class EGC {
 	 @param ocpdRating Rating of the OCPD.
 	 @param metal The metal of the conductor (Cu or Al)
 	 */
-	public static Size getEGCSize(int ocpdRating, Metal metal){
+	public static Size getEGCSize(int ocpdRating, @NotNull Metal metal){
 		if(metal == null)
 			return null;
 		if(ocpdRating == 0)

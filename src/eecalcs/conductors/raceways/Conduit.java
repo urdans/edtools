@@ -304,7 +304,7 @@ public class Conduit implements ROConduit {
 		Conductor EGC = getBiggestEGC();
 		if(EGC == null)
 			return 0;
-		return ConductorProperties.getInsulatedAreaIn2(EGC.getSize(),
+		return ConductorProperties.getInsulatedConductorAreaIn2(EGC.getSize(),
 				EGC.getInsulation());
 	}
 

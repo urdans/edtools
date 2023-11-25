@@ -7,7 +7,7 @@ import eecalcs.conductors.raceways.Conductor;
 import eecalcs.conductors.raceways.Conduit;
 import eecalcs.conduits.*;
 import eecalcs.loads.Load;
-import eecalcs.systems.TempRating;
+import eecalcs.conductors.TempRating;
 import eecalcs.voltagedrop.VoltageDropAC;
 import org.jetbrains.annotations.Nullable;
 import tools.JSONTools;
@@ -461,7 +461,7 @@ public class Circuit {
 		if(usingCable) {
 			Cable cable = new Cable(load.getVoltageSystem());
 			if(load.isNeutralCurrentCarrying())
-				cable.setNeutralCarryingConductor();
+				cable.setNeutralAsCurrentCarrying();
 			return cable;
 		}
 		return null;
@@ -998,7 +998,7 @@ public class Circuit {
 	 */
 	private Size _getSize() {
 		return usingCable ?
-				cable.getPhaseConductorSize()
+				cable.getPhaseConductor().getSize()
 				: phaseAConductor.getSize();
 	}
 
@@ -1443,7 +1443,7 @@ public class Circuit {
 	public Size getCircuitSize(){
 		if(calculateCircuit()) {
 			if(usingCable)
-				return cable.getPhaseConductorSize();
+				return cable.getPhaseConductor().getSize();
 			else
 				return phaseAConductor.getSize();
 		}
@@ -1782,7 +1782,7 @@ Third line, circuit ratings:
 	 */
 	public void setMetal(Metal metal){
 		if(usingCable)
-			conduitables.forEach(conduitable ->	((Cable)conduitable).setMetal(metal));
+			conduitables.forEach(conduitable ->	((Cable)conduitable).setMetalForPhaseAndNeutral(metal));
 		else
 			conduitables.forEach(conduitable ->	((Conductor)conduitable).setMetal(metal));
 	}

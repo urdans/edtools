@@ -1,11 +1,7 @@
-✓1. Make all test cases work.
-	✓a. fix problems in the circuit class.
-	✓b. don't make profound changes, only the necessary ones.
-
 What I have tried to do so far, converting my classes to immutable ones have been crap. After watching a lot of videos I
 trusted immutability so much that I went closed eyes to recode everything. In the beginning I was optimistic but the
 more I recoded the more the challenges I was facing. After a lot or time coding, deleting, recoding, starting-over, I
-have come across the conclusion that immutability is good but it's not the rule. People tend to speak about it as if it was a
+have come across the conclusion that immutability is good, but it's not the rule. People tend to speak about it as if it was a
 religion.
 So, I'm writing now the principles under which I am going to refactor this piece of software. My main goal is to keep
 everything simple (KISS principle). The following might be seen as the architecture for this code but is also applicable
@@ -21,17 +17,17 @@ A class can have private field object that the class uses "privately". There are
 	mutable and the class can handle the change of state for that single object. The class consumes behavior and state
 	from this object. For example a private-no-getter-field object TList.
 	1.2. The class exposes the object to the exterior. There are three scenarios here:
-		1.2.1. The getter to the object returns a copy of the object. Any change to that object outside of the class
+		1.2.1. The getter to the object returns a copy of the object. Any change to that object outside the class
 		will not affect the container class.
 		1.2.2. The getter returns a read-only interface to that object, so the exterior can read the state of the object
 		but cannot make changes. This is achieved by placing all the getters in an interface. For example, a class Point
-		might have getters and setters. So we make the class Point to implement ROPoint and we move all the getter
+		might have getters and setters. So we make the class Point to implement ROPoint, and we move all the getter
 		definitions to the interface ROPoint.
 		1.2.3. The getter returns the object reference. THERE WILL BE SIDE EFFECTS!. This is what I think the cult of
 		anti-mutability fears of. Well, this scenario is needed for GUI interfaces where you want your GUI to update
 		once you change something somewhere. For other cases, we need to avoid exposing object references. However, if
 		you really need to expose that object you can do two things to keep control over your code:
-			- Use listeners: this add a lot of complexity.
+			- Use listeners: this adds a lot of complexity.
 			- Do not trust that object. That is, everytime your class is requested to provide state (which happens
 			through getters), your class must assume that the object has changed. That is, recompute your state
 			everytime it is requested and provide all the class state at once (we do not want the state to change in
@@ -49,7 +45,7 @@ A class manages a list of objects. Every object is added in bulk or one by one. 
 		2.2.2. The object has a field that references the container class. So, the "add" method checks if the passed
 		object has that field null before actually adding it to the list. If that field is not null there can be two
 		scenarios:
-			2.2.2.1. The "add" method throws an exception if the object is own by another object. That is, we do not
+			2.2.2.1. The "add" method throws an exception if the object is owned by another object. That is, we do not
 			want to change this object and produce a side effect in the other container. This is the best approach.
 			2.2.2.2. The "add" method detach the object from its container by calling
 			myObject.getContainer().remove(myObject). Of course, this produces side effect in the other container that
@@ -60,12 +56,9 @@ A class manages a list of objects. Every object is added in bulk or one by one. 
 *-ResultMessages is mutable and has a RO interface. When returning the actual list of errors, it returns a copy.
 *-VoltageDropAC and DC are mutable.
 *-Conductor is mutable and implements Conduitable which is readonly.
--If a conductor is set its ambient temperature: if its conduit or bundle property is null the temperature is set.
-Otherwise, it rises an exception.
-
-
-
-
+*-If a conductor is set its ambient temperature: if its conduit or bundle property is null the temperature is set.
+Otherwise, it rises an exception, because the conductor belongs to a conduit or to a bundle and only those objects can
+assign the ambient temperature of the owned conductors.
 
 -Any object using/consuming an external Conductor must be passed a Conduitable.
 -Conduit is mutable, but its conductors and cables are exposed as Conduitables (as immutable objects). When adding a
@@ -75,19 +68,36 @@ it must throw an exception.
 are set the same ambient temperature of the conduit.
 -The circuit class must not change the ambient temperature of an external conduit.
 
+JSON representation of objects.
+-------------------------------
+The JSON representation of any object must have enough detail to:
+- Recreate the object from scratch.
+- Represent the object state in the front-end side.
+
+ The challenge arises when representing objects that contain objects, where the child objects reference the parent
+ object. In this case, the children should not add the parent object to their JSON representation, otherwise an infinite
+ reference loop is created. For this software.
 
 
+1. Objects that perform calculations:
+	- The ResultMessage object is added first, since it contains the result messages of the class level, before any
+	calculation is requested.
+	- Then, param fields are added. Param fields are private fields that have setters and getters or that are set during
+	 construction.
+	- If a calculating method can add result messages to the ResultMessage list, then, a 2dn level objects is created
+	to contain the calculated values and their result messages. The name of the object is the name of the calculating
+	method without the "get" prefix. The result is stored as "value".
+	- If the calculating method does not change the result message list, then the result value is added as a field (not
+	wrapped in an object)
+	- Fields referencing other objects are not added.
 
-
-
-
-
-Progress list (updated on 9/26/2021)
+--------------------------------------------------
+Progress list (updated on 11/26/2021)
 *- ResultMessage: ok.
 *- ResultMessages: ok. No context was implemented.
 *- VoltageDropAC: updated. all tests run fine.
 *- VoltageDropDC: updated. all tests run fine.
-- Conductor: TRY APPROACH #2.
+- Conductor: APPROACH #2 was implemented.
 	- Interaction with the Conduit and the Bundle classes:
 	  The methods getAdjustmentFactor() and getCorrectionFactor need to know the conduit the conductor belongs to.
 	  The methods getAdjustmentFactor() needs to know the bundle the conductor belongs to.
@@ -129,24 +139,52 @@ Progress list (updated on 9/26/2021)
 	    this.conduit = conduit.
 	  }
 
-/*quedé aquí
+
 For conductor:
+*-javadoc
+*-flush comments.
+*-run test with coverage. Done.
+*-correct usage of errors #57, 59 & 61.
+*-implement toJSON or check the default conversion works (especially when using ResultMessages).
+*-Add a test case to test the result messages for full coverage.
+
+For cable:
+*-javadoc
+*-flush comments.
+*-run test with coverage.
+*-implement toJSON or check the default conversion works (especially when using ResultMessages).
+*-Add a test case to test the result messages for full coverage.
+*-solve dilemmas.
+
+For conduit:
+/*quedé aquí:
 -javadoc
 -flush comments.
 -run test with coverage.
 -implement toJSON or check the default conversion works (especially when using ResultMessages).
+-Add a test case to test the result messages for full coverage.
 
 Do the same for:
-    -cable
-    -conduit,
 	-VoltageDropAC
 	-VoltageDropDC
 	-OCPD
-	-all the other classes, except Circuit, the classes in package loads
+	-the classes in package loads
+	-all the other classes, except Circuit,
 
 
--continue with next step in TODO.txt which should be more tests in class
- Circuit.
+-Continue with next step in CircuitTest.java which should be more tests in class
+ Circuit (copying from the old CircuitTest.java.txt)
+-Once CircuitTest is completed, do:
+	-javadoc
+	-flush comments.
+	-run test with coverage.
+	-implement toJSON or check the default conversion works (especially when using ResultMessages).
+	-Add a test case to test the result messages for full coverage.
+
+-Implement ACMotorTest from the ACMotorTest.java.txt
+-Add more load types
+-Implement panels
+-Plan for beyond.
 
 
  */
@@ -181,7 +219,7 @@ that object immutable in regard to those parameters.
 2. The ResultMessages should ONLY contain errors and warnings that occur after the object is constructed. Any error
 occurring during construction MUST throw an IllegalArgumentException. When used in a REST API that error must be
 captured and sent back to client. Errors occurring due to a "presupposition failure" must also throw exceptions. For
-example, trying o set a property of the neutral conductor of a cable that does not have a cable should throw an
+example, trying to set a property of the neutral conductor of a cable that does not have a cable should throw an
 exception. All other errors occurring during a call to a setter or when computing a value, must be put inside the
 ResultMessage object.
 

@@ -7,7 +7,7 @@ import eecalcs.conductors.raceways.Conductor;
 import eecalcs.conductors.raceways.Conduit;
 import eecalcs.conduits.Trade;
 import eecalcs.conduits.Type;
-import eecalcs.systems.TempRating;
+import eecalcs.conductors.TempRating;
 import eecalcs.systems.VoltageAC;
 import org.junit.jupiter.api.Test;
 
@@ -27,7 +27,8 @@ class CableTest {
 
         diameter = 0;
         cable.setOuterDiameter(diameter);
-        assertEquals(0.25*0.25*0.25*Math.PI, cable.getInsulatedAreaIn2());
+        assertEquals(Cable.MINIMUM_OUTER_DIAMETER*Cable.MINIMUM_OUTER_DIAMETER*0.25*Math.PI,
+            cable.getInsulatedAreaIn2());
     }
 
     @Test
@@ -41,52 +42,52 @@ class CableTest {
         Cable cable = new Cable(VoltageAC.v480_3ph_4w).setOuterDiameter(1);
         assertEquals(3, cable.getCurrentCarryingCount());
 
-        cable.setNeutralCarryingConductor();
+        cable.setNeutralAsCurrentCarrying();
         assertEquals(4, cable.getCurrentCarryingCount());
 
-        cable.setNeutralNonCarryingConductor();
+        cable.setNeutralAsNonCurrentCarrying();
         assertEquals(3, cable.getCurrentCarryingCount());
     }
 
     @Test
     void getCurrentCarryingCount_01() {
         Cable cable = new Cable(VoltageAC.v240_3ph_3w);
-        assertThrows(IllegalArgumentException.class, cable::setNeutralCarryingConductor);
+        assertThrows(IllegalArgumentException.class, cable::setNeutralAsCurrentCarrying);
         assertEquals(3, cable.getCurrentCarryingCount());
     }
 
     @Test
     void getCurrentCarryingCount_02() {
         Cable cable = new Cable(VoltageAC.v208_3ph_4w);
-        cable.setNeutralCarryingConductor();
+        cable.setNeutralAsCurrentCarrying();
         assertEquals(4, cable.getCurrentCarryingCount());
     }
 
     @Test
     void getCurrentCarryingCount_03() {
         Cable cable = new Cable(VoltageAC.v240_1ph_2w);
-        assertThrows(IllegalArgumentException.class, cable::setNeutralCarryingConductor);
+        assertThrows(IllegalArgumentException.class, cable::setNeutralAsCurrentCarrying);
         assertEquals(2, cable.getCurrentCarryingCount());
     }
 
     @Test
     void getCurrentCarryingCount_04() {
         Cable cable = new Cable(VoltageAC.v240_1ph_3w);
-        cable.setNeutralCarryingConductor();
+        cable.setNeutralAsCurrentCarrying();
         assertEquals(3, cable.getCurrentCarryingCount());
     }
 
     @Test
     void getCurrentCarryingCount_05() {
         Cable cable = new Cable(VoltageAC.v120_1ph_2w);
-        cable.setNeutralCarryingConductor();
+        cable.setNeutralAsCurrentCarrying();
         assertEquals(2, cable.getCurrentCarryingCount());
     }
 
     @Test
     void getCurrentCarryingCount_06() {
         Cable cable = new Cable(VoltageAC.v240_3ph_4w);
-        cable.setNeutralCarryingConductor();
+        cable.setNeutralAsCurrentCarrying();
         assertEquals(4, cable.getCurrentCarryingCount());
     }
 
@@ -248,7 +249,7 @@ class CableTest {
         conduit.setNipple();
         assertEquals(285 * 0.75 * 1, cable.getCorrectedAndAdjustedAmpacity(), 0.01);
 
-        cable.setMetal(Metal.ALUMINUM);
+        cable.setMetalForPhaseAndNeutral(Metal.ALUMINUM);
         cable.setInsulation(Insul.THHN);
         assertEquals(6, conduit.getCurrentCarryingCount());
 
@@ -267,12 +268,12 @@ class CableTest {
                 .setPhaseConductorSize(Size.KCMIL_300)
                 .setAmbientTemperatureF(95)
                 .setType(CableType.MC)
-                .setMetal(Metal.ALUMINUM)
+                .setMetalForPhaseAndNeutral(Metal.ALUMINUM)
                 .setInsulation(Insul.THHN);
         assertEquals(260 * 0.96 * 1, cable.getCorrectedAndAdjustedAmpacity(), 0.01);
 
         cable.setPhaseConductorSize(Size.AWG_12);
-        cable.setMetal(Metal.COPPER);
+        cable.setMetalForPhaseAndNeutral(Metal.COPPER);
         assertEquals(30 * 0.96 * 1.0, cable.getCorrectedAndAdjustedAmpacity());
 
         cable.setType(CableType.NM);
@@ -351,7 +352,7 @@ class CableTest {
 
         bundle.getConduitables().forEach(conduitable -> ((Cable) conduitable).setJacketed());
         assertTrue(cable.isJacketed());
-        assertEquals(Size.AWG_12, cable.getPhaseConductorSize());
+        assertEquals(Size.AWG_12, cable.getPhaseConductor().getSize());
         assertEquals(Metal.COPPER, cable.getMetal());
         assertEquals(2, cable.getCurrentCarryingCount());
         assertEquals(12, bundle.getCurrentCarryingCount());
@@ -423,40 +424,43 @@ class CableTest {
     void setNeutralConductorSize() {
         Cable cable = new Cable(VoltageAC.v277_1ph_2w).setOuterDiameter(1);
         //default conductor size is #12
-        assertEquals(Size.AWG_12, cable.getGroundingConductorSize());
-        //the size of the neutral can be set independently
+        assertEquals(Size.AWG_12, cable.getGroundingConductor().getSize());
+        //the size of the neutral can be set independently, but since it's a
+        // 1Φ with hot and neutral, both neutral and phase are set
         cable.setNeutralConductorSize(Size.KCMIL_300);
-        assertEquals(Size.AWG_12, cable.getGroundingConductorSize());
-        assertEquals(Size.AWG_12, cable.getPhaseConductorSize());
-        assertEquals(Size.KCMIL_300, cable.getNeutralConductorSize());
-        //the size of the phase can be set independently
+        assertEquals(Size.AWG_12, cable.getGroundingConductor().getSize());
+        assertEquals(Size.KCMIL_300, cable.getPhaseConductor().getSize());
+        assertEquals(Size.KCMIL_300, cable.getNeutralConductor().getSize());
+        //the size of the phase can be set independently, but since it's a
+        // 1Φ with hot and neutral, both neutral and phase are set
         cable.setPhaseConductorSize(Size.KCMIL_700);
-        assertEquals(Size.AWG_12, cable.getGroundingConductorSize());
-        assertEquals(Size.KCMIL_700, cable.getPhaseConductorSize());
-        assertEquals(Size.KCMIL_300, cable.getNeutralConductorSize());
+        assertEquals(Size.AWG_12, cable.getGroundingConductor().getSize());
+        assertEquals(Size.KCMIL_700, cable.getPhaseConductor().getSize());
+        assertEquals(Size.KCMIL_700, cable.getNeutralConductor().getSize());
         //the size of the ground can be set independently
         cable.setGroundingConductorSize(Size.KCMIL_900);
-        assertEquals(Size.KCMIL_900, cable.getGroundingConductorSize());
-        assertEquals(Size.KCMIL_700, cable.getPhaseConductorSize());
-        assertEquals(Size.KCMIL_300, cable.getNeutralConductorSize());
+        assertEquals(Size.KCMIL_900, cable.getGroundingConductor().getSize());
+        assertEquals(Size.KCMIL_700, cable.getPhaseConductor().getSize());
+        assertEquals(Size.KCMIL_700, cable.getNeutralConductor().getSize());
     }
 
     @Test
     void setNeutralConductorSize_01(){
         Cable cable = new Cable(VoltageAC.v480_3ph_3w).setOuterDiameter(1);
         //this cable does not have neutral.
-        assertNull(cable.getNeutralConductorSize());
+        assertNull(cable.getNeutralConductor());
     }
 
     @Test
     void getPhaseConductorSize() {
         Cable cable = new Cable(VoltageAC.v277_1ph_2w).setOuterDiameter(1);
         cable.setPhaseConductorSize(Size.KCMIL_250);
-        assertEquals(Size.KCMIL_250, cable.getPhaseConductorSize());
+        assertEquals(Size.KCMIL_250, cable.getPhaseConductor().getSize());
+        assertEquals(Size.KCMIL_250, cable.getNeutralConductor().getSize());
 
         cable.setNeutralConductorSize(Size.KCMIL_300);
-        assertEquals(Size.KCMIL_300, cable.getNeutralConductorSize());
-        assertEquals(Size.KCMIL_250, cable.getPhaseConductorSize());
+        assertEquals(Size.KCMIL_300, cable.getNeutralConductor().getSize());
+        assertEquals(Size.KCMIL_300, cable.getPhaseConductor().getSize());
     }
 
     @Test
@@ -473,15 +477,19 @@ class CableTest {
         cable1.setLength(123);
         conduit.setRoofTopDistance(20);
         Cable cable2 = cable1.copy();
-        assertEquals(cable1.getPhaseConductorSize(), cable2.getPhaseConductorSize());
-        assertEquals(cable1.getNeutralConductorSize(), cable2.getNeutralConductorSize());
-        assertEquals(cable1.getGroundingConductorSize(), cable2.getGroundingConductorSize());
+        assertEquals(cable1.getPhaseConductor().getSize(), cable2.getPhaseConductor().getSize());
+        assertEquals(cable1.hasNeutral()? cable1.getNeutralConductor().getSize(): null,
+                     cable2.hasNeutral()? cable2.getNeutralConductor().getSize(): null);
+        assertEquals(cable1.getGroundingConductor().getSize(), cable2.getGroundingConductor().getSize());
         assertEquals(cable1.getMetal(), cable2.getMetal());
         assertEquals(cable1.getInsulation(), cable2.getInsulation());
         assertEquals(cable1.getLength(), cable2.getLength());
         assertEquals(cable1.getAmbientTemperatureF(), cable2.getAmbientTemperatureF());
         assertEquals(cable1.getCopperCoating(), cable2.getCopperCoating());
-        assertEquals(cable1.isNeutralCarryingConductor(), cable2.isNeutralCarryingConductor());
+        assertFalse(cable1.hasNeutral());
+        assertFalse(cable2.hasNeutral());
+        assertThrows(IllegalArgumentException.class, cable1::isNeutralCurrentCarrying);
+        assertThrows(IllegalArgumentException.class, cable2::isNeutralCurrentCarrying);
         assertEquals(cable1.isJacketed(), cable2.isJacketed());
         assertEquals(cable1.getOuterDiameter(), cable2.getOuterDiameter());
         assertEquals(cable1.getRooftopDistance(), cable2.getRooftopDistance());
@@ -563,11 +571,106 @@ class CableTest {
         Cable cable = new Cable(VoltageAC.v480_3ph_4w);
         assertEquals(3, cable.getCurrentCarryingCount());
 
-        cable.setNeutralCarryingConductor();
+        cable.setNeutralAsCurrentCarrying();
         assertEquals(4, cable.getCurrentCarryingCount());
 
-        cable.setNeutralNonCarryingConductor();
+        cable.setNeutralAsNonCurrentCarrying();
         assertEquals(3, cable.getCurrentCarryingCount());
+    }
+
+    @Test
+    void errorMessages(){
+        Cable cable;
+        assertThrows(IllegalArgumentException.class,()->new Cable(null));
+
+        cable = new Cable(VoltageAC.v480_3ph_4w);
+        cable.setPhaseConductorSize(null);
+        assertTrue(cable.getResultMessages().containsMessage(Conductor.ERROR062));
+        cable.setPhaseConductorSize(Size.AWG_4$0);
+        assertFalse(cable.getResultMessages().hasErrors());
+
+        cable.setNeutralConductorSize(null);
+        assertTrue(cable.getResultMessages().containsMessage(Conductor.ERROR063));
+        cable.setNeutralConductorSize(Size.AWG_10);
+        assertFalse(cable.getResultMessages().hasErrors());
+
+        cable.setGroundingConductorSize(null);
+        assertTrue(cable.getResultMessages().containsMessage(Conductor.ERROR064));
+        cable.setGroundingConductorSize(Size.AWG_12);
+        assertFalse(cable.getResultMessages().hasErrors());
+
+        cable.setMetalForPhaseAndNeutral(null);
+        assertTrue(cable.getResultMessages().containsMessage(Conductor.ERROR051));
+        cable.setMetalForPhaseAndNeutral(Metal.ALUMINUM);
+        assertFalse(cable.getResultMessages().hasErrors());
+
+        cable.setInsulation(null);
+        assertTrue(cable.getResultMessages().containsMessage(Conductor.ERROR052));
+        cable.setInsulation(Insul.TW);
+        assertFalse(cable.getResultMessages().hasErrors());
+
+        cable.setLength(0);
+        assertTrue(cable.getResultMessages().containsMessage(Conductor.ERROR053));
+        cable.setLength(123);
+        assertFalse(cable.getResultMessages().hasErrors());
+
+        cable.setAmbientTemperatureF(0);
+        assertTrue(cable.getResultMessages().containsMessage(Conductor.ERROR054));
+        cable.setAmbientTemperatureF(100);
+        assertFalse(cable.getResultMessages().hasErrors());
+
+        cable.setCopperCoating(null);
+        assertTrue(cable.getResultMessages().containsMessage(Conductor.ERROR055));
+        cable.setCopperCoating(Coating.UNCOATED);
+        assertFalse(cable.getResultMessages().hasErrors());
+
+        cable.setType(null);
+        assertTrue(cable.getResultMessages().containsMessage(Conductor.ERROR059));
+        cable.setType(CableType.NM);
+        assertFalse(cable.getResultMessages().hasErrors());
+
+        assertNotEquals("", cable.getDescription());
+
+        assertEquals(0.82, cable.getCompoundFactor());
+        assertEquals(0.91, cable.getCompoundFactor(TempRating.T90));
+        assertEquals(1, cable.getCompoundFactor(null));
+        assertEquals(0.82, cable.getCompoundFactor(TempRating.T60));
+        assertEquals(0.88, cable.getCompoundFactor(TempRating.T75));
+        assertFalse(cable.isNeutralCurrentCarrying());
+        assertEquals(Size.AWG_4$0, cable.getSize());
+        assertEquals(Size.AWG_4$0, cable.getPhaseConductor().getSize());
+        assertEquals(Size.AWG_10, cable.getNeutralConductor().getSize());
+        assertEquals(Size.AWG_12, cable.getGroundingConductor().getSize());
+
+        Cable cable2 = new Cable(VoltageAC.v208_3ph_3w);
+        assertThrows(IllegalArgumentException.class, cable2::setNeutralAsCurrentCarrying);
+        assertThrows(IllegalArgumentException.class, cable2::setNeutralAsNonCurrentCarrying);
+        assertThrows(IllegalArgumentException.class, ()-> cable2.setNeutralConductorSize(Size.AWG_12));
+
+        Conduit conduit = new Conduit(86);
+        cable2.setAmbientTemperatureF(100);
+        assertEquals(100, cable2.getAmbientTemperatureF());
+        conduit.add(cable2);
+        assertEquals(86, cable2.getAmbientTemperatureF());
+        assertThrows(IllegalArgumentException.class, ()-> cable2.setAmbientTemperatureF(100));
+
+        Cable cable3 = new Cable(VoltageAC.v208_3ph_3w);
+        Bundle bundle = new Bundle(86);
+        cable3.setAmbientTemperatureF(100);
+        assertEquals(100, cable3.getAmbientTemperatureF());
+        bundle.add(cable3);
+        assertEquals(86, cable3.getAmbientTemperatureF());
+        assertThrows(IllegalArgumentException.class, ()-> cable3.setAmbientTemperatureF(100));
+        assertNotEquals("", cable.toJSON());
+
+        cable.setMetalForPhaseAndNeutral(Metal.COPPER);
+        cable.setMetalForGrounding(null);
+        assertTrue(cable.getResultMessages().containsMessage(Conductor.ERROR058));
+        cable.setMetalForGrounding(Metal.ALUMINUM);
+        assertFalse(cable.getResultMessages().hasErrors());
+        assertEquals(Metal.COPPER,cable.getMetalForPhaseAndNeutral());
+        assertEquals(Metal.ALUMINUM,cable.getMetalForGrounding());
+        System.out.println("This is a stringP");
 
     }
 

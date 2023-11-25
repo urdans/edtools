@@ -6,7 +6,7 @@ import eecalcs.conductors.raceways.Cable;
 import eecalcs.conductors.raceways.Conductor;
 import eecalcs.conductors.raceways.Conduit;
 import eecalcs.conduits.Type;
-import eecalcs.systems.TempRating;
+import eecalcs.conductors.TempRating;
 import eecalcs.systems.VoltageAC;
 import org.junit.jupiter.api.Test;
 
@@ -18,7 +18,7 @@ class ConductorTest {
     Conduit conduit;
 
     @Test
-    void testClone() {
+    void testCopy() {
         Conductor cond1 = new Conductor()
                 .setSize(Size.AWG_8)
                 .setMetal(Metal.ALUMINUM)
@@ -313,24 +313,6 @@ class ConductorTest {
         assertEquals(113.1,conductor2.getCorrectedAndAdjustedAmpacity());
     }
 
-/*    @Test
-    void illustrateGuideContinuousLoadPage102_case1(){
-        Conductor conductor2 = new Conductor()
-                .setSize(Size.AWG_12)
-                .setMetal(Metal.COPPER)
-                .setInsulation(Insul.THHW)
-                .setLength(10);
-        Conduit raceway = new Conduit(TempRating.getFahrenheit(43))
-                .setType(Type.PVC40)
-                .setNonNipple();
-        raceway.add(conductor2);
-        raceway.add(conductor2.copy());
-        raceway.add(conductor2.copy());
-        raceway.add(conductor2.copy());
-        raceway.add(conductor2.copy());
-        raceway.add(conductor2.copy());
-    }*/
-
     @Test
     void illustrateGuideContinuousLoadPage102_case1(){
         Conductor conductor2 = new Conductor()
@@ -393,4 +375,89 @@ class ConductorTest {
         assertEquals(Size.KCMIL_2000, phaseB.getSize());
         assertEquals(Insul.TBS, phaseB.getInsulation());
     }
+
+    @Test
+    void errorMessages(){
+        conductor = new Conductor();
+
+        conductor.setSize(null);
+        assertTrue(conductor.getResultMessages().containsMessage(Conductor.ERROR050));
+        assertNull(conductor.getSize());
+
+        conductor.setSize(Size.AWG_8);
+        assertFalse(conductor.getResultMessages().hasErrors());
+        assertEquals(Size.AWG_8, conductor.getSize());
+//--
+        conductor.setMetal(null);
+        assertTrue(conductor.getResultMessages().containsMessage(Conductor.ERROR051));
+        assertNull(conductor.getMetal());
+
+        conductor.setMetal(Metal.ALUMINUM);
+        assertFalse(conductor.getResultMessages().hasErrors());
+        assertEquals(Metal.ALUMINUM, conductor.getMetal());
+//--
+        conductor.setInsulation(null);
+        assertTrue(conductor.getResultMessages().containsMessage(Conductor.ERROR052));
+        assertNull(conductor.getInsulation());
+
+        conductor.setInsulation(Insul.THWN2);
+        assertFalse(conductor.getResultMessages().hasErrors());
+        assertEquals(Insul.THWN2, conductor.getInsulation());
+//--
+        conductor.setLength(0);
+        assertTrue(conductor.getResultMessages().containsMessage(Conductor.ERROR053));
+        assertEquals(0, conductor.getLength());
+
+        conductor.setLength(12345);
+        assertFalse(conductor.getResultMessages().hasErrors());
+        assertEquals(12345, conductor.getLength());
+//--
+        conductor.setAmbientTemperatureF(186);
+        assertTrue(conductor.getResultMessages().containsMessage(Conductor.ERROR054));
+        assertEquals(186, conductor.getAmbientTemperatureF());
+
+        conductor.setAmbientTemperatureF(154);
+        assertFalse(conductor.getResultMessages().hasErrors());
+        assertEquals(154, conductor.getAmbientTemperatureF());
+//--
+        conductor.setCopperCoating(null);
+        assertTrue(conductor.getResultMessages().containsMessage(Conductor.ERROR055));
+        assertNull(conductor.getCopperCoating());
+
+        conductor.setCopperCoating(Coating.COATED);
+        assertFalse(conductor.getResultMessages().hasErrors());
+        assertEquals(Coating.COATED, conductor.getCopperCoating());
+//--
+        conductor.setRole(null);
+        assertTrue(conductor.getResultMessages().containsMessage(Conductor.ERROR056));
+        assertNull(conductor.getRole());
+
+        conductor.setRole(Conductor.Role.GND);
+        assertFalse(conductor.getResultMessages().hasErrors());
+        assertEquals(Conductor.Role.GND, conductor.getRole());
+//--
+        assertNotEquals("", conductor.getRole().getDescription());
+        assertEquals(5, Conductor.Role.getDescriptions().length);
+        assertEquals(1, conductor.getCompoundFactor(null));
+        conductor.setRole(null);
+        assertEquals(0, conductor.getInsulatedAreaIn2());
+        assertEquals(0, conductor.getCorrectedAndAdjustedAmpacity());
+        assertEquals(0, conductor.getCorrectionFactor());
+        assertEquals(0, conductor.getAdjustmentFactor());
+        assertEquals(0, conductor.getCompoundFactor());
+        assertEquals(0, conductor.getCompoundFactor(TempRating.T60));
+        assertNull(conductor.getTemperatureRating());
+        assertEquals(0, conductor.getCurrentCarryingCount());
+        assertEquals("", conductor.getDescription());
+        assertNotEquals("", conductor.toString());
+//--
+        conduit = new Conduit(85);
+        conduit.add(conductor);
+        assertThrows(IllegalArgumentException.class, ()->
+                conductor.setAmbientTemperatureF(99));
+        assertNotEquals("", conductor.toJSON());
+
+        System.out.println(conductor.toJSON());
+    }
+
 }

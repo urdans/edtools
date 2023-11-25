@@ -1,7 +1,5 @@
 package eecalcs.conductors;
 
-import eecalcs.systems.TempRating;
-
 /**
  A Conduitable object is a conductor or a cable. Any of these objects can be
  installed inside a Conduit object, therefore the name Conduitable. This
@@ -13,8 +11,8 @@ import eecalcs.systems.TempRating;
 public interface Conduitable {
 
 	/**
-	 @return The size of this conduitable. For a conductor, it refers to the
-	 its size. For a cable, it refers to the size of the phase conductors.
+	 @return The size of this conduitable. For a conductor, it refers to its
+	 size. For a cable, it refers to the size of the phase conductors.
 	 @see Size
 	 */
 	Size getSize();
@@ -62,43 +60,43 @@ public interface Conduitable {
 	 accounted for at the {@link eecalcs.circuits.Circuit} class level.<br>
 
 	 <p>If no correction factor is required ({@link #getCorrectionFactor()}
-	 returns 1), the conductor should be sized per 110.14(C), that is:
+	 returns 1), the conductor must be sized per 110.14(C), that is:
 	 <p>&emsp;
-	 - per the 60°C column for conductors 14AWG to 1AWG or circuits up to
-	 100AMPS, UNLESS it's known the terminals are rated for 75°C.
+	 - per the 60 °C column for conductors 14AWG to 1AWG or circuits up to
+	 100AMPS, UNLESS it's known the terminals are rated for 75 °C.
 	 <p>&emsp;
-	 - per the 75°C column for conductors larger than 1AWG or circuits above
+	 - per the 75 °C column for conductors larger than 1AWG or circuits above
 	 100AMPS.
 	 <p>In both cases, conductors with temperature ratings higher than specified
 	 for terminations shall be permitted to be used for ampacity adjustment,
 	 correction, or both. This is the reason why the rating of the terminals
-	 are accounted for outside of this class.<br>
+	 are accounted for outside this class.<br>
 
 	 <p>Conductors rated for a temperature higher than termination can be
 	 used for correction and adjustment only if the corrected and adjusted
 	 ampacity does not exceed the ampacity of the conductor for the
 	 termination temperature. This rule appears several times throughout the
 	 code.<br><br>
-	 <p>A concrete example is as follow: Suppose a load was calculated at 105
+	 <p>A concrete example is as follows: Suppose a load was calculated at 105
 	 AMPS. The installer is going to use a surplus of THHW copper conductors
-	 (90°C). Let's assume that there are 4 current-carrying conductors in the
-	 raceway and that the ambient temperature is 100°C:
+	 (90 °C). Let's assume that there are 4 current-carrying conductors in the
+	 raceway and that the ambient temperature is 100 °C:
 	 <p>&emsp;
-	 - Temperature correction factor for a 90°C conductor (TABLE 310.15(B)(2)
+	 - Temperature correction factor for a 90 °C conductor (TABLE 310.15(B)(2)
 	 (a)) = 0.91
 	 <p>&emsp;
 	 - Adjustment factor for four current-carrying conductors (TABLE
 	 310.15(B)(3)(a)) = 0.8
 	 <p>&emsp;
-	 - Looking for 105/(0.91x0.8)=144.2 Amps in column for 90°C, we find that
+	 - Looking for 105/(0.91x0.8)=144.2 Amps in column for 90 °C, we find that
 	 # 1 AWG THHW  is 145 Amps, so it's good.
 	 <p>&emsp;
 	 - The corrected ampacity of that conductor is 145x0.91x0.8 = 105.6 Amps.
 	 <p>&emsp;
 	 - 105.56 Amps is above the load current of 105 Amps, so it's good for the
-	 load. since
+	 load.
 	 <p>The # 1 AWG THHW wire is good because the ampacity for the same wire at
-	 60°C is 110AMP.<br>
+	 60 °C is 110AMP.<br>
 	 <p>The general approach to determine the allowed ampacity is:
 	 <p>&emsp;&emsp;
 	 AllowedAmpacity*TCF*AF {@literal >}= load Amps
@@ -119,7 +117,7 @@ public interface Conduitable {
 	 {@link eecalcs.circuits.Circuit} class would need as reversed
 	 coefficient to multiply the load amperes (to get the 144.23 AMPS from
 	 the example). Then the method
-	 {@link ConductorProperties#getSizeFromStandardAmpacityTable(double,
+	 {@link ConductorProperties#getSizePerCurrent(double,
 	 Metal, TempRating)} can provide the proper size of the conductor.
 	 */
 	double getCorrectedAndAdjustedAmpacity();
@@ -190,7 +188,7 @@ public interface Conduitable {
 	TempRating getTemperatureRating();
 
 	/**
-	 @return The metal of this conduitable as defined by {@link Metal}
+	 @return The metal of this conduitable.
 	 */
 	Metal getMetal();
 

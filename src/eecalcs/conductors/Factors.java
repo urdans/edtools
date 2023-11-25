@@ -1,10 +1,7 @@
 package eecalcs.conductors;
 
-import eecalcs.systems.TempRating;
-
 /**
- This class encapsulates static methods to provide temperature correction
- factors
+ This class encapsulates static methods to provide temperature correction factors
  for conductors and applies to ampacities defined in NEC "TABLE 310.15(B)(2)(a)
  Ambient Temperature Correction Factors Based on 30°C (86°F)", as well as to
  provide adjustment factor for number of current-carrying conductors in the same
