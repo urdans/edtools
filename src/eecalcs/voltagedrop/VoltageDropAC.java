@@ -432,7 +432,7 @@ public class VoltageDropAC {
 				conduitable.getLength(), numberOfSets);
 
 		double oneWayConductorReactance = ConductorProperties.getReactance(size,
-				ConduitProperties.isMagnetic(conduitMaterial),
+				conduitMaterial.isMagnetic(),
 				conduitable.getLength(), numberOfSets);
 
 		Complex totalConductorImpedanceComplex =
@@ -476,7 +476,7 @@ public class VoltageDropAC {
 				conduitMaterial) * 0.001 / numberOfSets;
 
 		double conductorX = ConductorProperties.getReactance(size,
-				ConduitProperties.isMagnetic(conduitMaterial)) * 0.001 / numberOfSets;
+				conduitMaterial.isMagnetic()) * 0.001 / numberOfSets;
 
 		double theta = Math.acos(powerFactor);
 		double Vs2 = Math.pow(sourceVoltageSystem.getVoltage(), 2);

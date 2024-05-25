@@ -237,8 +237,8 @@ public class VoltageDropDC {
 			resultMessages.add(ERROR12);
 		if(conduitable.getLength() <= 0)
 			resultMessages.add(ERROR05);
-		if(conduitable.getCopperCoating() == null)
-			resultMessages.add(ERROR14);
+/*		if(conduitable.getCopperCoating() == null)
+			resultMessages.add(ERROR14);*/
 		if(loadCurrent <= 0 )
 			resultMessages.add(ERROR06);
 		if(numberOfSets <= 0 || numberOfSets > 10)
@@ -323,8 +323,8 @@ public class VoltageDropDC {
 				size,
 				conduitable.getMetal(),
 				conduitable.getLength(),
-				numberOfSets,
-				conduitable.getCopperCoating());
+				numberOfSets/*,
+				conduitable.getCopperCoating()*/);
 		return dcVoltage - 2 * oneWayDCResistance * loadCurrent;
 	}
 
@@ -352,8 +352,8 @@ public class VoltageDropDC {
 				size,
 				conduitable.getMetal(),
 				conduitable.getLength(),
-				numberOfSets,
-				conduitable.getCopperCoating());
+				numberOfSets/*,
+				conduitable.getCopperCoating()*/);
 		return dcVoltage
 				* maxVoltageDropPercent
 				* conduitable.getLength()

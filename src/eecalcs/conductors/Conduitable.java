@@ -1,5 +1,8 @@
 package eecalcs.conductors;
 
+import eecalcs.systems.NEC;
+import org.jetbrains.annotations.NotNull;
+
 /**
  A Conduitable object is a conductor or a cable. Any of these objects can be
  installed inside a Conduit object, therefore the name Conduitable. This
@@ -17,10 +20,10 @@ public interface Conduitable {
 	 */
 	Size getSize();
 
-	/**
+	/*
 	 @return The coating or no-coating of this conduitable.
-	 */
-	Coating getCopperCoating();
+	 /
+	@NotNull Coating getCopperCoating();*/
 
 	/**
 	 @return The cross sectional area of this Conduitable object. This area
@@ -89,7 +92,7 @@ public interface Conduitable {
 	 310.15(B)(3)(a)) = 0.8
 	 <p>&emsp;
 	 - Looking for 105/(0.91x0.8)=144.2 Amps in column for 90 °C, we find that
-	 # 1 AWG THHW  is 145 Amps, so it's good.
+	 # 1 AWG THHW is 145 Amps, so it's good.
 	 <p>&emsp;
 	 - The corrected ampacity of that conductor is 145x0.91x0.8 = 105.6 Amps.
 	 <p>&emsp;
@@ -152,18 +155,17 @@ public interface Conduitable {
 	 @return The insulation of this conduitable.
 	 @see Insul
 	 */
-	Insul getInsulation();
+	@NotNull Insul getInsulation();
 
 	/**
-	 @return The temperature correction factor for this conduitable.
+	 @return The temperature correction factor for this conduitable, as it is
+	 defined by the NEC.
 	 */
 	double getCorrectionFactor();
 
 	/**
-	 @return The adjustment factor for ampacity of this conduitable, as per
-	 <b>NEC 310.15(B)(3)</b>; it specifically accounts for rules
-	 <b>310.15(B)(3)(a)(4) {@literal &} (5)</b> and
-	 <b>Table 310.15(B)(3)(a).</b>
+	 @return The ampacity adjustment factor for this conduitable as defined
+	 by the NEC.
 	 */
 	double getAdjustmentFactor();
 
@@ -177,20 +179,20 @@ public interface Conduitable {
 	 @param tempRating The temperature rating of the termination.
 	 @return The product of the correction and adjustment factor of this
 	 conduitable when calculated based on the given temperature
-	 rating. If tempRating is null the returned value is 1.
+	 rating. Cannot be null.
 	 */
-	double getCompoundFactor(TempRating tempRating);
+	double getCompoundFactor(@NotNull TempRating tempRating);
 
 	/**
 	 @return The temperature rating of this conduitable per its insulation, as
 	 defined in {@link TempRating}
 	 */
-	TempRating getTemperatureRating();
+	@NotNull TempRating getTemperatureRating();
 
 	/**
 	 @return The metal of this conduitable.
 	 */
-	Metal getMetal();
+	@NotNull Metal getMetal();
 
 	/**
 	 @return The length of this conductor in feet (one-way length).

@@ -10,5 +10,9 @@ package eecalcs.conduits;
  </ul>
  */
 public enum Material {
-	PVC, STEEL, ALUMINUM
+	PVC, STEEL, ALUMINUM;
+
+	public boolean isMagnetic() {
+		return this != PVC && this != ALUMINUM;
+	}
 }

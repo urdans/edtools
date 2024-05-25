@@ -7,7 +7,7 @@ package eecalcs.conductors;
  <li><b>UNCOATED</b>: false</li>
  </ul>
  */
-public enum Coating {
+/*public enum Coating {
 	COATED(true),
 	UNCOATED(false);
 	private final boolean coating;
@@ -16,12 +16,12 @@ public enum Coating {
 		this.coating = coating;
 	}
 
-	/**
+	*//**
 	 Asks if this Coating object is coated or not.
 	 @return True if the value represents a coated copper conductor, false
 	 otherwise.
-	 */
+	 *//*
 	public boolean isCoated() {
 		return coating;
 	}
-}
+}*/

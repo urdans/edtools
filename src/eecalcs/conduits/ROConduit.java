@@ -1,8 +1,8 @@
 package eecalcs.conduits;
 
 import eecalcs.conductors.Conduitable;
-import eecalcs.conductors.raceways.Conduit;
-import tools.ROResultMessages;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  This interface is intended to be used by the class {@link Conduit} in order to
@@ -27,17 +27,16 @@ public interface ROConduit {
 	 this conduit.
 	 @return True if this conduit contains it, false otherwise.
 	 */
-	boolean hasConduitable(Conduitable conduitable);
+	boolean hasConduitable(@NotNull Conduitable conduitable);
 
 	/**
 	 Returns the minimum allowable trade size for this conduit.
 	 @return The minimum allowable trade size for this conduit.
 	 */
-	Trade getMinimumTrade();
+	@NotNull Trade getMinimumTradeSize();
 
 	/**
-	 Returns the number of conductor that fills this conduit as set forth in
-     NEC
+	 Returns the number of conductors that fill this conduit as set forth in NEC
 	 chapter 9, Table 1. Cables always count as one conductor. The returned
 	 number is used to compute the percentage of filling area in this conduit.
 	 @return The number of conductors.
@@ -51,9 +50,7 @@ public interface ROConduit {
 	int getCurrentCarryingCount();
 
 	/**
-	 Returns the total area of the conductors filling this conduit, including
-	 the
-	 ones within any cables.
+	 Returns the sum of the areas of all the conduitables inside this conduit.
 	 @return The total area in square inches.
 	 */
 	double getConduitablesArea();
@@ -71,7 +68,7 @@ public interface ROConduit {
 	 @return The type of this conduit.
 	 @see Type
 	 */
-	Type getType();
+	@NotNull Type getType();
 
 	/**
 	 Asks if this conduit is a nipple, that is, its length is equal or less
@@ -92,26 +89,21 @@ public interface ROConduit {
 	 Returns the rooftop distance of this conduit.
 	 @return The rooftop distance of this conduit.
 	 */
-	double getRoofTopDistance();
+	double getRooftopDistance();
 
 	/**
-	 Calculates the trade size of this conduit to accommodate all its
-     conductors
-	 and cables. The calculation will depend on if this conduit is a nipple or
-	 not, and on the minimum trade size it can be. It counts all the conductors
-	 including the EGC belonging to each circuit filling this conduit. To get
-	 the
-	 size of this conduit by accounting for the biggest EGC use {@link
-	#getTradeSizeForOneEGC()}. To obtain the size of an EGC that would replace
-	 all the existing EGC call {@link #getBiggestEGC()}
+	 Calculates the trade size of this conduit to accommodate all its conductors
+	 and cables. The calculated trade size will depend on if this conduit is a nipple or
+	 not, on the minimum trade size it can be, and on the total number of conductors/cables in this conduit. It accounts
+	 for all the conductors and cables,including the EGC belonging to each circuit filling this conduit. To get
+	 the size of this conduit by accounting for the biggest EGC use {@link #getTradeSizeForOneEGC()}. To obtain the
+	 size of an EGC that would replace all the existing EGC call {@link #getBiggestEGC()}
 	 @return The calculated trade size of this conduit.
 	 */
-	Trade getTradeSize();
+	@Nullable Trade getTradeSize();
 
 	/**
-	 @return The area in square inches of this conduit or zero if the trade
-     size
-	 is null.
+	 @return The area in square inches of this conduit or zero if the trade size is null.
 	 */
 	double getArea();
 
@@ -124,11 +116,10 @@ public interface ROConduit {
 
 	/**
 	 @return The trade size of this conduit as if it was using only one EGC.
-     The
-	 conduit must have at least one EGC. Returns null if there is no EGC. Refer
+     The conduit must have at least one EGC. Returns null if there is no EGC. Refer
 	 to {@link #getBiggestEGC()} for more information.
 	 */
-	Trade getTradeSizeForOneEGC();
+	@Nullable Trade getTradeSizeForOneEGC();
 
 	/**
 	 @return The size of the EGC that is able to replace all existing EGC of
@@ -142,9 +133,7 @@ public interface ROConduit {
      are
 	 cables in this conduit it is assumed their EGC are properly sized.
 	 */
-	Conduitable getBiggestEGC();
+	@Nullable Conduitable getBiggestEGC();
 
 	int getAmbientTemperatureF();
-
-    ROResultMessages getResultMessages();
 }

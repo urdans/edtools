@@ -640,7 +640,7 @@ public class ConductorProperties {
 	/**
 	 Returns a Properties object for the given conductor size.
 	 @param conductorSize The size of the conductor for which the properties
-	 object is being requested.
+	 object is being requested. It cannot be null.
 	 @return A Properties object for the given conductor size.
 	 @see Size
 	 */
@@ -666,15 +666,14 @@ public class ConductorProperties {
 	}
 
 	/**
-	 Returns the area in square inches of a compact conductor (Table 5A) of the
-	 given size and of insulation.
+	 Returns the area of a compact conductor (Table 5A) of the given size and
+	 insulation.
 	 @param conductorSize The size of the conductor as defined by {@link Size}
 	 @param insulation The insulation type of the conductor as defined by
 	 {@link
 	 Insul}
-	 @return The area of the compact conductor or zero if any of the
-	 parameter is
-	 invalid or the area is not defined in table 5.
+	 @return The area of the compact conductor, in square inches, or zero if
+	 the area of  the given conductor is not defined in table 5A.
 	 */
 	public static double getCompactConductorAreaIn2(Size conductorSize,
 	                                                Insul insulation) {
@@ -729,18 +728,19 @@ public class ConductorProperties {
 	/**
 	 Returns true if a compact bare conductor of the given has its area defined
 	 in table 5A.
-	 @param conductorSize The size of the conductor as defined by {@link Size}
-	 @return True if the area is defined in table 5A, false otherwise or
-	 parameter is null.
+	 @param conductorSize The size of the conductor as defined by
+	 {@link Size}. It cannot be null.
+	 @return True if the area is defined in table 5A, false otherwise.
 	 */
 	public static boolean hasCompactBareAreaDefined(@NotNull Size conductorSize) {
 		return compactBareDimensions.containsKey(conductorSize);
 	}
 
 	/**
-	 Requests for the temperature rating of the given insulation. It assumes
-	 the location of the underlined conductor is DRY.
-	 @param insulation The requested insulation.
+	 Requests the temperature rating of the given insulation. It assumes the
+	 location of the underlined conductor is DRY.
+	 @param insulation The requested insulation as defined in {@link Insul}. It
+	 cannot be null.
 	 @return A {@link TempRating} enum representing the temperature rating of
 	 this insulation.
 	 */
@@ -762,10 +762,12 @@ public class ConductorProperties {
 	}
 
 	/**
-	 Requests for the temperature rating of the given insulation for the given
+	 Requests the temperature rating of the given insulation for the given
 	 location condition.
-	 @param insulation The requested insulation.
-	 @param location The location condition. See {@link Location}.
+	 @param insulation The requested insulation, as defined in {@link Insul}.
+	 It cannot be null.
+	 @param location The location condition. See {@link Location}. It cannot
+	 be null.
 	 @return A {@link TempRating} enum representing the temperature rating of
 	 this insulation.
 	 */
@@ -778,6 +780,7 @@ public class ConductorProperties {
 	}
 
 	/**
+	 Compares the two given conductor sizes and returns the biggest one.
 	 @param size1 Size to be compared.
 	 @param size2 Size to be compared.
 	 @return The biggest of the two sizes.
@@ -789,7 +792,8 @@ public class ConductorProperties {
 	/**
 	 Returns the reactance property of this conductor under the given conduit
 	 magnetic condition.
-	 @param conductorSize The size of the conductor as defined by {@link Size}.
+	 @param conductorSize The size of the conductor as defined by
+	 {@link Size}. It cannot be null.
 	 @param magneticConduit Indicates if the conduit is magnetic or not.
 	 @return The reactance of this conductor in ohms per 1000 feet.
 	 */
@@ -801,11 +805,12 @@ public class ConductorProperties {
 	}
 
 	/**
-	 Returns the total reactance of this conductor under the given magnetic
-	 conduit condition, for the given length and number of parallel conductors.
-	 @param conductorSize The size of the conductor as defined by {@link Size}.
+	 Returns the total reactance of this conductor for the given magnetic
+	 conduit condition, length and number of parallel conductors.
+	 @param conductorSize The size of the conductor as defined by
+	 {@link Size}. It cannot be null.
 	 @param magneticConduit Indicates if the conduit is magnetic or not.
-	 @param oneWayLength The length in feet of this conductor. Must be >=0
+	 @param oneWayLength The length in feet of this conductor. Must be >0
 	 @param numberOfSets The number of conductors in parallel. Must be >0
 	 @return The total reactance under the specified conditions, in ohms.
 	 */
@@ -813,8 +818,8 @@ public class ConductorProperties {
 	                                  boolean magneticConduit,
 	                                  double oneWayLength,
 	                                  int numberOfSets) {
-		if (oneWayLength < 0)
-			throw new IllegalArgumentException("oneWayLength must be >= 0");
+		if (oneWayLength <= 0)
+			throw new IllegalArgumentException("oneWayLength must be > 0");
 		if (numberOfSets <= 0 )
 			throw new IllegalArgumentException("numberOfSets must be > 0");
 
@@ -823,7 +828,8 @@ public class ConductorProperties {
 
 	/**
 	 Returns the metal area of the given conductor, in Circular Mils.
-	 @param conductorSize The size of the conductor as defined by {@link Size}.
+	 @param conductorSize The size of the conductor as defined by
+	 {@link Size}. It cannot be null.
 	 @return The area in Circular Mils.
 	 */
 	public static int getAreaCM(@NotNull Size conductorSize) {
@@ -838,7 +844,7 @@ public class ConductorProperties {
 	 */
 	public static @Nullable Size getSizePerArea(double cmArea) {
 		if (cmArea <= 0)
-			throw new IllegalArgumentException("cmArea must be >= 0");
+			throw new IllegalArgumentException("cmArea must be > 0");
 
 		for (Properties properties : table) {
 			if (properties.areaCM >= cmArea)
@@ -849,22 +855,18 @@ public class ConductorProperties {
 
 	/**
 	 Returns the DC resistance of this conductor size for the given metal. If
-	 the
-	 specified metal is aluminum, the copperCoated parameter is ignored.
+	 the specified metal is aluminum, the copperCoated parameter is ignored.
 	 @param conductorSize The size of the conductor as defined by {@link Size}
 	 @param metal The metal of the conductor as defined by  {@link Metal}.
-	 @param copperCoated Indicates for a copper conductor if it is coated or
-	 not.
+	 None of these parameters can be null.
 	 @return The DC resistance of this conductor in ohms per 1000 feet.
 	 */
 	public static double getDCResistance(@NotNull Size conductorSize,
-	                                     @NotNull Metal metal,
-	                                     @NotNull Coating copperCoated) {
-		if (metal == Metal.COPPER) {
-			if (copperCoated.isCoated())
-				return bySize(conductorSize).CuResDCCoated;
+	                                     @NotNull Metal metal) {
+		if (metal == Metal.COPPER)
 			return bySize(conductorSize).CuResDCUncoated;
-		}
+		if (metal == Metal.COPPERCOATED)
+			return bySize(conductorSize).CuResDCCoated;
 		return bySize(conductorSize).ALResDC;
 	}
 
@@ -872,38 +874,39 @@ public class ConductorProperties {
 	 Returns the DC resistance of this conductor size for the given metal,
 	 length, sets, etc. If the specified metal is aluminum, the copperCoated
 	 parameter is ignored.
-	 @param conductorSize The size of the conductor as defined by {@link Size}.
-	 @param metal The metal of the conductor as defined by  {@link Metal}.
-	 @param oneWayLength The length of the conductor. Must be >=0
+	 @param conductorSize Not null. The size of the conductor as defined by
+	 {@link Size}.
+	 @param metal Not null. The metal of the conductor as defined by
+	 {@link Metal}.
+	 @param oneWayLength The length of the conductor. Must be >0
 	 @param numberOfSets The number of conductors in parallel. Must be >0.
-	 @param copperCoated Indicates for a copper conductor if it is coated or
-	 not.
 	 @return The DC resistance in ohms of this conductor size under the given
 	 conditions.
 	 */
 	public static double getDCResistance(@NotNull Size conductorSize,
 	                                     @NotNull Metal metal,
-	                                     double oneWayLength, int numberOfSets,
-	                                     @NotNull Coating copperCoated) {
-		if (oneWayLength < 0)
-			throw new IllegalArgumentException("oneWayLength must be >= 0");
+	                                     double oneWayLength, int numberOfSets) {
+		if (oneWayLength <= 0)
+			throw new IllegalArgumentException("oneWayLength must be > 0");
 		if (numberOfSets <= 0 )
 			throw new IllegalArgumentException("numberOfSets must be > 0");
 
-		return getDCResistance(conductorSize, metal, copperCoated) * 0.001 * oneWayLength / numberOfSets;
+		return getDCResistance(conductorSize, metal) * 0.001 * oneWayLength / numberOfSets;
 	}
 
 	/**
 	 Returns the AC resistance of this conductor size for the given metal and
 	 conduit material.
-	 @param conductorSize The size of the conductor as defined by {@link Size}.
-	 @param metal The metal of the conductor as defined by {@link Metal}.
-	 @param conduitMaterial The material type of the conduit as specified in
-	 {@link Material}.
+	 @param conductorSize Not null. The size of the conductor as defined by
+	 {@link Size}.
+	 @param metal Not null. The metal of the conductor as defined by
+	 {@link Metal}.
+	 @param conduitMaterial The material type of the conduit as specified in {@link Material}, or NULL if the
+	 conductor is in free air.
 	 @return The AC resistance in ohms per 1000 feet.
 	 */
 	public static double getACResistance(@NotNull Size conductorSize, @NotNull Metal metal,
-	                                     @NotNull Material conduitMaterial) {
+	                                     @Nullable Material conduitMaterial) {
 		if (metal == Metal.COPPER) {
 			if (conduitMaterial == Material.PVC)
 				return bySize(conductorSize).CuResInPVCCond;
@@ -912,7 +915,7 @@ public class ConductorProperties {
 			else
 				return bySize(conductorSize).CuResInSteelCond;
 		} else {
-			if (conduitMaterial == Material.PVC)
+			if (conduitMaterial == Material.PVC || conduitMaterial == null)
 				return bySize(conductorSize).ALResInPVCCond;
 			else if (conduitMaterial == Material.ALUMINUM)
 				return bySize(conductorSize).ALResInALCond;
@@ -924,11 +927,13 @@ public class ConductorProperties {
 	/**
 	 Returns the AC resistance of this conductor size for the given metal,
 	 conduit material, length and number of sets.
-	 @param conductorSize The size of the conductor as defined by {@link Size}
-	 @param metal The metal of the conductor as defined by {@link Metal}.
-	 @param conduitMaterial The material type of the conduit as specified in
-	 {@link Material}.
-	 @param oneWayLength The length of the conductor in feet. Must be >=0
+	 @param conductorSize Not null. The size of the conductor as defined by
+	 {@link Size}
+	 @param metal Not null. The metal of the conductor as defined by
+	 {@link Metal}.
+	 @param conduitMaterial Not null. The material type of the conduit as
+	 specified in {@link Material}.
+	 @param oneWayLength The length of the conductor in feet. Must be >0
 	 @param numberOfSets The number of sets (conductors in parallel per
 	 phase). Must be > 0
 	 @return The AC resistance in ohms of this conductor size under the given
@@ -938,7 +943,7 @@ public class ConductorProperties {
 	                                     @NotNull Material conduitMaterial,
 	                                     double oneWayLength, int numberOfSets) {
 		if (oneWayLength < 0)
-			throw new IllegalArgumentException("oneWayLength must be >= 0");
+			throw new IllegalArgumentException("oneWayLength must be > 0");
 		if (numberOfSets <= 0 )
 			throw new IllegalArgumentException("numberOfSets must be > 0");
 		return getACResistance(conductorSize, metal, conduitMaterial) * 0.001 * oneWayLength / numberOfSets;
@@ -946,13 +951,15 @@ public class ConductorProperties {
 
 	/**
 	 Returns the ampacity of the given conductor size for the given metal and
-	 temperature rating per the NEC table 310.16 (30 °C, up to 3
+	 temperature rating per the NEC table 310.16 (old 310.15(B)(16)) (30 °C, up to 3
 	 current-carrying conductors)
-	 @param conductorSize The size of the conductor as defined by {@link Size}
-	 @param metal The metal of the conductor as defined in {@link Metal}.
-	 @param temperatureRating The temperature rating as defined in {@link
-	 TempRating}
-	 @return The ampacity of this conductor size in amperes.
+	 @param conductorSize Not null. The size of the conductor as defined by
+	 {@link Size}
+	 @param metal Not null. The metal of the conductor as defined in
+	 {@link Metal}.
+	 @param temperatureRating Not null. The temperature rating as defined in
+	 {@link TempRating}
+	 @return The ampacity in amperes.
 	 */
 	public static double getStandardAmpacity(@NotNull Size conductorSize,
 	                                         @NotNull Metal metal,
@@ -978,19 +985,18 @@ public class ConductorProperties {
 	 Returns the minimum allowed size of a conductor of the given metal and
 	 temperature rating, for the given current, as per table 310.16.
 	 The returned size does not account for any correction or adjustment
-	 factor,
-	 that is, the ambient temperature is 86 °F and no more than 3 current-
-	 carrying conductors in a raceway.
-	 @param current The current in amperes. This is value should be the
+	 factor, that is, the ambient temperature is 86 °F and no more than 3 current-carrying conductors in a raceway.
+	 @param current The current in amperes. This value should be the
 	 obtained one once all conditions of use have been accounted for, that
 	 is, once the temperature correction factor, the adjustment factor and
 	 any other restriction have been applied. Must be > 0.
-	 @param metal The metal of the conductor as defined in {@link Metal}.
-	 @param tempRating The temperature rating of the conductor as defined in
-	 {@link TempRating}
-	 @return The minimum size of the conductor good for the given current and
-	 temperature rating or null if a conductor for that current could not be
-	 found.
+	 @param metal Not null. The metal of the conductor as defined in
+	 {@link Metal}.
+	 @param tempRating Not null. The temperature rating of the conductor as
+	 defined in {@link TempRating}
+	 @return The minimum size of the conductor that can carry the given
+	 current for the temperature rating, or null if a conductor for that
+	 current could not be found.
 	 */
 	public static @Nullable Size getSizePerCurrent(double current,
 	                                               @NotNull Metal metal,

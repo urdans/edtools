@@ -1,10 +1,10 @@
 package eecalcs.circuits;
 
 import eecalcs.conductors.*;
-import eecalcs.conductors.raceways.Bundle;
-import eecalcs.conductors.raceways.Cable;
-import eecalcs.conductors.raceways.Conductor;
-import eecalcs.conductors.raceways.Conduit;
+import eecalcs.conductors.bundle.Bundle;
+import eecalcs.conductors.Cable;
+import eecalcs.conductors.Conductor;
+import eecalcs.conduits.Conduit;
 import eecalcs.conduits.*;
 import eecalcs.loads.Load;
 import eecalcs.conductors.TempRating;

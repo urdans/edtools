@@ -1,6 +1,9 @@
 package eecalcs.conductors;
 
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 /**
  Enums to represent conductor sizes and their string representation.
  <br>
@@ -95,11 +98,12 @@ public enum Size {
 	}
 
 	/**
-	 @return The next bigger conductor size than this conductor size.
+	 @return The next bigger conductor size than this conductor size. If this size is 2000 KCMIL (the biggest one),
+	 then null is returned.
 	 */
-	public Size getNextSizeUp() {
+	public @Nullable Size getNextSizeUp() {
 		if(this.ordinal() + 1 >= values().length)
-			return this;
+			return null;
 		return Size.values()[this.ordinal() + 1];
 	}
 
@@ -109,5 +113,18 @@ public enum Size {
 
 	public boolean isGreaterThan(Size size){
 		return this.ordinal() > size.ordinal();
+	}
+
+	/**
+	 * @param name The name of the conductor size.
+	 * @return The Size that correspond to the given name
+	 */
+	public static @Nullable Size getSizeByName(String name) {
+		for(Size s: values()){
+			if(s.getName().equals(name)) {
+				return s;
+			}
+		}
+		return null;
 	}
 }

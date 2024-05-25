@@ -10,7 +10,8 @@ package eecalcs.conductors;
  */
 public enum Metal {
 	COPPER("CU"),
-	ALUMINUM("AL");
+	ALUMINUM("AL"),
+	COPPERCOATED("CU COATED");
 	private final String symbol;
 	private static final String[] symbols;
 
