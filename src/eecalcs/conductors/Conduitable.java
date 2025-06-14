@@ -1,14 +1,14 @@
 package eecalcs.conductors;
 
-import eecalcs.systems.NEC;
+import eecalcs.circuits.CircuitAll;
 import org.jetbrains.annotations.NotNull;
 
 /**
- A Conduitable object is a conductor or a cable. Any of these objects can be
+ A Conduitable object represents a conductor or a cable. Any of these objects can be
  installed inside a Conduit object, therefore the name Conduitable. This
- interface provides read only properties. Methods that returns a conductor or
- a cable should return a conduitable instead. This will avoid side effects
- since there is no way to change the conductor or the cable through this
+ interface provides read only properties common to conductors and cables. Throughout this library, methods that
+ returns a conductor or a cable should return a conduitable instead. This will avoid side effects
+ since there is no way to change the conductor or the cable properties through this
  interface (this interface has only getters, no setters).
  */
 public interface Conduitable {
@@ -20,16 +20,11 @@ public interface Conduitable {
 	 */
 	Size getSize();
 
-	/*
-	 @return The coating or no-coating of this conduitable.
-	 /
-	@NotNull Coating getCopperCoating();*/
-
 	/**
-	 @return The cross sectional area of this Conduitable object. This area
+	 @return The cross-sectional area of this Conduitable object. This area
 	 includes the outer insulation and the conductive material. For a
 	 conductor, it's the area of that conductor including its insulation. For
-	 a cable, it's the cross sectional area of the assembly, including any
+	 a cable, it's the cross-sectional area of the assembly, including any
 	 filling and conductive material inside the outer jacket.
 	 */
 	double getInsulatedAreaIn2();
@@ -60,7 +55,7 @@ public interface Conduitable {
 	 rating of the conductor, if the corrected and adjusted ampacity does not
 	 exceed the ampacity for the temperature rating of the terminals in
 	 accordance with 110.14(C), is not accounted for in this method. It is
-	 accounted for at the {@link eecalcs.circuits.Circuit} class level.<br>
+	 accounted for at the {@link CircuitAll} class level.<br>
 
 	 <p>If no correction factor is required ({@link #getCorrectionFactor()}
 	 returns 1), the conductor must be sized per 110.14(C), that is:
@@ -81,25 +76,26 @@ public interface Conduitable {
 	 termination temperature. This rule appears several times throughout the
 	 code.<br><br>
 	 <p>A concrete example is as follows: Suppose a load was calculated at 105
-	 AMPS. The installer is going to use a surplus of THHW copper conductors
-	 (90 °C). Let's assume that there are 4 current-carrying conductors in the
+	 AMPS. It is known that the temperature rating of the termination is 60°C. The installer is going to use a surplus
+	 of THHW copper conductors (90 °C). Let's assume that there are 4 current-carrying conductors in the
 	 raceway and that the ambient temperature is 100 °C:
 	 <p>&emsp;
-	 - Temperature correction factor for a 90 °C conductor (TABLE 310.15(B)(2)
-	 (a)) = 0.91
+	 - Temperature correction factor for a 90 °C conductor (TABLE 2014,2017:310.15(B)(2)
+	 (a), 2020:310.15(B)(1) = 0.91
 	 <p>&emsp;
-	 - Adjustment factor for four current-carrying conductors (TABLE
-	 310.15(B)(3)(a)) = 0.8
+	 - Adjustment factor for four current-carrying conductors (TABLE 2014,2017:310.15(B)(3)(a),
+	 2020:310.15(C)(1)) = 0.8
 	 <p>&emsp;
 	 - Looking for 105/(0.91x0.8)=144.2 Amps in column for 90 °C, we find that
 	 # 1 AWG THHW is 145 Amps, so it's good.
 	 <p>&emsp;
-	 - The corrected ampacity of that conductor is 145x0.91x0.8 = 105.6 Amps.
+	 - The corrected ampacity of that conductor is 145x0.91x0.8 = 105.56 Amps.
 	 <p>&emsp;
 	 - 105.56 Amps is above the load current of 105 Amps, so it's good for the
 	 load.
 	 <p>The # 1 AWG THHW wire is good because the ampacity for the same wire at
-	 60 °C is 110AMP.<br>
+	 60 °C is 110AMP. So, the surplus conductor (90°C) can be used, because when using the temperature rating of the
+	 same for correction and adjustment factor, the corrected and adjusted ampacity is less than 110 Amps.<br>
 	 <p>The general approach to determine the allowed ampacity is:
 	 <p>&emsp;&emsp;
 	 AllowedAmpacity*TCF*AF {@literal >}= load Amps
@@ -117,11 +113,10 @@ public interface Conduitable {
 	 load amps is not known at this level. However, the methods {@link
 	 #getCorrectionFactor()} and {@link #getAdjustmentFactor()} will provide the
 	 0.91 &#38; 0.8 value (from the example) that the
-	 {@link eecalcs.circuits.Circuit} class would need as reversed
+	 {@link CircuitAll} class would need as reversed
 	 coefficient to multiply the load amperes (to get the 144.23 AMPS from
 	 the example). Then the method
-	 {@link ConductorProperties#getSizePerCurrent(double,
-	 Metal, TempRating)} can provide the proper size of the conductor.
+	 {@link ConductorProperties#getSizePerCurrent(double, ConductiveMaterial, TempRating)} can provide the proper size of the conductor.
 	 */
 	double getCorrectedAndAdjustedAmpacity();
 
@@ -153,9 +148,9 @@ public interface Conduitable {
 
 	/**
 	 @return The insulation of this conduitable.
-	 @see Insul
+	 @see Insulation
 	 */
-	@NotNull Insul getInsulation();
+	@NotNull Insulation getInsulation();
 
 	/**
 	 @return The temperature correction factor for this conduitable, as it is
@@ -176,10 +171,10 @@ public interface Conduitable {
 	double getCompoundFactor();
 
 	/**
-	 @param tempRating The temperature rating of the termination.
+	 @param tempRating The temperature rating of the termination. Cannot be null.
 	 @return The product of the correction and adjustment factor of this
 	 conduitable when calculated based on the given temperature
-	 rating. Cannot be null.
+	 rating.
 	 */
 	double getCompoundFactor(@NotNull TempRating tempRating);
 
@@ -192,7 +187,7 @@ public interface Conduitable {
 	/**
 	 @return The metal of this conduitable.
 	 */
-	@NotNull Metal getMetal();
+	@NotNull ConductiveMaterial getMetal();
 
 	/**
 	 @return The length of this conductor in feet (one-way length).

@@ -1,7 +1,7 @@
 package eecalcs.conductors;
 /* Revised on 11/24/23 to make compatible with NEC 2020 Edition*/
 
-import eecalcs.conduits.Material;
+import eecalcs.conduits.OuterMaterial;
 import eecalcs.systems.Location;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -15,7 +15,7 @@ import static eecalcs.systems.Location.WET;
  This class encapsulates static data and methods for the properties of
  conductors as defined in NEC 2020 tables 310.16, 5, 5A, 8 and 9.
  It assumes the conductors are located in a dry location, unless otherwise
- specified. See {@link #getTempRating(Insul)}
+ specified. See {@link #getTempRating(Insulation)}
  <p>
  This class groups all the properties related to conductors of a given size,
  when it is isolated, that is, the represented characteristics don't depend upon
@@ -24,7 +24,8 @@ import static eecalcs.systems.Location.WET;
  load types, etc. */
 public class ConductorProperties {
 	private static final Properties[] table;
-	//Area of insulated conductors in inch-square.
+	//region Area of the cross-section of insulated conductors in inch-square, including its insulation.
+	/*Table 5*/
 	private static final Map<Size, Double> TW;
 	private static final Map<Size, Double> RHW;
 	private static final Map<Size, Double> THW;
@@ -43,8 +44,9 @@ public class ConductorProperties {
 	private static final Map<Size, Double> XHHW2;
 	private static final Map<Size, Double> EMPTY;
 
-	private static final Map<Insul, Map<Size, Double>> insulatedDimensions;
-	//Table 5
+	private static final Map<Insulation, Map<Size, Double>> insulatedDimensions;
+
+	/*Table 5A*/
 	private static final Map<Size, Double> compactRHH;
 	private static final Map<Size, Double> compactRHW;
 	private static final Map<Size, Double> compactUSE;
@@ -53,9 +55,10 @@ public class ConductorProperties {
 	private static final Map<Size, Double> compactTHHN;
 	private static final Map<Size, Double> compactXHHW;
 	private static final Map<Size, Double> compactBareDimensions;
-	private static final Map<Insul, Map<Size, Double>> compactDimensions;
-	//Table 5A
-	private static final Map<TempRating, Insul[]> insulationTempMap;
+	private static final Map<Insulation, Map<Size, Double>> compactDimensions;
+
+	private static final Map<TempRating, Insulation[]> insulationTempMap;
+	//endregion
 
 	/**
 	 Encapsulates the properties for a conductor of a given size in
@@ -461,41 +464,42 @@ public class ConductorProperties {
 		 table.
 		*/
 		insulationTempMap = new HashMap<>();
-		insulationTempMap.put(TempRating.T60, new Insul[]{Insul.TW});
-		insulationTempMap.put(TempRating.T75, new Insul[]{Insul.RHW, Insul.THW
-				, Insul.THWN, Insul.USE, Insul.ZW});
-		insulationTempMap.put(TempRating.T90, new Insul[]{Insul.TBS, Insul.SA,
-				Insul.SIS, Insul.FEP, Insul.FEPB, Insul.MI, Insul.RHH,
-				Insul.RHW2, Insul.THHN,
-				Insul.THHW, Insul.THW2, Insul.THWN2, Insul.USE2, Insul.XHH,
-				Insul.XHHW, Insul.XHHW2, Insul.ZW2});
+		insulationTempMap.put(TempRating.UNKNOWN, new Insulation[]{null});
+		insulationTempMap.put(TempRating.T60, new Insulation[]{Insulation.TW});
+		insulationTempMap.put(TempRating.T75, new Insulation[]{Insulation.RHW, Insulation.THW
+				, Insulation.THWN, Insulation.USE, Insulation.ZW});
+		insulationTempMap.put(TempRating.T90, new Insulation[]{Insulation.TBS, Insulation.SA,
+				Insulation.SIS, Insulation.FEP, Insulation.FEPB, Insulation.MI, Insulation.RHH,
+				Insulation.RHW2, Insulation.THHN,
+				Insulation.THHW, Insulation.THW2, Insulation.THWN2, Insulation.USE2, Insulation.XHH,
+				Insulation.XHHW, Insulation.XHHW2, Insulation.ZW2});
 		//endregion
 
 		//region dimensions of insulated conductors
 		insulatedDimensions = new HashMap<>();
-		insulatedDimensions.put(Insul.TW, TW);
-		insulatedDimensions.put(Insul.RHW, RHW);
-		insulatedDimensions.put(Insul.THW, THW);
-		insulatedDimensions.put(Insul.THWN, THWN);
-		insulatedDimensions.put(Insul.USE, EMPTY);  //USE
-		insulatedDimensions.put(Insul.ZW, ZW);
-		insulatedDimensions.put(Insul.TBS, EMPTY);  //TBS
-		insulatedDimensions.put(Insul.SA, EMPTY);  //SA
-		insulatedDimensions.put(Insul.SIS, EMPTY);  //SIS
-		insulatedDimensions.put(Insul.FEP, FEP);
-		insulatedDimensions.put(Insul.FEPB, FEPB);
-		insulatedDimensions.put(Insul.MI, EMPTY); //MI
-		insulatedDimensions.put(Insul.RHH, RHH);
-		insulatedDimensions.put(Insul.RHW2, RHW2);
-		insulatedDimensions.put(Insul.THHN, THHN);
-		insulatedDimensions.put(Insul.THHW, THHW);
-		insulatedDimensions.put(Insul.THW2, THW2);
-		insulatedDimensions.put(Insul.THWN2, THWN2);
-		insulatedDimensions.put(Insul.USE2, EMPTY); //USE-2
-		insulatedDimensions.put(Insul.XHH, XHH);
-		insulatedDimensions.put(Insul.XHHW, XHHW);
-		insulatedDimensions.put(Insul.XHHW2, XHHW2);
-		insulatedDimensions.put(Insul.ZW2, EMPTY); //ZW-2
+		insulatedDimensions.put(Insulation.TW, TW);
+		insulatedDimensions.put(Insulation.RHW, RHW);
+		insulatedDimensions.put(Insulation.THW, THW);
+		insulatedDimensions.put(Insulation.THWN, THWN);
+		insulatedDimensions.put(Insulation.USE, EMPTY);  //USE
+		insulatedDimensions.put(Insulation.ZW, ZW);
+		insulatedDimensions.put(Insulation.TBS, EMPTY);  //TBS
+		insulatedDimensions.put(Insulation.SA, EMPTY);  //SA
+		insulatedDimensions.put(Insulation.SIS, EMPTY);  //SIS
+		insulatedDimensions.put(Insulation.FEP, FEP);
+		insulatedDimensions.put(Insulation.FEPB, FEPB);
+		insulatedDimensions.put(Insulation.MI, EMPTY); //MI
+		insulatedDimensions.put(Insulation.RHH, RHH);
+		insulatedDimensions.put(Insulation.RHW2, RHW2);
+		insulatedDimensions.put(Insulation.THHN, THHN);
+		insulatedDimensions.put(Insulation.THHW, THHW);
+		insulatedDimensions.put(Insulation.THW2, THW2);
+		insulatedDimensions.put(Insulation.THWN2, THWN2);
+		insulatedDimensions.put(Insulation.USE2, EMPTY); //USE-2
+		insulatedDimensions.put(Insulation.XHH, XHH);
+		insulatedDimensions.put(Insulation.XHHW, XHHW);
+		insulatedDimensions.put(Insulation.XHHW2, XHHW2);
+		insulatedDimensions.put(Insulation.ZW2, EMPTY); //ZW-2
 		//endregion
 
 		//region compactRHH
@@ -603,13 +607,13 @@ public class ConductorProperties {
 
 		//region dimension of compact conductors
 		compactDimensions = new HashMap<>();
-		compactDimensions.put(Insul.RHH, compactRHH);
-		compactDimensions.put(Insul.RHW, compactRHW);
-		compactDimensions.put(Insul.USE, compactUSE);
-		compactDimensions.put(Insul.THW, compactTHW);
-		compactDimensions.put(Insul.THHW, compactTHHW);
-		compactDimensions.put(Insul.THHN, compactTHHN);
-		compactDimensions.put(Insul.XHHW, compactXHHW);
+		compactDimensions.put(Insulation.RHH, compactRHH);
+		compactDimensions.put(Insulation.RHW, compactRHW);
+		compactDimensions.put(Insulation.USE, compactUSE);
+		compactDimensions.put(Insulation.THW, compactTHW);
+		compactDimensions.put(Insulation.THHW, compactTHHW);
+		compactDimensions.put(Insulation.THHN, compactTHHN);
+		compactDimensions.put(Insulation.XHHW, compactXHHW);
 		//endregion
 
 		//region dimension of compact bare conductors
@@ -654,12 +658,12 @@ public class ConductorProperties {
 	 @param conductorSize The size of the conductor as defined by {@link Size}
 	 @param insulation The insulation type of the conductor as defined by
 	 {@link
-	 Insul}
+	 Insulation}
 	 @return The area of the requested insulated conductor, in square inches or
 	 zero if the conductor doesn't have an area as defined in NEC table 5.
 	 */
 	public static double getInsulatedConductorAreaIn2(Size conductorSize,
-	                                                  Insul insulation) {
+	                                                  Insulation insulation) {
 		if (hasInsulatedAreaDefined(conductorSize, insulation))
 			return insulatedDimensions.get(insulation).get(conductorSize);
 		return 0;
@@ -671,12 +675,12 @@ public class ConductorProperties {
 	 @param conductorSize The size of the conductor as defined by {@link Size}
 	 @param insulation The insulation type of the conductor as defined by
 	 {@link
-	 Insul}
+	 Insulation}
 	 @return The area of the compact conductor, in square inches, or zero if
 	 the area of  the given conductor is not defined in table 5A.
 	 */
 	public static double getCompactConductorAreaIn2(Size conductorSize,
-	                                                Insul insulation) {
+	                                                Insulation insulation) {
 		if (hasCompactAreaDefined(conductorSize, insulation))
 			return compactDimensions.get(insulation).get(conductorSize);
 		return 0;
@@ -697,17 +701,16 @@ public class ConductorProperties {
 
 	/**
 	 Returns true if an insulated conductor of the given size and insulation
-	 type
-	 has its area defined in table 5.
+	 type has an area defined in table 5.
 	 @param conductorSize The size of the conductor as defined by {@link Size}.
 	 @param insulation The insulation type of the conductor as defined by
 	 {@link
-	 Insul}.
+	 Insulation}.
 	 @return True if the area is defined in table 5, false otherwise or
 	 parameters are null.
 	 */
 	public static boolean hasInsulatedAreaDefined(Size conductorSize,
-	                                              Insul insulation) {
+	                                              Insulation insulation) {
 		return insulatedDimensions.containsKey(insulation) && insulatedDimensions.get(insulation).containsKey(conductorSize);
 	}
 
@@ -717,11 +720,11 @@ public class ConductorProperties {
 	 @param conductorSize The size of the conductor as defined by {@link Size}.
 	 @param insulation The insulation type of the conductor as defined by
 	 {@link
-	 Insul}.
+	 Insulation}.
 	 @return True if the area is defined in table 5A, false otherwise.
 	 */
 	public static boolean hasCompactAreaDefined(Size conductorSize,
-	                                            Insul insulation) {
+	                                            Insulation insulation) {
 		return compactDimensions.containsKey(insulation) && compactDimensions.get(insulation).containsKey(conductorSize);
 	}
 
@@ -739,15 +742,15 @@ public class ConductorProperties {
 	/**
 	 Requests the temperature rating of the given insulation. It assumes the
 	 location of the underlined conductor is DRY.
-	 @param insulation The requested insulation as defined in {@link Insul}. It
+	 @param insulation The requested insulation as defined in {@link Insulation}. It
 	 cannot be null.
 	 @return A {@link TempRating} enum representing the temperature rating of
 	 this insulation.
 	 */
-	public static @NotNull TempRating getTempRating(@NotNull Insul insulation) {
+	public static @NotNull TempRating getTempRating(@NotNull Insulation insulation) {
 		TempRating result = null;
 		for (TempRating tempRating : TempRating.values()) {
-			for (Insul insul : insulationTempMap.get(tempRating)) {
+			for (Insulation insul : insulationTempMap.get(tempRating)) {
 				if (insul == insulation) {
 					result = tempRating;
 					break;
@@ -764,16 +767,16 @@ public class ConductorProperties {
 	/**
 	 Requests the temperature rating of the given insulation for the given
 	 location condition.
-	 @param insulation The requested insulation, as defined in {@link Insul}.
+	 @param insulation The requested insulation, as defined in {@link Insulation}.
 	 It cannot be null.
 	 @param location The location condition. See {@link Location}. It cannot
 	 be null.
 	 @return A {@link TempRating} enum representing the temperature rating of
 	 this insulation.
 	 */
-	public static @NotNull TempRating getTempRating(@NotNull Insul insulation,
+	public static @NotNull TempRating getTempRating(@NotNull Insulation insulation,
 			@NotNull Location location) {
-		if ((location == WET) && (insulation == Insul.THHW || insulation == Insul.XHHW)) {
+		if ((location == WET) && (insulation == Insulation.THHW || insulation == Insulation.XHHW)) {
 			return TempRating.T75;
 		}
 		return getTempRating(insulation);
@@ -837,87 +840,84 @@ public class ConductorProperties {
 	}
 
 	/**
-	 @return The size of the conductor whose area is equal or immediately
-	 above to the given area, or null if no size have an equal or greater
-	 area than the given one.
-	 @param cmArea The area for which a conductor size is requested. Must be > 0.
+	 @return The size of the conductor whose cross-sectional area is equal or immediately above of the given area, or
+	 null if there is no conductor with a size whose area is equal or greater than the given one.
+	 @param areaCM The area for which a conductor size is requested. Must be > 0. and in circular mils.
 	 */
-	public static @Nullable Size getSizePerArea(double cmArea) {
-		if (cmArea <= 0)
-			throw new IllegalArgumentException("cmArea must be > 0");
+	public static @Nullable Size getSizePerArea(double areaCM) {
+		if (areaCM <= 0)
+			throw new IllegalArgumentException("areaCM must be > 0");
 
 		for (Properties properties : table) {
-			if (properties.areaCM >= cmArea)
+			if (properties.areaCM >= areaCM)
 				return properties.size;
 		}
 		return null;
 	}
 
 	/**
-	 Returns the DC resistance of this conductor size for the given metal. If
-	 the specified metal is aluminum, the copperCoated parameter is ignored.
+	 Returns the DC resistance of this conductor size for the given conductiveMaterial.
 	 @param conductorSize The size of the conductor as defined by {@link Size}
-	 @param metal The metal of the conductor as defined by  {@link Metal}.
+	 @param conductiveMaterial The conductiveMaterial of the conductor as defined by  {@link ConductiveMaterial}.
 	 None of these parameters can be null.
 	 @return The DC resistance of this conductor in ohms per 1000 feet.
 	 */
 	public static double getDCResistance(@NotNull Size conductorSize,
-	                                     @NotNull Metal metal) {
-		if (metal == Metal.COPPER)
+	                                     @NotNull ConductiveMaterial conductiveMaterial) {
+		if (conductiveMaterial == ConductiveMaterial.COPPER)
 			return bySize(conductorSize).CuResDCUncoated;
-		if (metal == Metal.COPPERCOATED)
+		if (conductiveMaterial == ConductiveMaterial.COPPERCOATED)
 			return bySize(conductorSize).CuResDCCoated;
 		return bySize(conductorSize).ALResDC;
 	}
 
 	/**
-	 Returns the DC resistance of this conductor size for the given metal,
-	 length, sets, etc. If the specified metal is aluminum, the copperCoated
-	 parameter is ignored.
+	 Returns the DC resistance of this conductor size for the given conductiveMaterial,
+	 length, sets, etc.
 	 @param conductorSize Not null. The size of the conductor as defined by
 	 {@link Size}.
-	 @param metal Not null. The metal of the conductor as defined by
-	 {@link Metal}.
+	 @param conductiveMaterial Not null. The conductiveMaterial of the conductor as defined by
+	 {@link ConductiveMaterial}.
 	 @param oneWayLength The length of the conductor. Must be >0
 	 @param numberOfSets The number of conductors in parallel. Must be >0.
 	 @return The DC resistance in ohms of this conductor size under the given
 	 conditions.
 	 */
 	public static double getDCResistance(@NotNull Size conductorSize,
-	                                     @NotNull Metal metal,
+	                                     @NotNull ConductiveMaterial conductiveMaterial,
 	                                     double oneWayLength, int numberOfSets) {
 		if (oneWayLength <= 0)
 			throw new IllegalArgumentException("oneWayLength must be > 0");
 		if (numberOfSets <= 0 )
 			throw new IllegalArgumentException("numberOfSets must be > 0");
 
-		return getDCResistance(conductorSize, metal) * 0.001 * oneWayLength / numberOfSets;
+		return getDCResistance(conductorSize, conductiveMaterial) * 0.001 * oneWayLength / numberOfSets;
 	}
 
 	/**
-	 Returns the AC resistance of this conductor size for the given metal and
+	 Returns the AC resistance of this conductor size for the given conductiveMaterial and
 	 conduit material.
 	 @param conductorSize Not null. The size of the conductor as defined by
 	 {@link Size}.
-	 @param metal Not null. The metal of the conductor as defined by
-	 {@link Metal}.
-	 @param conduitMaterial The material type of the conduit as specified in {@link Material}, or NULL if the
+	 @param conductiveMaterial Not null. The conductiveMaterial of the conductor as defined by
+	 {@link ConductiveMaterial}.
+	 @param conduitMaterial The material type of the conduit as specified in {@link OuterMaterial}, or NULL if the
 	 conductor is in free air.
 	 @return The AC resistance in ohms per 1000 feet.
 	 */
-	public static double getACResistance(@NotNull Size conductorSize, @NotNull Metal metal,
-	                                     @Nullable Material conduitMaterial) {
-		if (metal == Metal.COPPER) {
-			if (conduitMaterial == Material.PVC)
+	public static double getACResistance(@NotNull Size conductorSize, @NotNull ConductiveMaterial conductiveMaterial,
+	                                     @Nullable OuterMaterial conduitMaterial) {
+		if (conductiveMaterial == ConductiveMaterial.COPPER) {
+			if (conduitMaterial == OuterMaterial.PVC)
 				return bySize(conductorSize).CuResInPVCCond;
-			else if (conduitMaterial == Material.ALUMINUM)
+			else if (conduitMaterial == OuterMaterial.ALUMINUM)
 				return bySize(conductorSize).CuResInALCond;
 			else
 				return bySize(conductorSize).CuResInSteelCond;
 		} else {
-			if (conduitMaterial == Material.PVC || conduitMaterial == null)
+			if (conduitMaterial == OuterMaterial.PVC || conduitMaterial == null)
 				return bySize(conductorSize).ALResInPVCCond;
-			else if (conduitMaterial == Material.ALUMINUM)
+			else if (conduitMaterial == OuterMaterial.ALUMINUM)
 				return bySize(conductorSize).ALResInALCond;
 			else
 				return bySize(conductorSize).ALResInSteelCond;
@@ -925,53 +925,53 @@ public class ConductorProperties {
 	}
 
 	/**
-	 Returns the AC resistance of this conductor size for the given metal,
+	 Returns the AC resistance of this conductor size for the given conductiveMaterial,
 	 conduit material, length and number of sets.
 	 @param conductorSize Not null. The size of the conductor as defined by
 	 {@link Size}
-	 @param metal Not null. The metal of the conductor as defined by
-	 {@link Metal}.
+	 @param conductiveMaterial Not null. The conductiveMaterial of the conductor as defined by
+	 {@link ConductiveMaterial}.
 	 @param conduitMaterial Not null. The material type of the conduit as
-	 specified in {@link Material}.
+	 specified in {@link OuterMaterial}.
 	 @param oneWayLength The length of the conductor in feet. Must be >0
 	 @param numberOfSets The number of sets (conductors in parallel per
 	 phase). Must be > 0
 	 @return The AC resistance in ohms of this conductor size under the given
 	 conditions.
 	 */
-	public static double getACResistance(@NotNull Size conductorSize, @NotNull Metal metal,
-	                                     @NotNull Material conduitMaterial,
+	public static double getACResistance(@NotNull Size conductorSize, @NotNull ConductiveMaterial conductiveMaterial,
+	                                     @NotNull OuterMaterial conduitMaterial,
 	                                     double oneWayLength, int numberOfSets) {
 		if (oneWayLength < 0)
 			throw new IllegalArgumentException("oneWayLength must be > 0");
 		if (numberOfSets <= 0 )
 			throw new IllegalArgumentException("numberOfSets must be > 0");
-		return getACResistance(conductorSize, metal, conduitMaterial) * 0.001 * oneWayLength / numberOfSets;
+		return getACResistance(conductorSize, conductiveMaterial, conduitMaterial) * 0.001 * oneWayLength / numberOfSets;
 	}
 
 	/**
-	 Returns the ampacity of the given conductor size for the given metal and
+	 Returns the ampacity of the given conductor size for the given conductiveMaterial and
 	 temperature rating per the NEC table 310.16 (old 310.15(B)(16)) (30 °C, up to 3
 	 current-carrying conductors)
 	 @param conductorSize Not null. The size of the conductor as defined by
 	 {@link Size}
-	 @param metal Not null. The metal of the conductor as defined in
-	 {@link Metal}.
+	 @param conductiveMaterial Not null. The conductiveMaterial of the conductor as defined in
+	 {@link ConductiveMaterial}.
 	 @param temperatureRating Not null. The temperature rating as defined in
 	 {@link TempRating}
 	 @return The ampacity in amperes.
 	 */
 	public static double getStandardAmpacity(@NotNull Size conductorSize,
-	                                         @NotNull Metal metal,
+	                                         @NotNull ConductiveMaterial conductiveMaterial,
 	                                         @NotNull TempRating temperatureRating) {
-		if (metal == Metal.COPPER) {
+		if (conductiveMaterial == ConductiveMaterial.COPPER) {
 			if (temperatureRating == TempRating.T60)
 				return bySize(conductorSize).CuAmp60;
 			else if (temperatureRating == TempRating.T75)
 				return bySize(conductorSize).CuAmp75;
 			else //temperatureRating == TempRating.T90
 				return bySize(conductorSize).CuAmp90;
-		} else { //metal == Metal.ALUMINUM
+		} else { //conductiveMaterial == ConductiveMaterial.ALUMINUM
 			if (temperatureRating == TempRating.T60)
 				return bySize(conductorSize).AlAmp60;
 			else if (temperatureRating == TempRating.T75)
@@ -982,29 +982,26 @@ public class ConductorProperties {
 	}
 
 	/**
-	 Returns the minimum allowed size of a conductor of the given metal and
-	 temperature rating, for the given current, as per table 310.16.
-	 The returned size does not account for any correction or adjustment
-	 factor, that is, the ambient temperature is 86 °F and no more than 3 current-carrying conductors in a raceway.
-	 @param current The current in amperes. This value should be the
-	 obtained one once all conditions of use have been accounted for, that
-	 is, once the temperature correction factor, the adjustment factor and
-	 any other restriction have been applied. Must be > 0.
-	 @param metal Not null. The metal of the conductor as defined in
-	 {@link Metal}.
-	 @param tempRating Not null. The temperature rating of the conductor as
-	 defined in {@link TempRating}
-	 @return The minimum size of the conductor that can carry the given
-	 current for the temperature rating, or null if a conductor for that
-	 current could not be found.
+	 Returns the minimum allowed size for a conductor of the given conductiveMaterial and temperature rating, for the
+	 given current, as per table 310.16.<p>
+	 The returned size does not account for any correction or adjustment factor, that is, the ambient temperature is
+	 86 °F and no more than 3 current-carrying conductors in a raceway.
+	 @param current The current in amperes. This value should be the one obtained once all conditions of use have
+	 been accounted for, that is, once the temperature correction factor, the adjustment factor and any other
+	 restriction have been applied. Must be > 0.
+	 @param conductiveMaterial Not null. The metal of the conductor as defined in {@link ConductiveMaterial}.
+	 @param tempRating Not null. The temperature rating of the conductor (its insulation) as defined in
+	 {@link TempRating}.
+	 @return The minimum size of the conductor that can carry the given current for the temperature rating, or null
+	 if no conductor can carry the given high current.
 	 */
 	public static @Nullable Size getSizePerCurrent(double current,
-	                                               @NotNull Metal metal,
+	                                               @NotNull ConductiveMaterial conductiveMaterial,
 	                                               @NotNull TempRating tempRating) {
 		if (current <= 0)
 			throw new IllegalArgumentException("current must be > 0");
 
-		if (metal == Metal.COPPER) {
+		if (conductiveMaterial == ConductiveMaterial.COPPER) {
 			if (tempRating == TempRating.T60) {
 				for (Properties properties : table)
 					if (properties.CuAmp60 >= current)
@@ -1018,7 +1015,7 @@ public class ConductorProperties {
 					if (properties.CuAmp90 >= current)
 						return properties.size;
 			}
-		} else { //metal == Metal.ALUMINUM
+		} else { //conductiveMaterial == ConductiveMaterial.ALUMINUM
 			if (tempRating == TempRating.T60) {
 				for (Properties properties : table)
 					if (properties.AlAmp60 >= current)

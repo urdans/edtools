@@ -14,20 +14,20 @@ class VoltageACTest {
 
     @Test
     void getName() {
-        assertEquals("120v 1Ø 2W", v120_1ph_2w.getName());
-        assertEquals("208v 1Ø 2W", v208_1ph_2w.getName());
-        assertEquals("240v 1Ø 3W", v240_1ph_3w.getName());
-        assertEquals("480v 3Ø 3W", v480_3ph_3w.getName());
-        assertEquals("480v 3Ø 4W", v480_3ph_4w.getName());
+        assertEquals("120V 1Ø 2W", v120_1ph_2w.getName());
+        assertEquals("208V 1Ø 2W", v208_1ph_2w.getName());
+        assertEquals("240/120V 1Ø 3W", v240_1ph_3w.getName());
+        assertEquals("480V 3Ø 3W", v480_3ph_3w.getName());
+        assertEquals("480V 3Ø 4W", v480_3ph_4w.getName());
     }
 
     @Test
     void getNames() {
-        assertEquals("120v 1Ø 2W",  VoltageAC.getNames()[0]);
-        assertEquals("208v 1Ø 2W",  VoltageAC.getNames()[1]);
-        assertEquals("240v 1Ø 3W",  VoltageAC.getNames()[7]);
-        assertEquals("480v 3Ø 3W",  VoltageAC.getNames()[13]);
-        assertEquals("480v 3Ø 4W",  VoltageAC.getNames()[14]);
+        assertEquals("120V 1Ø 2W",  VoltageAC.getNames()[0]);
+        assertEquals("208V 1Ø 2W",  VoltageAC.getNames()[1]);
+        assertEquals("240/120V 1Ø 3W",  VoltageAC.getNames()[7]);
+        assertEquals("480V 3Ø 3W",  VoltageAC.getNames()[13]);
+        assertEquals("480V 3Ø 4W",  VoltageAC.getNames()[14]);
     }
 
     @Test
@@ -65,4 +65,5 @@ class VoltageACTest {
         assertEquals(Math.sqrt(3), v480_3ph_3w.getFactor());
         assertEquals(Math.sqrt(3), v480_3ph_4w.getFactor());
     }
+
 }

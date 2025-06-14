@@ -24,7 +24,7 @@ import eecalcs.systems.VoltageAC;
 
  <p><b>General NEC requirements for nonlinear loads:</b>
 
- <p>-On a 4-wire, 3-phase wye circuit where the major portion of the load
+ <p>-On a 4-wire, 3-phase wye circuitAll where the major portion of the load
  consists of nonlinear loads, harmonic currents are present in the neutral
  conductor; the neutral conductor shall therefore be considered a
  current-carrying conductor. (NEC-310.15(B)(5)(c))

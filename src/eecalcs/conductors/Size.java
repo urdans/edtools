@@ -39,7 +39,7 @@ import org.jetbrains.annotations.Nullable;
  </ul>
  */
 public enum Size {
-	//They have to be defined in ascending order of size.
+	//They must be defined in ascending order of size.
 	AWG_14("14 AWG"),
 	AWG_12("12 AWG"),
 	AWG_10("10 AWG"),
@@ -107,12 +107,41 @@ public enum Size {
 		return Size.values()[this.ordinal() + 1];
 	}
 
-	public boolean isLessThan(Size size){
+	/**
+	 * @param size The size to which this size is to be compared.
+	 * @return True if the given size is smaller than this size.
+	 */
+	public boolean isSmallerThan(@NotNull Size size){
 		return this.ordinal() < size.ordinal();
 	}
 
-	public boolean isGreaterThan(Size size){
+	/**
+	 * @param size The size to which this size is to be compared.
+	 * @return True if the given size is bigger than this size.
+	 */
+	public boolean isBiggerThan(Size size){
 		return this.ordinal() > size.ordinal();
+	}
+
+	/**
+	 * @param size1 One of the sizes to which this size is to be compared.
+	 * @param size2 One of the sizes to which this size is to be compared.
+	 * @return True if this size is bigger or equal than the smallest of the given sizes, and smaller or equal than
+	 * the biggest of the given sizes. In particular, it returns true if size1==size2==this size, or false otherwise.
+	 */
+	public boolean isBetween(@NotNull Size size1, @NotNull Size size2) {
+		if (size1 == size2)
+			return this == size1;
+		Size smaller, bigger;
+		if (size1.ordinal() < size2.ordinal()){
+		  smaller = size1;
+		  bigger = size2;
+		}
+		else {
+			smaller = size2;
+			bigger = size1;
+		}
+		return (smaller.ordinal() <= this.ordinal() && this.ordinal() <= bigger.ordinal());
 	}
 
 	/**

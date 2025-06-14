@@ -34,4 +34,6 @@ public interface ROBundle {
 	 otherwise
 	 */
 	boolean isEmpty();
+
+    int getAmbientTemperatureF();
 }

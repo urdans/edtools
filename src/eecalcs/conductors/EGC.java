@@ -2,17 +2,20 @@ package eecalcs.conductors;
 
 import org.jetbrains.annotations.NotNull;
 
+/**
+ This class represents the values of the table NEC 2014,2017,2020: 250.122.
+ */
 public class EGC {
 	static class TableItem {
 		int ocpdRating;
 		Size copperSize;
 		Size aluminiumSize;
-		TableItem(int ocpdRating, @NotNull Size copperSize, @NotNull Size aluminiumSize){
+		TableItem(int ocpdRating, @NotNull Size copperSize, @NotNull Size aluminiumSize) {
 			this.ocpdRating = ocpdRating;
 			this.copperSize = copperSize;
 			this.aluminiumSize = aluminiumSize;
 		}
-	};
+	}
 	/** Table 250.122 sizing of the copper and aluminum EGC. The non-standard size (1200) which is repeated twice for
 	 aluminum conductor is replaced with 1250.*/
 	private static final TableItem[] table = {
@@ -38,23 +41,24 @@ public class EGC {
 	};
 
 	/**
-	 @return The size of the EGC per table NEC-250.122, for the given OCPD rating and metal.
+	 @return The size of the EGC per table NEC-250.122, for the given OCPD rating and conductiveMaterial.
 	 @param ocpdRating Rating of the OCPD. Must be in the range [15, 6000] (minimum and maximum standard OCPD
 	 ratings), otherwise an {@link IllegalArgumentException} is thrown.
-	 @param metal The metal of the conductor.
+	 @param conductiveMaterial The conductiveMaterial of the conductor.
 	 */
-	public static Size getEGCSize(int ocpdRating, @NotNull Metal metal){
+	public static Size getEGCSize(int ocpdRating, @NotNull ConductiveMaterial conductiveMaterial){
 		if(ocpdRating < 15 || ocpdRating > 6000)
 			throw new IllegalArgumentException("The OCPD rating must be in the range [15, 6000]");
-		int index = 0;
-		for (int i = table.length-1; i > 0 ; i--) {
-			if (ocpdRating >= table[i].ocpdRating) {
+		int index = table.length - 1;
+
+		for (int i = 0; i < table.length; i++) {
+			if (ocpdRating <= table[i].ocpdRating) {
 				index = i;
 				break;
 			}
-
 		}
-		if(metal == Metal.COPPER)
+
+		if(conductiveMaterial == ConductiveMaterial.COPPER)
 			return table[index].copperSize;
 		return table[index].aluminiumSize;
 	}

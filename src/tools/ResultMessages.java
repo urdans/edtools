@@ -19,7 +19,7 @@ import java.util.List;
  050->099: Conductor & Cable class
  100->149: Conduit class
  150->199: Bundle class
- 200->299: Circuit class
+ 200->299: CircuitAll class
 
  */
 public class ResultMessages implements ROResultMessages{

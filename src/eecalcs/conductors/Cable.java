@@ -20,7 +20,7 @@ import static eecalcs.conductors.Conductor.*;
  <p>
  The NEC recognizes the following group of cables as wiring methods for permanent installations:
  <p>AC - Armored Cable (round)
- <p>MC - Metal Clad Cable (round)
+ <p>MC - ConductiveMaterial Clad Cable (round)
  <p>FC - Flat Cable (flat, to be used in a surface metal raceway, not in conduits), <b>not covered by this software.</b>
  <p>FCC - Flat Conductor Cable (flat, to be used for branch circuits installed under carpet squares, not in conduits)
  , <b>not covered by this software.</b>
@@ -42,7 +42,7 @@ import static eecalcs.conductors.Conductor.*;
  <li>- 1, 2 or 3 phase conductors. They are always considered current-carrying
  conductors (CCC).</li>
  <li>- 0 or 1 neutral conductor. If the neutral is present, it is current-carrying by default, except for 3Ø 4W
- systems where it is assumed not current-carrying.</li>
+ and 1Φ 3W systems where the load majority of the load is linear (>50%).</li>
  <li>- 1 Equipment grounding conductor.</li>
  </ol>
  <p>Cables covered by this software are for single-circuit loads. However, multi-wire circuits are covered.
@@ -52,12 +52,13 @@ import static eecalcs.conductors.Conductor.*;
  <p>
  A cable used for a 240/208/120 volts delta system (high leg) can be created using any 3 phase voltage and 4 wires.
  <p>
- The voltage system is used only to determine the presence of phases B and C, and the neutral conductor.*/
-public class Cable implements Conduitable {
+ The voltage system is used only to determine the presence of phases B and C, and the neutral conductor, that is the
+ role of each conductor.*/
+public class Cable implements Conduitable, RWConduitable {
 	//region field members
 	/**Minimum outer diameter for a cable in inches*/
 	public static final double MINIMUM_OUTER_DIAMETER = 0.5;
-	private final @NotNull Conductor phaseAConductor = new Conductor();
+	private final @NotNull Conductor phaseAConductor = new Conductor(); //Role is HOT by default
 	private final @Nullable Conductor phaseBConductor;
 	private final @Nullable Conductor phaseCConductor;
 	private final @Nullable Conductor neutralConductor;
@@ -71,18 +72,45 @@ public class Cable implements Conduitable {
 	private @Nullable Bundle bundle = null;
 	//endregion
 
-	//private final ResultMessages resultMessages = new ResultMessages();
-
-	/*
-	 @return A read-only version of the error and warning messages of this object.
-	 *
-	public ROResultMessages getResultMessages() {
-		return resultMessages;
-	}*/
+	//region some MC cables from the company Atkore
+	//Todo: move this to another class? Make it part of a database?
+	public static Cable MC_12_4 = new Cable(VoltageAC.v208_3ph_4w).setOuterDiameter(0.586);
+	public static Cable MC_12_3 = new Cable(VoltageAC.v208_3ph_3w).setOuterDiameter(0.586);
+	public static Cable MC_10_2 = new Cable(VoltageAC.v120_1ph_2w)
+			.setOuterDiameter(0.581)
+			.setPhaseConductorSize(Size.AWG_10)
+			.setNeutralConductorSize(Size.AWG_10)
+			.setGroundingConductorSize(Size.AWG_10);
+	public static Cable MC_10_3 = new Cable(VoltageAC.v208_1ph_3w)
+			.setOuterDiameter(0.622)
+			.setPhaseConductorSize(Size.AWG_10)
+			.setNeutralConductorSize(Size.AWG_10)
+			.setGroundingConductorSize(Size.AWG_10);
+	public static Cable MC_10_4 = new Cable(VoltageAC.v208_3ph_4w)
+			.setOuterDiameter(0.643)
+			.setPhaseConductorSize(Size.AWG_10)
+			.setNeutralConductorSize(Size.AWG_10)
+			.setGroundingConductorSize(Size.AWG_10);
+	public static Cable MC_8_2 = new Cable(VoltageAC.v120_1ph_2w)
+			.setOuterDiameter(0.677)
+			.setPhaseConductorSize(Size.AWG_8)
+			.setNeutralConductorSize(Size.AWG_8)
+			.setGroundingConductorSize(Size.AWG_10);
+	public static Cable MC_8_3 = new Cable(VoltageAC.v208_1ph_3w)
+			.setOuterDiameter(0.813)
+			.setPhaseConductorSize(Size.AWG_8)
+			.setNeutralConductorSize(Size.AWG_8)
+			.setGroundingConductorSize(Size.AWG_10);
+	public static Cable MC_8_4 = new Cable(VoltageAC.v208_3ph_4w)
+			.setOuterDiameter(0.848)
+			.setPhaseConductorSize(Size.AWG_8)
+			.setNeutralConductorSize(Size.AWG_8)
+			.setGroundingConductorSize(Size.AWG_10);
+	//endregion
 
 	/**
-	 Creates an MC (default) cable object of the given voltage system. The
-	 voltage system defines the number of conductors of this cable.
+	 Creates an MC (default) cable object to be connected to the given voltage source. The
+	 voltage source defines the number of conductors of this cable.
 	 The conductors of this cable have default sizes, metal and insulation.
 	 Refer to the class {@link Conductor} for default values.
 	 Other default parameters are:<br>
@@ -91,7 +119,7 @@ public class Cable implements Conduitable {
 	 - in free air (not in a conduit).<br>
 	 - not bundled.
 
-	 @param voltageAC The voltage system to be used with this cable.
+	 @param voltageAC The voltage source to be used with this cable.
 	 It will define the existence of a neutral. Cannot be null.
 	 */
 	public Cable (@NotNull VoltageAC voltageAC){
@@ -101,14 +129,12 @@ public class Cable implements Conduitable {
 		neutralConductor = createNeutral();
 	}
 
-	//todo (12/10/23): add a routine that calculates and updates the diameter of the cable based on the number of
-	// conductors and the size of the same.
 	/**
-	 Sets the size of the phase conductors. Notice that if the voltage system
-	 is so, that a phase and a neutral are the only current-carrying
+	 Sets the size of the phase conductors. Note that if the voltage source
+	 is so that a phase and a neutral are the only current-carrying
 	 conductors, the size of the neutral is set to be the same as the size
 	 of the phase.<br>
-	 Notice the outer diameter of the cable is not updated. The user of this
+	 Note the outer diameter of the cable is not updated. The user of this
 	 method is responsible to set the proper outer diameter that correspond
 	 to the size of the conductors making up this cable.
 	 @param phaseConductorSize The new size. Cannot be null.
@@ -128,9 +154,9 @@ public class Cable implements Conduitable {
 
 	/**
 	 Sets the size of the neutral conductors. If the cable does not contain a neutral, an IllegalArgumentException is thrown.
-	 Notice that if the voltage system is so, that a phase and a neutral are the only current-carrying conductors,
+	 Note that if the voltage source is so that a phase and a neutral are the only current-carrying conductors,
 	 the size of the phase will be updated to match the size of the neutral.<br>
-	 Notice the outer diameter of the cable is not updated. The user of this method is responsible to set the proper
+	 Note the outer diameter of the cable is not updated. The user of this method is responsible to set the proper
 	 outer diameter that correspond to the size of the conductors making up this cable.
 	 @param neutralConductorSize The new size. Cannot be null.
 	 */
@@ -147,7 +173,7 @@ public class Cable implements Conduitable {
 
 	/**
 	 Sets the size of the grounding conductor.<br>
-	 Notice the outer diameter of the cable is not updated. The user of this
+	 Note the outer diameter of the cable is not updated. The user of this
 	 method is responsible to set the proper outer diameter that correspond
 	 to the size of the conductors making up this cable.
 	 @param groundingConductorSize The new size. Cannot be null.
@@ -159,28 +185,28 @@ public class Cable implements Conduitable {
 	}
 
 	/**
-	 Sets the metal of the phase and neutral conductors of this cable.
-	 @param metal The new conductive metal. Cannot be null.
+	 Sets the conductiveMaterial of the phase and neutral conductors of this cable.
+	 @param conductiveMaterial The new conductor's conductive material. Cannot be null.
 	 */
-	public Cable setMetalForPhaseAndNeutral(@NotNull Metal metal) {
-		phaseAConductor.setMetal(metal);
+	public Cable setMetalForPhaseAndNeutral(@NotNull ConductiveMaterial conductiveMaterial) {
+		phaseAConductor.setMetal(conductiveMaterial);
 		if(phaseBConductor != null)
-			phaseBConductor.setMetal(metal);
+			phaseBConductor.setMetal(conductiveMaterial);
 		if(phaseCConductor != null)
-			phaseCConductor.setMetal(metal);
+			phaseCConductor.setMetal(conductiveMaterial);
 		if(neutralConductor != null) {
-			neutralConductor.setMetal(metal);
+			neutralConductor.setMetal(conductiveMaterial);
 		}
 		return this;
 	}
 
 	/**
-	 Sets the metal of the grounding conductor of this cable.
-	 @param metal The new conductive metal. Cannot be null.
+	 Sets the conductiveMaterial of the grounding conductor of this cable.
+	 @param conductiveMaterial The new conductive conductiveMaterial. Cannot be null.
 	 */
 	@SuppressWarnings("UnusedReturnValue")
-	public Cable setMetalForGrounding(@NotNull Metal metal) {
-		groundingConductor.setMetal(metal);
+	public Cable setMetalForGrounding(@NotNull ConductiveMaterial conductiveMaterial) {
+		groundingConductor.setMetal(conductiveMaterial);
 		return this;
 	}
 
@@ -188,7 +214,7 @@ public class Cable implements Conduitable {
 	 Sets the insulation of the conductors making up this cable.
 	 @param insulation The new insulation. Cannot be null.
 	 */
-	public Cable setInsulation(@NotNull Insul insulation) {
+	public Cable setInsulation(@NotNull Insulation insulation) {
 		phaseAConductor.setInsulation(insulation);
 		if(phaseBConductor != null)
 			phaseBConductor.setInsulation(insulation);
@@ -218,18 +244,25 @@ public class Cable implements Conduitable {
 	}
 
 	/**
-	 Sets the ambient temperature for this cable. If this cable is inside a
-	 conduit or is part of a bundle, an IllegalArgumentException is thrown,
-	 as this parameter must be set at the conduit or bundle object.
-	 Otherwise, the ambient temperature is set for this cable.
+	 Sets the ambient temperature for this cable. If this cable is inside a conduit or is part of a bundle, an
+	 IllegalArgumentException is thrown, as this parameter must be set by the conduit or bundle object. Otherwise,
+	 the ambient temperature is set for this cable.
 	 <p> {@link #hasConduit()} and {@link #hasBundle()} can be used to test the condition of this cable.
 
-	 @param ambientTemperatureF The ambient temperature in degrees
-	 Fahrenheits. The ambient temperature must be in the [{@link Factors#MIN_TEMP_F},
-	 {@link Factors#MAX_TEMP_F}].
+	 @param ambientTemperatureF The ambient temperature in degrees Fahrenheits. The ambient temperature must be in
+	 the [{@link Factors#MIN_TEMP_F},{@link Factors#MAX_TEMP_F}].
 	 @return This cable.
 	 */
 	public Cable setAmbientTemperatureF(int ambientTemperatureF) {
+		setAmbientTemperatureF2(ambientTemperatureF);
+		return this;
+	}
+
+	/**
+	 Same as {@link #setAmbientTemperatureF(int)} except that this method does not return anything.
+	 */
+	@Override
+	public void setAmbientTemperatureF2(int ambientTemperatureF) {
 		if(hasConduit() || hasBundle())
 			throw new IllegalArgumentException("Ambient temperature cannot be" +
 					" assigned to a cable that belongs to a conduit or " +
@@ -246,25 +279,7 @@ public class Cable implements Conduitable {
 		if(neutralConductor != null)
 			neutralConductor.setAmbientTemperatureF(ambientTemperatureF);
 		groundingConductor.setAmbientTemperatureF(ambientTemperatureF);
-		return this;
 	}
-
-	/** Sets this cable's conductor copper coating if the conductors are copper,
-	 otherwise nothing is done.
-	 @param coating The new copper coating. Cannot be null.
-	 */
-	@SuppressWarnings("UnusedReturnValue")
-	/*public Cable setCopperCoating(@NotNull Coating coating) {
-		phaseAConductor.setCopperCoating(coating);
-		if(phaseBConductor != null)
-			phaseBConductor.setCopperCoating(coating);
-		if(phaseCConductor != null)
-			phaseCConductor.setCopperCoating(coating);
-		if(neutralConductor != null)
-			neutralConductor.setCopperCoating(coating);
-		groundingConductor.setCopperCoating(coating);
-		return this;
-	}*/
 
 	/**
 	 Marks this cable as being jacketed. This is meaningful only for AC or MC
@@ -299,7 +314,7 @@ public class Cable implements Conduitable {
 	/**
 	 Sets the distance from this cable to the rooftop.
 	 @param roofTopDistance The distance in inches above roof to bottom of this
-	 cable. A negative value indicates tha this cable is not ins a rooftop condition.
+	 cable. A negative value indicates that this cable is not in a rooftop condition.
 	 This is equivalent to calling {@link #resetRoofTopCondition()}.
 	 If this cable is in a conduit, an IllegalArgumentException is thrown as
 	 this parameter must be set from the conduit object owning this cable.
@@ -361,11 +376,20 @@ public class Cable implements Conduitable {
 	 Once this cable is set in a conduit, it cannot be changed.
 	 @param conduit The conduit this cable will belong to.
 	 */
-	public void setConduit(@NotNull Conduit conduit){
+	public Cable setConduit(@Nullable Conduit conduit){
 		if(Tools.getClassName(Thread.currentThread().getStackTrace()[2].getClassName()).equals("Conduit"))
 			this.conduit = conduit;
 		else
 			throw new IllegalCallerException("setConduit method cannot be called from outside of a Conduit object.");
+		return this;
+	}
+
+	@Override
+	public void setConduit2(@Nullable Conduit conduit){
+		if(Tools.getClassName(Thread.currentThread().getStackTrace()[2].getClassName()).equals("Conduit"))
+			this.conduit = conduit;
+		else
+			throw new IllegalCallerException("setConduit2 method cannot be called from outside of a Conduit object.");
 	}
 
 	/**
@@ -374,15 +398,24 @@ public class Cable implements Conduitable {
 	 Once this cable is set in a bundle, it cannot be changed.
 	 @param bundle The bundle this cable will belong to.
 	 */
-	public void setBundle(@NotNull Bundle bundle){
+	public Cable setBundle(@NotNull Bundle bundle){
 		if(Tools.getClassName(Thread.currentThread().getStackTrace()[2].getClassName()).equals("Bundle"))
 			this.bundle = bundle;
 		else
 			throw new IllegalCallerException("setBundle method cannot be called from outside of a Bundle object.");
+		return this;
+	}
+
+	@Override
+	public void setBundle2(@Nullable Bundle bundle){
+		if (Tools.getClassName(Thread.currentThread().getStackTrace()[2].getClassName()).equals("Bundle"))
+			this.bundle = bundle;
+		else
+			throw new IllegalCallerException("setBundle2 method cannot be called from outside of a Bundle object.");
 	}
 
 	/** Returns the number of hot conductors in this cable*/
-	private int getHotCount() {
+	private int getHotConductorCount() {
 		return 1 + (phaseBConductor == null ? 0 : 1) + (phaseCConductor == null ? 0 : 1);
 	}
 
@@ -399,6 +432,7 @@ public class Cable implements Conduitable {
 		cable.outerDiameter = this.outerDiameter;
 		cable.roofTopDistance = hasConduit()? conduit.getRooftopDistance() : this.roofTopDistance;
 		cable.type = this.type;
+		//The ambient temperature is copied from each conductor
 		cable.phaseAConductor.copyFrom(this.phaseAConductor);
 		if(cable.phaseBConductor != null)
 			cable.phaseBConductor.copyFrom(this.phaseBConductor);
@@ -430,17 +464,17 @@ public class Cable implements Conduitable {
 			if(bundle.getBundlingLength() > 24) {
 				if (type == CableType.AC || type == CableType.MC) {
 					//Checking rule 310.15(B)(3)(a)(4)
-					if (!isJacketed() && getCurrentCarryingCount() <= 3 && getSize() == Size.AWG_12 && getMetalForPhaseAndNeutral() == Metal.COPPER && bundle.getCurrentCarryingCount() <= 20) {
+					if (!jacketed && getCurrentCarryingCount() <= 3 && getSize() == Size.AWG_12 && getMetalForPhaseAndNeutral() == ConductiveMaterial.COPPER && bundle.getCurrentCarryingCount() <= 20) {
 						return 1.0;
 					}
 					if (NECEdition.getDefault() == NECEdition.NEC2014) {
 						//Checking rule 310.15(B)(3)(a)(5)
-						if (!isJacketed() && bundle.getCurrentCarryingCount() > 20)
+						if (!jacketed && bundle.getCurrentCarryingCount() > 20)
 							return 0.6;
 					}
 					else {//NECEdition == NEC2017 || NEC2020
 						//Checking rule NEC2017:310.15(B)(3)(a)(4) NEC2020:310.15(C)(1)(d)
-						if (!isJacketed() && getCurrentCarryingCount() <= 3 && getSize() == Size.AWG_12 && getMetalForPhaseAndNeutral() == Metal.COPPER && bundle.getCurrentCarryingCount() > 20)
+						if (!jacketed && getCurrentCarryingCount() <= 3 && getSize() == Size.AWG_12 && getMetalForPhaseAndNeutral() == ConductiveMaterial.COPPER && bundle.getCurrentCarryingCount() > 20)
 							return 0.6;
 					}
 				}
@@ -467,19 +501,15 @@ public class Cable implements Conduitable {
 
 	@Override
 	public double getCompoundFactor(@NotNull TempRating terminationTempRating) {
-		/* TODO: 12/9/2023 : need to confirm later that no one is calling this
-		  function with null and then remove these commented lines.
-		if (terminationTempRating == null)
-			return 1;*/
-		Insul temp_insul;
+		Insulation anInsulation;
 		if (terminationTempRating == TempRating.T60)
-			temp_insul = Insul.TW;
+			anInsulation = Insulation.TW;
 		else if (terminationTempRating == TempRating.T75)
-			temp_insul = Insul.THW;
+			anInsulation = Insulation.THW;
 		else
-			temp_insul = Insul.THHW;
+			anInsulation = Insulation.THHW;
 
-		return getCorrectionFactor(temp_insul) * getAdjustmentFactor();
+		return getCorrectionFactor(anInsulation) * getAdjustmentFactor();
 	}
 
 	/**@return  the outer diameter of this cable, in inches.*/
@@ -532,9 +562,9 @@ public class Cable implements Conduitable {
 	public int getCurrentCarryingCount() {
 		int ccc = 1; //Phase A counts always as 1
 		if (phaseBConductor != null)
-			ccc += phaseBConductor.getCurrentCarryingCount();
+			ccc += 1;
 		if (phaseCConductor != null)
-			ccc += phaseCConductor.getCurrentCarryingCount();
+			ccc += 1;
 		if (hasNeutral())
 			//noinspection DataFlowIssue
 			ccc += neutralConductor.getCurrentCarryingCount();
@@ -549,7 +579,7 @@ public class Cable implements Conduitable {
 	@NEC(year = "2014")
 	@NEC(year = "2017")
 	@NEC(year = "2020")
-	private double getCorrectionFactor(@NotNull Insul insulation) {
+	private double getCorrectionFactor(@NotNull Insulation insulation) {
 		int adjustedTemp;
 		if (hasConduit())
 			//noinspection DataFlowIssue
@@ -591,22 +621,22 @@ public class Cable implements Conduitable {
 
 	/**Returns the metal of the phase and neutral conductors*/
 	@Override
-	public @NotNull Metal getMetal() {
+	public @NotNull ConductiveMaterial getMetal() {
 		return phaseAConductor.getMetal();
 	}
 
 	/**Returns the metal of the phase and neutral conductors*/
-	public Metal getMetalForPhaseAndNeutral() {
+	public ConductiveMaterial getMetalForPhaseAndNeutral() {
 		return phaseAConductor.getMetal();
 	}
 
 	/**Returns the metal of the grounding conductor*/
-	public Metal getMetalForGrounding() {
+	public ConductiveMaterial getMetalForGrounding() {
 		return groundingConductor.getMetal();
 	}
 
 	@Override
-	public @NotNull Insul getInsulation() {
+	public @NotNull Insulation getInsulation() {
 		return phaseAConductor.getInsulation();
 	}
 
@@ -620,24 +650,19 @@ public class Cable implements Conduitable {
 		return phaseAConductor.getAmbientTemperatureF();
 	}
 
-/*	@Override
-	public @NotNull Coating getCopperCoating() {
-		return phaseAConductor.getCopperCoating();
-	}*/
-
 	@Override
 	public @NotNull TempRating getTemperatureRating() {
 		return getTemperatureRating(phaseAConductor.getInsulation());
 	}
 
-	private TempRating getTemperatureRating(Insul insulation) {
+	private TempRating getTemperatureRating(Insulation insulation) {
 		return ConductorProperties.getTempRating(insulation);
 	}
 
 	@Override
 	public String getDescription() {
 		String s1, s2, s3;
-		s1 = type + " Cable: (" + getHotCount() + ") " + phaseAConductor.getDescription();
+		s1 = type + " Cable: (" + getHotConductorCount() + ") " + phaseAConductor.getDescription();
 		s2 = "";
 		if (hasNeutral())
 			//noinspection DataFlowIssue

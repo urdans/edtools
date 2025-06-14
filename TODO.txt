@@ -1,3 +1,79 @@
+6/2/25
+------
+The last commit included the following changes/comments:
+		-Added support for NEC tags.
+		-Refactored, simplified, many classes:
+		  -Making methods compatible with code editions 2014, 2017 and 2020.
+		  -Adding support to manage null values using @Nullable and @NotNull
+		  -Removing support for result messages to emphasize contract adherence.
+		  -Revised code and documentation for all classes in:
+			-eecalcs.bundle
+			-eecalcs.conductors
+			-eecalcs.conduits
+			-eecalcs.systems
+			-eecalcs.voltagedrop
+		This commit is done prior to continue working with the following packages:
+		  -eecalcs.loads
+		  -eecalcs.circuits
+/--/--/  
+I am reviewing all the code in
+			*- eecalcs.bundle
+				*- Bundle
+				*- ROBundle
+			*- eecalcs.conductors
+				*- Cable
+				*- CableType
+				*- Conductor
+				*- ConductiveMaterial (renamed from ConductorMetal)
+				*- ConductorProperties
+				*- Conduitable
+				*- EGC
+				*- Factors
+				*- Insulation
+				*- RWConduitable
+				*- Size
+				*- TempRating
+			- eecalcs.conduits
+				- Conduit
+				*- ConduitProperties
+				*- OuterMaterial
+				*- ROConduit
+				*- TradeSize (renamed from Trade)
+				*- Type
+			*- eecalcs.systems
+				*- Location
+				*- NEC
+				*- NECEdition
+				*- NECYears
+				*- VoltageAC
+			- eecalcs.voltagedrop
+				- ROVoltageDropAC
+				- VoltageDropAC
+				- VoltageDropDC
+
+	cleaning, tweaking, understanding... So I come up with this TODO:
+	
+	* Determining if a neutral conductor is current-carrying is wrong. To fix:
+		* Conductors.java line 71
+		* BaseLoad.java, line 122
+		* GenericLoad.java, line 223
+
+		The method isNeutralPossiblyCurrentCarrying() in VoltageAC.java, line 278, should be used to determine if the neutral is (possibly) a CC conductor.
+		(this method should/could be renamed as isSystemNeutralCurrentCarrying() --> better keep it as is because it shows that further consideration is needed at the load level (if load is non linear)
+
+		Here is the rule for non current-carryng (the system must have a neutral)
+			- All loads fed from a 3φ Y system (they all are 4 wires, 3 hots + neutral)
+			- All loads fed from a 1φ E system (2 hots + neutral, 3 wires)
+			The system must:
+				- have a neutral AND either:
+					- be 3φ, WYE
+					- be E
+
+		All others are cc if neutral is present.
+
+Conduct the test making the default edition to NEC2017 in the file NECEdition.java
+
+-----------------------------------------------
 Notes about the edtools project.
 11/19/2023.
 
@@ -29,6 +105,7 @@ ALWAYS IMPLEMENT A TEST-DRIVEN DEVELOPMENT APPROACH!!!!!!!!!
 		*-Cable
 		*-CableType
 		*-Coating (dead code. To be removed from this version)
+			*-Deleted
 		*-Conductor
 		*-ConductorProperties
 		*-Conduitable
@@ -68,20 +145,24 @@ ALWAYS IMPLEMENT A TEST-DRIVEN DEVELOPMENT APPROACH!!!!!!!!!
 		*-NECEdition
 		*-NECYears
 		*-VoltageAC
-	-package eecalcs.voltagedrop
-		-VoltageDropAC (dead code. To be removed from this version)
-		-VoltageDropDC (dead code. To be removed from this version)
-		-VDAC (this is the new code, to be renamed as VoltageDropAC)
-		-VDDC (this is the new code, to be renamed as VoltageDropDC)
+	*-package eecalcs.voltagedrop
+		*-VoltageDropAC (dead code. To be removed from this version)
+			*-deleted
+		*-VoltageDropDC (dead code. To be removed from this version)
+			*-deleted
+		*-VDAC (this is the new code, to be renamed as VoltageDropAC)
+			*-done
+		*-VDDC (this is the new code, to be renamed as VoltageDropDC)
+			*-done
 
--Conduct a git commit "before removing all code and refactoring for simplicity: nullables, no error codes, etc."
+*-Conduct a git commit "before removing all code and refactoring for simplicity: nullables, no error codes, etc."
 
 Continue with:
 	-package eecalcs.circuits
+		-OCPD.java.txt
 		-Circuit
 		-CircuitMode.java.txt
 		-DSProperties.java.txt
-		-OCPD.java.txt
 
 	-package eecalcs.loads
 		-ACMotor
@@ -106,10 +187,6 @@ Continue with:
 		-Tools (Avoid using this. Will be removed from this software)
 
 
-
-4. Rewrite the classes for voltage drop calculation. Get rid of the enormous amount of error messages.
-	*- Voltage drop for AC
-	- Voltage drop for DC
 
 General things to do for each class
 - To comply with NEC2017 and NEC2020 Ed.
@@ -138,7 +215,7 @@ everything simple (KISS principle). The following might be seen as the architect
 to other programs.
 
 Mutable objects are necessary. When used appropriately they result in code that is clear and simple. But, it is not
-easy to use them correctly, a lot of planing, thinking and discipline are necessary. What is important, is to keep in
+easy to use them correctly, a lot of planning, thinking and discipline are necessary. What is important, is to keep in
 mind at all times, how to avoid side effects. Here is my strategy/architecture:
 
 1. Objects use objects.
@@ -204,7 +281,7 @@ conductor to a conduit if the conductor's conduit field is not null and not the 
 it must throw an exception.
 -Conduit must have a method to set the ambient temperature of all its conductors. all conductors added to the conduit
 are set the same ambient temperature of the conduit.
--The circuit class must not change the ambient temperature of an external conduit.
+-The circuitAll class must not change the ambient temperature of an external conduit.
 
 //////to be reviewed later - IS THIS NECESSARY?//////
 JSON representation of objects.

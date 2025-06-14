@@ -12,41 +12,75 @@ import java.util.List;
 
 
 /**
- This class represents an electrical conduit. Conduits have a {@link Type} and a {@link Trade} size. The
+ This class represents an electrical conduit. Conduits have a {@link Type} and a {@link TradeSize} size. The
  conduit trade size is automatically increased to accommodate the conductors/cables it contains in order to meet the
- NEC chapter 9 requirements for conduit sizing. Likewise, its size is decreased automatically when removing
- conductor/cables from it. A minimum trade size can be set to avoid the conduit to decrease below a desired valued;
- it's a way to account for spare use.
+ NEC chapter 9 requirements for conduit sizing. A minimum trade size can be set to prevent smaller than desired sizes
+ (when for example, accounting for spare for later use). Adding spare conductors to the conduit is also a way to
+ size the conduit for spare capacity (use this method when the number of spare conductors are know in advance, which
+ would be rare)<p>
 
- <p>When a conductor or cable inside a conduit object changes one of its properties and that property affects the
- conduit size (like the size and number of the conductors or the outer diameter of the cable) the size of the
- conduit is updated accordingly.
+ The results of the getters are computed at the time the getter is called. This means that, for example, when a
+ conductor or cable inside a conduit object changes one of its properties that can affect the conduit size (like the
+ size and number of the conductors or the outer diameter of the cable) the trade size returned by the getter is
+ always correct because the size is recomputed every time the getter is called.<p>
 
- >p> The length of the conduit does not matter except if it is longer than 24 inches. Instead of tracking the length
+ The length of the conduit does not matter except if it is longer than 24 inches. Instead of tracking the length
  of the conduit, a boolean field is used to indicate whether the conduit is a nipple (equal or less than 24 inches)
- or not. The default value state is not being a nipple; the state can be changed by the method {@link #setNipple()}
- and {@link #setNonNipple()}.*/
+ or not. The default value state is "not nipple"; the state can be changed by the method {@link #setNipple()}
+ and {@link #setNonNipple()}.<p>
+
+ The default parameters are: <p>
+ - Ambient temperature: 86 °F.<br>
+ - Conduit type: {@link Type#EMT}.<br>
+ - Conduit trade size: {@link TradeSize#T1$2}.<br>
+ - Not in a rooftop condition.<p>
+ These parameters can be changed through setters.
+ */
 public class Conduit implements ROConduit {
-	private @NotNull Trade minimumTradeSize = Trade.T1$2;
+	private @NotNull TradeSize minimumTradeSizeSize = TradeSize.T1$2;
 	private boolean nipple = false;
-	private @NotNull Type type = Type.PVC40;
+	private @NotNull Type type = Type.EMT;
 	private double rooftopDistance = -1.0; //means no rooftop condition
-	private final int ambientTemperatureF;
+	private int ambientTemperatureF = 86;
 	private final List<Conduitable> conduitables = new ArrayList<>();
 
-	/** Creates a new conduit with the given ambient temperature. If the given ambient temperature is out of the
-	 range [{@link Factors#MIN_TEMP_F}, {@link Factors#MAX_TEMP_F}] an IllegalArgumentException is thrown.
-	 The default field values are {@link Type#PVC40}, {@link Trade#T1$2} and not in a rooftop condition. */
 	public Conduit(int ambientTemperatureF){
+		setAmbientTemperatureF(ambientTemperatureF);
+	}
+
+	public Conduit(){
+		setAmbientTemperatureF(ambientTemperatureF);
+	}
+
+	/**
+	 * Sets the ambient temperature of this conduit. If the given ambient temperature is out of the range
+	 * [{@link Factors#MIN_TEMP_F}, {@link Factors#MAX_TEMP_F}] an IllegalArgumentException is thrown.
+	 * @param ambientTemperatureF The ambient temperature in degrees Fahrenheit.
+	 * @return This Conduit object.
+	 */
+	public Conduit setAmbientTemperatureF(int ambientTemperatureF) {
 		if(ambientTemperatureF < Factors.MIN_TEMP_F || ambientTemperatureF > Factors.MAX_TEMP_F)
 			throw new IllegalArgumentException("Ambient temperature must be " +
 					"in the [" + Factors.MIN_TEMP_F + "," + Factors.MAX_TEMP_F + "] °F range.");
 		this.ambientTemperatureF = ambientTemperatureF;
+		updateAmbientTemperature();
+		return this;
+	}
+
+
+	private void updateAmbientTemperature() {
+		for (var c: conduitables) {
+			if (c instanceof RWConduitable) {
+				((RWConduitable) c).setConduit2(null);
+				((RWConduitable) c).setAmbientTemperatureF2(ambientTemperatureF);
+				((RWConduitable) c).setConduit2(this);
+			}
+		}
 	}
 
 	@Override
-	public @NotNull Trade getMinimumTradeSize() {
-		return minimumTradeSize;
+	public @NotNull TradeSize getMinimumTradeSize() {
+		return minimumTradeSizeSize;
 	}
 
 	@Override
@@ -60,13 +94,21 @@ public class Conduit implements ROConduit {
 	}
 
 	@Override
+	public @NotNull OuterMaterial getMaterial() {
+		return ConduitProperties.getMaterial(type);
+	}
+
+	@Override
 	public double getRooftopDistance() {
 		return rooftopDistance;
 	}
 
 	@Override
 	public double getArea() {
-		return ConduitProperties.getArea(type, getTradeSize());
+		TradeSize tradeSize = getTradeSize();
+		if (tradeSize == null)
+			return 0;
+		return ConduitProperties.getArea(type, tradeSize);
 	}
 
 	@Override
@@ -80,7 +122,7 @@ public class Conduit implements ROConduit {
 			if(conduitable instanceof Conductor) {
 				Conductor conductor = (Conductor) conduitable;
 				if (conductor.getRole() == Conductor.Role.GND)
-					if (conductor.getSize().isGreaterThan(biggestEGCSize)) {
+					if (conductor.getSize().isBiggerThan(biggestEGCSize)) {
 						biggestEGCSize = conductor.getSize();
 						biggestEGC = conductor;
 					}
@@ -132,13 +174,13 @@ public class Conduit implements ROConduit {
 	}
 
 	@Override
-	public @Nullable Trade getTradeSize() {
+	public @Nullable TradeSize getTradeSize() {
 		double conduitableAreas = getConduitablesArea() / (getMaxAllowedFillPercentage() * 0.01);
-		return ConduitProperties.getTradeSizeForArea(conduitableAreas, type, minimumTradeSize);
+		return ConduitProperties.getTradeSizeForArea(conduitableAreas, type, minimumTradeSizeSize);
 	}
 
 	@Override
-	public @Nullable Trade getTradeSizeForOneEGC() {
+	public @Nullable TradeSize getTradeSizeForOneEGC() {
 		if(isEmpty())
 			return null;
 		double EGCArea = getBiggestEGCArea();
@@ -150,7 +192,7 @@ public class Conduit implements ROConduit {
 				(getMaxAllowedFillPercentage() * 0.01);
 
 		return ConduitProperties.getTradeSizeForArea(requiredArea,
-				type, minimumTradeSize);
+				type, minimumTradeSizeSize);
 	}
 
 	@Override
@@ -168,16 +210,22 @@ public class Conduit implements ROConduit {
 
 	/**
 	 * Adds a conduitable to this conduit.
-	 * @param conduitable The conduitable to add. Cannot be null.
+	 * @param conduitable The conduitable to add. If the conduitable already exist inside the conduit, or its
+	 *                       value is null, nothing is added to the conduit.
 	 * @return This conduit.
 	 */
-	public Conduit add(@NotNull Conduitable conduitable){
-		if (conduitables.contains(conduitable))
+	public Conduit add(@Nullable Conduitable conduitable){
+		if (conduitables.contains(conduitable) || conduitable == null)
 			return this;
 		if(conduitable.hasConduit() || conduitable.hasBundle())
 			throw new IllegalArgumentException("Cannot add to this conduit a " +
 					"conduitable that belongs to another conduit or bundle.");
-		if(conduitable instanceof Conductor) {
+
+		/*This is dangerous. This code is safe as long as any class that implements Conduitables, also implements
+		RWConduitables. For now, only two classes implements both, Conductor and Cable.*/
+		((RWConduitable)conduitable).setAmbientTemperatureF2(ambientTemperatureF);
+		((RWConduitable)conduitable).setConduit2(this);
+/*		if(conduitable instanceof Conductor) {
 			//the order of this is important
 			((Conductor) conduitable).setAmbientTemperatureF(ambientTemperatureF);
 			((Conductor) conduitable).setConduit(this);
@@ -186,18 +234,18 @@ public class Conduit implements ROConduit {
 			//the order of this is important
 			((Cable) conduitable).setAmbientTemperatureF(ambientTemperatureF);
 			((Cable) conduitable).setConduit(this);
-		}
+		}*/
 		conduitables.add(conduitable);
 		return this;
 	}
 
 	/**
 	 * Sets the minimum trade size for this conduit.
-	 * @param minimumTradeSize The minimum trade size.
+	 * @param minimumTradeSizeSize The minimum trade size.
 	 * @return This conduit.
 	 */
-	public Conduit setMinimumTradeSize(@NotNull Trade minimumTradeSize){
-		this.minimumTradeSize = minimumTradeSize;
+	public Conduit setMinimumTradeSize(@NotNull TradeSize minimumTradeSizeSize){
+		this.minimumTradeSizeSize = minimumTradeSizeSize;
 		return this;
 	}
 
@@ -231,20 +279,13 @@ public class Conduit implements ROConduit {
 
 	/**
 	 * Sets the rooftop distance for this conduit.
-	 * @param rooftopDistance The new distance in inches
+	 * @param rooftopDistanceInInches The new distance in inches. A negative value means the conduit does not run
+	 *                                   above the rooftop.
 	 * @return This conduit.
 	 */
-	public Conduit setRooftopDistance(double rooftopDistance){
-		this.rooftopDistance = rooftopDistance;
+	public Conduit setRooftopDistance(double rooftopDistanceInInches){
+		this.rooftopDistance = rooftopDistanceInInches;
 		return this;
-	}
-
-	/**
-	 Resets the rooftop condition for this conduit, that is, no rooftop
-	 condition.
-	 */
-	public void resetRooftopCondition() {
-		setRooftopDistance(-1);
 	}
 
 	/**

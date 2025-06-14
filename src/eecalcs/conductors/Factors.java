@@ -6,17 +6,16 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  This class encapsulates static methods to provide temperature correction factors
- for conductors and applies to ampacities defined in NEC "TABLE 310.15(B)(2)(a)
- Ambient Temperature Correction Factors Based on 30°C (86°F)", as well as to
- provide adjustment factor for number of current-carrying conductors in the same
- conduit. */
+ for conductors and applies to ampacities defined in NEC 2014,2017: TABLE 310.15(B)(2)(a), 2020:Table 310.15(B)(1),
+ "Ambient Temperature Correction Factors Based on 30°C (86°F)", as well as to provide adjustment factor for number of
+ current-carrying conductors in the same conduit.
+ */
 public class Factors {
 	private final int minTF;
 	private final int maxTF;
 	private final double correctionFactor60;
 	private final double correctionFactor75;
 	private final double correctionFactor90;
-
 	private final static Factors[] tempCorrectionFactors;
 
 	/** This is the maximum temperature in °F in NEC 2014,2017:TABLE 310.15(B)(2)(A), 2020:Table 310.15(B)(1)*/
@@ -50,7 +49,7 @@ public class Factors {
 
 	/**
 	 Returns true if the given ambient temperature is within the minimum and
-	 maximum values corresponding to this class's temperature range.
+	 maximum values corresponding to this class's temperature range [minTF, maxTF]
 	 */
 	private boolean inRangeF(int ambientTempF) {
 		return ambientTempF >= minTF & ambientTempF <= maxTF;
@@ -61,11 +60,11 @@ public class Factors {
 	 ampacities specified in NEC 2014,2017:table 310.15(B)(16) or 2020:Table
 	 310.16, and corresponding to the given ambient temperature (in degrees
 	 Fahrenheits), for the given conductor's temperature rating (60, 75 or 90
-	 degrees Celsius). This correction factor is a multiplier of the
+	 degrees Celsius). This correction factor is a multiplier for the
 	 conductor's ampacity.
 	 @param ambientTemperatureF The ambient temperature in degrees Fahrenheits.
 	 @param temperatureRating The temperature rating of the conductor for which
-	 the ampacity is being corrected. Cannot be null.
+	 the correction factor is requested. Cannot be null.
 	 @return The temperature correction factor. If the ambient temperature
 	 exceeds the conductor temperature ratings, the conductor cannot be used
      and hence the returned value is zero.
@@ -83,13 +82,12 @@ public class Factors {
 	}
 
 	/**
-	 Returns the adjustment factor for all current carrying conductors inside a
-	 conduit, bundled, or cable per NEC 2014,2017:table 310.15(B)(3)(a),
-	 2020: table 310.15(C)(1). This method complies with NEC:
+	 Returns the adjustment factor that applies to all the current carrying conductors inside a
+	 conduit, bundled, or cable per NEC 2014,2017:table 310.15(B)(3)(a), 2020: table 310.15(C)(1). This method
+	 complies with NEC:
 	 <p>- 2014, 2017: 310.15(B)(3)(a) and 310.15(B)(3)(a)(2).
 	 <p>- 2020: 310.15(C)(1) and 310.15(C)(1)(b).
-	 @param currentCarrying The number of current-carrying conductors
-	 in a conduit, cable, or bundle. Must be >=0.
+	 @param currentCarrying The number of current-carrying conductors in a conduit, cable, or bundle. Must be >=0.
 	 @return The adjustment factor.
 	 */
 	@NEC(year="2014")
@@ -116,11 +114,12 @@ public class Factors {
 	}
 
 	/**
-	 Return the ambient temperature adjustment for conduits or cables
-     exposed to sunlight on or above rooftops, per NEC 2014:table 310.15(B)(3)(c), or NEC 2017:310.15(B)(3)(c);
-	 2020:310.15(B)(2).
-	 <p>NEC editions 2017, 2020, changed the rules for rooftop condition, considering it not an adjustment factor but
-	 a temperature correction one.
+	 Return the ambient temperature adder for conduits or cables exposed to sunlight on or above rooftops, per
+	 NEC 2014:table 310.15(B)(3)(c); NEC 2017:310.15(B)(3)(c); NEC 2020:310.15(B)(2).
+	 <p>NEC editions 2017, 2020, changed the rules for rooftop condition, applying a single adder when the conduit is
+	 installed at less than 7/8" from the roof surface.
+	 <p>Note that the caller to this method shall take into consideration that type XHHW-2 insulated conductors
+	 are exempted from application of this adder.
 	 @param distanceAboveRoof The distance above rooftop in inches.
 	 @return The temperature adjustment in degrees Fahrenheits.
 	 */
@@ -140,7 +139,7 @@ public class Factors {
 			if (distanceAboveRoof > 12 & distanceAboveRoof <= 36)
 				return 25;
 		}
-		else {//NECEdition.getDefault() == NECEdition.NEC2017 or NECEdition.NEC2020
+		else {//NECEdition.NEC2017 or NECEdition.NEC2020
 			if (distanceAboveRoof >0 && distanceAboveRoof< 7.0/8.0)
 				return 60;
 		}

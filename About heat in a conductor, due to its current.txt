@@ -5,7 +5,7 @@ The temperature of a conductor due to its current can be expressed using Joule's
 
 Q = I^2 R t
 
-The temperature rise (ΔT) of the conductor due to the generated heat can be calculated using the specific heat capacity (c) of the material of the conductor and its mass per unit length (m). Mathematically, this can be expressed as:
+The temperature rise (ΔT) of the conductor due to the generated heat can be calculated using the specific heat capacity (c) of the conduitMaterial of the conductor and its mass per unit length (m). Mathematically, this can be expressed as:
 
 ΔT = Q / (c * m)
 
@@ -21,7 +21,7 @@ The specific heat capacity of copper is approximately 0.385 J/g*K at room temper
 =============================================================================================================================
 what is the resistivity of copper?
 -----------------------------------------------------------------------------------------------------------------------------
-The resistivity of copper is approximately 1.68 x 10^-8 ohm-meters at 20°C. This value can vary slightly depending on the purity and temperature of the copper. Copper is a highly conductive material and is commonly used in electrical wiring and other applications where high conductivity is required.
+The resistivity of copper is approximately 1.68 x 10^-8 ohm-meters at 20°C. This value can vary slightly depending on the purity and temperature of the copper. Copper is a highly conductive conduitMaterial and is commonly used in electrical wiring and other applications where high conductivity is required.
 
 =============================================================================================================================
 Deduct the formula for the change in temperature of a copper wire, given its length, diameter and current flowing through it.

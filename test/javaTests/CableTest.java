@@ -6,7 +6,7 @@ import eecalcs.bundle.Bundle;
 import eecalcs.conductors.Cable;
 import eecalcs.conductors.Conductor;
 import eecalcs.conduits.Conduit;
-import eecalcs.conduits.Trade;
+import eecalcs.conduits.TradeSize;
 import eecalcs.conduits.Type;
 import eecalcs.conductors.TempRating;
 import eecalcs.systems.NECEdition;
@@ -190,7 +190,7 @@ class CableTest {
 
 
         /*if a conduit rooftop condition is reset, so is the cable.*/
-        conduit.resetRooftopCondition();
+        conduit.setRooftopDistance(-1);
         assertFalse(cable.isRoofTopCondition());
         assertFalse(conduit.isRoofTopCondition());
 
@@ -275,7 +275,7 @@ class CableTest {
             assertEquals(285 * 0.94 * 0.7, cable.getCorrectedAndAdjustedAmpacity(), 0.01);
 
 
-        conduit.resetRooftopCondition();
+        conduit.setRooftopDistance(-1);
         assertEquals(285 * 0.94 * 0.7, cable.getCorrectedAndAdjustedAmpacity(), 0.01);
     }
 
@@ -287,8 +287,8 @@ class CableTest {
         Cable cable = new Cable(VoltageAC.v277_1ph_2w)
                 .setOuterDiameter(1)
                 .setPhaseConductorSize(Size.KCMIL_300)
-                .setRoofTopDistance(20)
-                .setAmbientTemperatureF(95);
+                .setRoofTopDistance(20);
+        cable.setAmbientTemperatureF(95);
         if(NECEdition.getDefault() == NECEdition.NEC2014)
             assertEquals(285 * 0.75 * 1.0, cable.getCorrectedAndAdjustedAmpacity(), 0.01);
         else //NEC2017 and NEC2020
@@ -314,12 +314,12 @@ class CableTest {
         Cable cable = new Cable(VoltageAC.v277_1ph_2w)
                 .setOuterDiameter(1)
                 .setPhaseConductorSize(Size.KCMIL_300)
-                .setRoofTopDistance(20)
-                .setAmbientTemperatureF(95);
+                .setRoofTopDistance(20);
+        cable.setAmbientTemperatureF(95);
         Conduit conduit = new Conduit(95)
                 .setType(Type.ENT)
                 .setNonNipple()
-                .setMinimumTradeSize(Trade.T1$2)
+                .setMinimumTradeSize(TradeSize.T1$2)
                 .setRooftopDistance(20)
                 .add(new Conductor())
                 .add(new Conductor())
@@ -340,11 +340,11 @@ class CableTest {
             assertEquals(285 * 0.94 * 0.8, cable.getCorrectedAndAdjustedAmpacity(), 0.01);
 
 
-        cable.setMetalForPhaseAndNeutral(Metal.ALUMINUM);
-        cable.setInsulation(Insul.THHN);
+        cable.setMetalForPhaseAndNeutral(ConductiveMaterial.ALUMINUM);
+        cable.setInsulation(Insulation.THHN);
         assertEquals(6, conduit.getCurrentCarryingCount());
 
-        conduit.resetRooftopCondition();
+        conduit.setRooftopDistance(-1);
         assertEquals(260 * 0.96 * 0.8, cable.getCorrectedAndAdjustedAmpacity());
 
         Conduitable fifthConductor = new Conductor();
@@ -360,19 +360,18 @@ class CableTest {
         Cable cable = new Cable(VoltageAC.v277_1ph_2w)
                 .setOuterDiameter(1)
                 .setPhaseConductorSize(Size.KCMIL_300)
-                .setAmbientTemperatureF(95)
                 .setType(CableType.MC)
-                .setMetalForPhaseAndNeutral(Metal.ALUMINUM)
-                .setInsulation(Insul.THHN);
+                .setMetalForPhaseAndNeutral(ConductiveMaterial.ALUMINUM)
+                .setInsulation(Insulation.THHN).
+                setAmbientTemperatureF(95);
         assertEquals(260 * 0.96 * 1, cable.getCorrectedAndAdjustedAmpacity(), 0.01);
 
         cable.setPhaseConductorSize(Size.AWG_12);
-        cable.setMetalForPhaseAndNeutral(Metal.COPPER);
+        cable.setMetalForPhaseAndNeutral(ConductiveMaterial.COPPER);
         assertEquals(30 * 0.96 * 1.0, cable.getCorrectedAndAdjustedAmpacity());
 
-        cable.setType(CableType.NM);
-        cable.setAmbientTemperatureF(65);
-        cable.setInsulation(Insul.RHW);
+        cable.setType(CableType.NM).setAmbientTemperatureF(65);
+        cable.setInsulation(Insulation.RHW);
         cable.setJacketed();
         assertEquals(25 * 1.11 * 1.0, cable.getCorrectedAndAdjustedAmpacity());
         assertTrue(cable.isJacketed());
@@ -388,10 +387,10 @@ class CableTest {
         NECEdition.setDefault(necEdition);
         Cable cable = new Cable(VoltageAC.v277_1ph_2w)
                 .setOuterDiameter(1)
-                .setAmbientTemperatureF(65)
                 .setType(CableType.AC)
-                .setInsulation(Insul.RHW)
-                .setJacketed();
+                .setInsulation(Insulation.RHW)
+                .setJacketed()
+                .setAmbientTemperatureF(65);
         Conduit conduit = new Conduit(65).setType(Type.ENT).setNonNipple();
         conduit.add(cable);
         assertEquals(2, conduit.getCurrentCarryingCount());
@@ -420,10 +419,10 @@ class CableTest {
         NECEdition.setDefault(necEdition);
         Cable cable = new Cable(VoltageAC.v277_1ph_2w)
                 .setOuterDiameter(1)
-                .setAmbientTemperatureF(65)
                 .setType(CableType.AC)
-                .setInsulation(Insul.RHW)
-                .setJacketed();
+                .setInsulation(Insulation.RHW)
+                .setJacketed()
+                .setAmbientTemperatureF(65);
         Conduit conduit = new Conduit(65).setType(Type.ENT).setNonNipple();
         assertEquals(0, conduit.getCurrentCarryingCount());
         assertEquals(25 * 1.11 * 1.0, cable.getCorrectedAndAdjustedAmpacity());
@@ -450,7 +449,7 @@ class CableTest {
         bundle.getConduitables().forEach(conduitable -> ((Cable) conduitable).setJacketed());
         assertTrue(cable.isJacketed());
         assertEquals(Size.AWG_12, cable.getPhaseConductor().getSize());
-        assertEquals(Metal.COPPER, cable.getMetal());
+        assertEquals(ConductiveMaterial.COPPER, cable.getMetal());
         assertEquals(2, cable.getCurrentCarryingCount());
         assertEquals(12, bundle.getCurrentCarryingCount());
         assertEquals(25 * 1.11 * 1, cable.getCorrectedAndAdjustedAmpacity());
@@ -491,9 +490,9 @@ class CableTest {
         NECEdition.setDefault(necEdition);
         Cable cable = new Cable(VoltageAC.v480_1ph_3w)
                 .setOuterDiameter(1)
-                .setAmbientTemperatureF(86)
                 .setType(CableType.MC)
-                .setInsulation(Insul.THHN);
+                .setInsulation(Insulation.THHN)
+                .setAmbientTemperatureF(86);
         Bundle bundle = new Bundle(86).setBundlingLength(25);
         assertEquals(86, cable.getAmbientTemperatureF());
         assertEquals(3, cable.getCurrentCarryingCount());
@@ -521,9 +520,9 @@ class CableTest {
         NECEdition.setDefault(necEdition);
         Cable cable = new Cable(VoltageAC.v480_1ph_3w)
                 .setOuterDiameter(1)
-                .setAmbientTemperatureF(86)
                 .setType(CableType.MC)
-                .setInsulation(Insul.THHN);
+                .setInsulation(Insulation.THHN)
+                .setAmbientTemperatureF(86);
         Bundle bundle = new Bundle(86).setBundlingLength(25);
         assertEquals(30*1*1, cable.getCorrectedAndAdjustedAmpacity(), 0.01);
         assertEquals(0, bundle.getCurrentCarryingCount());
@@ -702,16 +701,14 @@ class CableTest {
         cable.setPhaseConductorSize(Size.AWG_4$0);
         cable.setNeutralConductorSize(Size.AWG_10);
         cable.setGroundingConductorSize(Size.AWG_12);
-        cable.setMetalForPhaseAndNeutral(Metal.ALUMINUM);
-        cable.setInsulation(Insul.TW);
+        cable.setMetalForPhaseAndNeutral(ConductiveMaterial.ALUMINUM);
+        cable.setInsulation(Insulation.TW);
         assertThrows(IllegalArgumentException.class, () -> cable.setLength(-1));
 
         cable.setLength(123);
         assertThrows(IllegalArgumentException.class, () ->cable.setAmbientTemperatureF(-77));
 
-        cable.setAmbientTemperatureF(100);
-//        cable.setCopperCoating(Coating.UNCOATED);
-        cable.setType(CableType.NM);
+        cable.setAmbientTemperatureF(100).setType(CableType.NM);
         assertNotEquals("", cable.getDescription());
         assertEquals(0.82, cable.getCompoundFactor());
         assertEquals(0.91, cable.getCompoundFactor(TempRating.T90));
@@ -746,10 +743,10 @@ class CableTest {
         assertThrows(IllegalArgumentException.class, ()-> cable3.setAmbientTemperatureF(100));
         assertNotEquals("", cable.toJSON());
 
-        cable.setMetalForPhaseAndNeutral(Metal.COPPER);
-        cable.setMetalForGrounding(Metal.ALUMINUM);
-        assertEquals(Metal.COPPER,cable.getMetalForPhaseAndNeutral());
-        assertEquals(Metal.ALUMINUM,cable.getMetalForGrounding());
+        cable.setMetalForPhaseAndNeutral(ConductiveMaterial.COPPER);
+        cable.setMetalForGrounding(ConductiveMaterial.ALUMINUM);
+        assertEquals(ConductiveMaterial.COPPER,cable.getMetalForPhaseAndNeutral());
+        assertEquals(ConductiveMaterial.ALUMINUM,cable.getMetalForGrounding());
     }
 
     @Test //that we cannot set the conduit of a cable by calling setConduit() from a different class other than Conduit.

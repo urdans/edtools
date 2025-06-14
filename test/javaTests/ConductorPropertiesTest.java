@@ -1,8 +1,7 @@
 package javaTests;
 
 import eecalcs.conductors.*;
-import eecalcs.conduits.ConduitProperties;
-import eecalcs.conduits.Material;
+import eecalcs.conduits.OuterMaterial;
 import eecalcs.conductors.TempRating;
 import eecalcs.systems.Location;
 import org.junit.jupiter.api.Test;
@@ -13,9 +12,9 @@ class ConductorPropertiesTest {
 
     @Test
     void getSizeByAmperes() {
-        assertEquals(Size.AWG_1, ConductorProperties.getSizePerCurrent(144.23, Metal.COPPER, TempRating.T90));
-        assertEquals(Size.AWG_1$0, ConductorProperties.getSizePerCurrent(144.23, Metal.COPPER, TempRating.T75));
-        assertEquals(Size.AWG_3$0, ConductorProperties.getSizePerCurrent(144.23, Metal.ALUMINUM, TempRating.T75));
+        assertEquals(Size.AWG_1, ConductorProperties.getSizePerCurrent(144.23, ConductiveMaterial.COPPER, TempRating.T90));
+        assertEquals(Size.AWG_1$0, ConductorProperties.getSizePerCurrent(144.23, ConductiveMaterial.COPPER, TempRating.T75));
+        assertEquals(Size.AWG_3$0, ConductorProperties.getSizePerCurrent(144.23, ConductiveMaterial.ALUMINUM, TempRating.T75));
     }
 
     @Test
@@ -32,8 +31,8 @@ class ConductorPropertiesTest {
     @Test
     void getCompactAreaIn2() {
         assertEquals(0.0, ConductorProperties.getCompactConductorAreaIn2(null, null),0.0001);
-        assertEquals(0.0531, ConductorProperties.getCompactConductorAreaIn2(Size.AWG_8, Insul.RHH),0.0001);
-        assertEquals(0.0, ConductorProperties.getCompactConductorAreaIn2(Size.AWG_3, Insul.RHH),0.0001);
+        assertEquals(0.0531, ConductorProperties.getCompactConductorAreaIn2(Size.AWG_8, Insulation.RHH),0.0001);
+        assertEquals(0.0, ConductorProperties.getCompactConductorAreaIn2(Size.AWG_3, Insulation.RHH),0.0001);
     }
 
     @Test
@@ -45,43 +44,43 @@ class ConductorPropertiesTest {
     @Test
     void hasCompactArea() {
         assertFalse(ConductorProperties.hasCompactAreaDefined(null, null));
-        assertFalse(ConductorProperties.hasCompactAreaDefined(Size.AWG_3, Insul.USE));
-        assertFalse(ConductorProperties.hasCompactAreaDefined(Size.AWG_8, Insul.THHN));
-        assertFalse(ConductorProperties.hasCompactAreaDefined(Size.AWG_10, Insul.THW));
-        assertFalse(ConductorProperties.hasCompactAreaDefined(Size.KCMIL_2000, Insul.XHHW));
-        assertTrue(ConductorProperties.hasCompactAreaDefined(Size.AWG_8, Insul.XHHW));
-        assertTrue(ConductorProperties.hasCompactAreaDefined(Size.KCMIL_1000, Insul.RHH));
+        assertFalse(ConductorProperties.hasCompactAreaDefined(Size.AWG_3, Insulation.USE));
+        assertFalse(ConductorProperties.hasCompactAreaDefined(Size.AWG_8, Insulation.THHN));
+        assertFalse(ConductorProperties.hasCompactAreaDefined(Size.AWG_10, Insulation.THW));
+        assertFalse(ConductorProperties.hasCompactAreaDefined(Size.KCMIL_2000, Insulation.XHHW));
+        assertTrue(ConductorProperties.hasCompactAreaDefined(Size.AWG_8, Insulation.XHHW));
+        assertTrue(ConductorProperties.hasCompactAreaDefined(Size.KCMIL_1000, Insulation.RHH));
     }
 
     @Test
     void hasCompactBareArea() {
         assertFalse(ConductorProperties.hasCompactAreaDefined(null, null));
-        assertFalse(ConductorProperties.hasCompactAreaDefined(Size.AWG_3, Insul.USE));
-        assertTrue(ConductorProperties.hasCompactAreaDefined(Size.KCMIL_750, Insul.THW));
+        assertFalse(ConductorProperties.hasCompactAreaDefined(Size.AWG_3, Insulation.USE));
+        assertTrue(ConductorProperties.hasCompactAreaDefined(Size.KCMIL_750, Insulation.THW));
     }
 
     @Test
     void getTempRating() {
         //for dry locations
-        assertEquals(TempRating.T60, ConductorProperties.getTempRating(Insul.TW));
-        assertEquals(TempRating.T75, ConductorProperties.getTempRating(Insul.THW));
-        assertEquals(TempRating.T90, ConductorProperties.getTempRating(Insul.THHW));
-        assertEquals(TempRating.T90, ConductorProperties.getTempRating(Insul.XHHW));
+        assertEquals(TempRating.T60, ConductorProperties.getTempRating(Insulation.TW));
+        assertEquals(TempRating.T75, ConductorProperties.getTempRating(Insulation.THW));
+        assertEquals(TempRating.T90, ConductorProperties.getTempRating(Insulation.THHW));
+        assertEquals(TempRating.T90, ConductorProperties.getTempRating(Insulation.XHHW));
 
-        assertEquals(TempRating.T60, ConductorProperties.getTempRating(Insul.TW, Location.DRY));
-        assertEquals(TempRating.T75, ConductorProperties.getTempRating(Insul.THW, Location.DRY));
-        assertEquals(TempRating.T90, ConductorProperties.getTempRating(Insul.THHW, Location.DRY));
-        assertEquals(TempRating.T90, ConductorProperties.getTempRating(Insul.XHHW, Location.DRY));
+        assertEquals(TempRating.T60, ConductorProperties.getTempRating(Insulation.TW, Location.DRY));
+        assertEquals(TempRating.T75, ConductorProperties.getTempRating(Insulation.THW, Location.DRY));
+        assertEquals(TempRating.T90, ConductorProperties.getTempRating(Insulation.THHW, Location.DRY));
+        assertEquals(TempRating.T90, ConductorProperties.getTempRating(Insulation.XHHW, Location.DRY));
         //for wet locations
-        assertEquals(TempRating.T60, ConductorProperties.getTempRating(Insul.TW, Location.WET));
-        assertEquals(TempRating.T75, ConductorProperties.getTempRating(Insul.THW, Location.WET));
-        assertEquals(TempRating.T75, ConductorProperties.getTempRating(Insul.THHW, Location.WET));
-        assertEquals(TempRating.T75, ConductorProperties.getTempRating(Insul.XHHW, Location.WET));
+        assertEquals(TempRating.T60, ConductorProperties.getTempRating(Insulation.TW, Location.WET));
+        assertEquals(TempRating.T75, ConductorProperties.getTempRating(Insulation.THW, Location.WET));
+        assertEquals(TempRating.T75, ConductorProperties.getTempRating(Insulation.THHW, Location.WET));
+        assertEquals(TempRating.T75, ConductorProperties.getTempRating(Insulation.XHHW, Location.WET));
         //for damp locations
-        assertEquals(TempRating.T60, ConductorProperties.getTempRating(Insul.TW, Location.DAMP));
-        assertEquals(TempRating.T75, ConductorProperties.getTempRating(Insul.THW, Location.DAMP));
-        assertEquals(TempRating.T90, ConductorProperties.getTempRating(Insul.THHW, Location.DAMP));
-        assertEquals(TempRating.T90, ConductorProperties.getTempRating(Insul.XHHW, Location.DAMP));
+        assertEquals(TempRating.T60, ConductorProperties.getTempRating(Insulation.TW, Location.DAMP));
+        assertEquals(TempRating.T75, ConductorProperties.getTempRating(Insulation.THW, Location.DAMP));
+        assertEquals(TempRating.T90, ConductorProperties.getTempRating(Insulation.THHW, Location.DAMP));
+        assertEquals(TempRating.T90, ConductorProperties.getTempRating(Insulation.XHHW, Location.DAMP));
     }
 
     @Test
@@ -100,22 +99,22 @@ class ConductorPropertiesTest {
 
     @Test
     void getDCResistance() {
-        assertEquals(3.19, ConductorProperties.getDCResistance(Size.AWG_14, Metal.COPPERCOATED/*, Coating.COATED*/),0.001);
-        assertEquals(0.0106, ConductorProperties.getDCResistance(Size.KCMIL_2000, Metal.ALUMINUM/*, Coating.COATED*/),0.0001);
+        assertEquals(3.19, ConductorProperties.getDCResistance(Size.AWG_14, ConductiveMaterial.COPPERCOATED/*, Coating.COATED*/),0.001);
+        assertEquals(0.0106, ConductorProperties.getDCResistance(Size.KCMIL_2000, ConductiveMaterial.ALUMINUM/*, Coating.COATED*/),0.0001);
 
-        assertEquals(0.0106*100*0.001/3, ConductorProperties.getDCResistance(Size.KCMIL_2000, Metal.ALUMINUM, 100, 3/*, Coating.COATED*/), 0.0001);
+        assertEquals(0.0106*100*0.001/3, ConductorProperties.getDCResistance(Size.KCMIL_2000, ConductiveMaterial.ALUMINUM, 100, 3/*, Coating.COATED*/), 0.0001);
     }
 
     @Test
     void getACResistance() {
-        assertEquals(3.1, ConductorProperties.getACResistance(Size.AWG_14, Metal.COPPER, Material.PVC),0.001);
-        assertEquals(0.0166, ConductorProperties.getACResistance(Size.KCMIL_2000, Metal.ALUMINUM, Material.STEEL),0.0001);
+        assertEquals(3.1, ConductorProperties.getACResistance(Size.AWG_14, ConductiveMaterial.COPPER, OuterMaterial.PVC),0.001);
+        assertEquals(0.0166, ConductorProperties.getACResistance(Size.KCMIL_2000, ConductiveMaterial.ALUMINUM, OuterMaterial.STEEL),0.0001);
     }
 
     @Test
     void getAmpacity() {
-        assertEquals(15, ConductorProperties.getStandardAmpacity(Size.AWG_14, Metal.COPPER, TempRating.T60));
-        assertEquals(630, ConductorProperties.getStandardAmpacity(Size.KCMIL_2000, Metal.ALUMINUM, TempRating.T90));
+        assertEquals(15, ConductorProperties.getStandardAmpacity(Size.AWG_14, ConductiveMaterial.COPPER, TempRating.T60));
+        assertEquals(630, ConductorProperties.getStandardAmpacity(Size.KCMIL_2000, ConductiveMaterial.ALUMINUM, TempRating.T90));
     }
 
 
@@ -138,47 +137,47 @@ class ConductorPropertiesTest {
 
     @Test
     void getInsulatedConductorAreaIn2() {
-        assertEquals(0.0293, ConductorProperties.getInsulatedConductorAreaIn2(Size.AWG_14, Insul.RHH));
-        assertEquals(3.3719, ConductorProperties.getInsulatedConductorAreaIn2(Size.KCMIL_2000,Insul.RHW2));
+        assertEquals(0.0293, ConductorProperties.getInsulatedConductorAreaIn2(Size.AWG_14, Insulation.RHH));
+        assertEquals(3.3719, ConductorProperties.getInsulatedConductorAreaIn2(Size.KCMIL_2000, Insulation.RHW2));
 
-        assertEquals(0.0139, ConductorProperties.getInsulatedConductorAreaIn2(Size.AWG_14, Insul.TW));
-        assertEquals(2.7818, ConductorProperties.getInsulatedConductorAreaIn2(Size.KCMIL_2000, Insul.THW2));
+        assertEquals(0.0139, ConductorProperties.getInsulatedConductorAreaIn2(Size.AWG_14, Insulation.TW));
+        assertEquals(2.7818, ConductorProperties.getInsulatedConductorAreaIn2(Size.KCMIL_2000, Insulation.THW2));
 
-        assertEquals(0.0139, ConductorProperties.getInsulatedConductorAreaIn2(Size.AWG_14, Insul.XHHW));
-        assertEquals(2.6073, ConductorProperties.getInsulatedConductorAreaIn2(Size.KCMIL_2000, Insul.XHHW2));
+        assertEquals(0.0139, ConductorProperties.getInsulatedConductorAreaIn2(Size.AWG_14, Insulation.XHHW));
+        assertEquals(2.6073, ConductorProperties.getInsulatedConductorAreaIn2(Size.KCMIL_2000, Insulation.XHHW2));
 
-        assertEquals(0.0139, ConductorProperties.getInsulatedConductorAreaIn2(Size.AWG_14, Insul.ZW));
-        assertEquals(0.1146, ConductorProperties.getInsulatedConductorAreaIn2(Size.AWG_2, Insul.ZW));
-        assertEquals(0.0, ConductorProperties.getInsulatedConductorAreaIn2(Size.AWG_1, Insul.ZW));
-        assertEquals(0.0, ConductorProperties.getInsulatedConductorAreaIn2(Size.KCMIL_2000, Insul.ZW));
+        assertEquals(0.0139, ConductorProperties.getInsulatedConductorAreaIn2(Size.AWG_14, Insulation.ZW));
+        assertEquals(0.1146, ConductorProperties.getInsulatedConductorAreaIn2(Size.AWG_2, Insulation.ZW));
+        assertEquals(0.0, ConductorProperties.getInsulatedConductorAreaIn2(Size.AWG_1, Insulation.ZW));
+        assertEquals(0.0, ConductorProperties.getInsulatedConductorAreaIn2(Size.KCMIL_2000, Insulation.ZW));
 
-        assertEquals(0.0097, ConductorProperties.getInsulatedConductorAreaIn2(Size.AWG_14, Insul.THWN));
-        assertEquals(1.3478, ConductorProperties.getInsulatedConductorAreaIn2(Size.KCMIL_1000, Insul.THHN));
-        assertEquals(0.0, ConductorProperties.getInsulatedConductorAreaIn2(Size.KCMIL_1250, Insul.THHN));
-        assertEquals(0.0, ConductorProperties.getInsulatedConductorAreaIn2(Size.KCMIL_2000, Insul.THHN));
+        assertEquals(0.0097, ConductorProperties.getInsulatedConductorAreaIn2(Size.AWG_14, Insulation.THWN));
+        assertEquals(1.3478, ConductorProperties.getInsulatedConductorAreaIn2(Size.KCMIL_1000, Insulation.THHN));
+        assertEquals(0.0, ConductorProperties.getInsulatedConductorAreaIn2(Size.KCMIL_1250, Insulation.THHN));
+        assertEquals(0.0, ConductorProperties.getInsulatedConductorAreaIn2(Size.KCMIL_2000, Insulation.THHN));
 
-        assertEquals(0.0100, ConductorProperties.getInsulatedConductorAreaIn2(Size.AWG_14, Insul.FEP));
-        assertEquals(0.0973, ConductorProperties.getInsulatedConductorAreaIn2(Size.AWG_2, Insul.FEPB));
-        assertEquals(0.0, ConductorProperties.getInsulatedConductorAreaIn2(Size.AWG_1, Insul.FEP));
-        assertEquals(0.0, ConductorProperties.getInsulatedConductorAreaIn2(Size.KCMIL_2000, Insul.FEPB));
+        assertEquals(0.0100, ConductorProperties.getInsulatedConductorAreaIn2(Size.AWG_14, Insulation.FEP));
+        assertEquals(0.0973, ConductorProperties.getInsulatedConductorAreaIn2(Size.AWG_2, Insulation.FEPB));
+        assertEquals(0.0, ConductorProperties.getInsulatedConductorAreaIn2(Size.AWG_1, Insulation.FEP));
+        assertEquals(0.0, ConductorProperties.getInsulatedConductorAreaIn2(Size.KCMIL_2000, Insulation.FEPB));
     }
 
     @Test
     void getCompactConductorAreaIn2() {
-        assertEquals(0.0531, ConductorProperties.getCompactConductorAreaIn2(Size.AWG_8, Insul.RHH));
-        assertEquals(1.2968, ConductorProperties.getCompactConductorAreaIn2(Size.KCMIL_1000, Insul.RHH));
+        assertEquals(0.0531, ConductorProperties.getCompactConductorAreaIn2(Size.AWG_8, Insulation.RHH));
+        assertEquals(1.2968, ConductorProperties.getCompactConductorAreaIn2(Size.KCMIL_1000, Insulation.RHH));
 
-        assertEquals(0.0510, ConductorProperties.getCompactConductorAreaIn2(Size.AWG_8, Insul.THW));
-        assertEquals(0.0510, ConductorProperties.getCompactConductorAreaIn2(Size.AWG_8, Insul.THHW));
-        assertEquals(1.2968, ConductorProperties.getCompactConductorAreaIn2(Size.KCMIL_1000, Insul.THW));
-        assertEquals(1.2968, ConductorProperties.getCompactConductorAreaIn2(Size.KCMIL_1000, Insul.THHW));
+        assertEquals(0.0510, ConductorProperties.getCompactConductorAreaIn2(Size.AWG_8, Insulation.THW));
+        assertEquals(0.0510, ConductorProperties.getCompactConductorAreaIn2(Size.AWG_8, Insulation.THHW));
+        assertEquals(1.2968, ConductorProperties.getCompactConductorAreaIn2(Size.KCMIL_1000, Insulation.THW));
+        assertEquals(1.2968, ConductorProperties.getCompactConductorAreaIn2(Size.KCMIL_1000, Insulation.THHW));
 
-        assertEquals(0.0, ConductorProperties.getCompactConductorAreaIn2(Size.AWG_8, Insul.THHN));
-        assertEquals(0.0452, ConductorProperties.getCompactConductorAreaIn2(Size.AWG_6, Insul.THHN));
-        assertEquals(1.2370, ConductorProperties.getCompactConductorAreaIn2(Size.KCMIL_1000, Insul.THHN));
+        assertEquals(0.0, ConductorProperties.getCompactConductorAreaIn2(Size.AWG_8, Insulation.THHN));
+        assertEquals(0.0452, ConductorProperties.getCompactConductorAreaIn2(Size.AWG_6, Insulation.THHN));
+        assertEquals(1.2370, ConductorProperties.getCompactConductorAreaIn2(Size.KCMIL_1000, Insulation.THHN));
 
-        assertEquals(0.0394, ConductorProperties.getCompactConductorAreaIn2(Size.AWG_8, Insul.XHHW));
-        assertEquals(1.1882, ConductorProperties.getCompactConductorAreaIn2(Size.KCMIL_1000, Insul.XHHW));
+        assertEquals(0.0394, ConductorProperties.getCompactConductorAreaIn2(Size.AWG_8, Insulation.XHHW));
+        assertEquals(1.1882, ConductorProperties.getCompactConductorAreaIn2(Size.KCMIL_1000, Insulation.XHHW));
     }
 
     @Test
@@ -189,32 +188,32 @@ class ConductorPropertiesTest {
 
     @Test
     void hasInsulatedAreaDefined() {
-        assertTrue(ConductorProperties.hasInsulatedAreaDefined(Size.AWG_2, Insul.FEP));
-        assertTrue(ConductorProperties.hasInsulatedAreaDefined(Size.AWG_2, Insul.ZW));
-        assertTrue(ConductorProperties.hasInsulatedAreaDefined(Size.AWG_14, Insul.ZW));
-        assertFalse(ConductorProperties.hasInsulatedAreaDefined(Size.AWG_14, Insul.USE));
-        assertFalse(ConductorProperties.hasInsulatedAreaDefined(Size.KCMIL_2000, Insul.ZW));
+        assertTrue(ConductorProperties.hasInsulatedAreaDefined(Size.AWG_2, Insulation.FEP));
+        assertTrue(ConductorProperties.hasInsulatedAreaDefined(Size.AWG_2, Insulation.ZW));
+        assertTrue(ConductorProperties.hasInsulatedAreaDefined(Size.AWG_14, Insulation.ZW));
+        assertFalse(ConductorProperties.hasInsulatedAreaDefined(Size.AWG_14, Insulation.USE));
+        assertFalse(ConductorProperties.hasInsulatedAreaDefined(Size.KCMIL_2000, Insulation.ZW));
     }
 
     @Test
     void hasCompactAreaDefined() {
-        assertFalse(ConductorProperties.hasCompactAreaDefined(Size.AWG_10, Insul.RHH));
-        assertFalse(ConductorProperties.hasCompactAreaDefined(Size.AWG_10, Insul.THW));
-        assertFalse(ConductorProperties.hasCompactAreaDefined(Size.AWG_10, Insul.THHW));
-        assertFalse(ConductorProperties.hasCompactAreaDefined(Size.AWG_10, Insul.THHN));
-        assertFalse(ConductorProperties.hasCompactAreaDefined(Size.AWG_10, Insul.XHHW));
-        assertTrue(ConductorProperties.hasCompactAreaDefined(Size.AWG_1, Insul.RHH));
-        assertTrue(ConductorProperties.hasCompactAreaDefined(Size.AWG_1, Insul.THW));
-        assertTrue(ConductorProperties.hasCompactAreaDefined(Size.AWG_1, Insul.THHW));
-        assertTrue(ConductorProperties.hasCompactAreaDefined(Size.AWG_1, Insul.THHN));
-        assertTrue(ConductorProperties.hasCompactAreaDefined(Size.AWG_1, Insul.XHHW));
-        assertFalse(ConductorProperties.hasCompactAreaDefined(Size.AWG_3, Insul.RHH));
-        assertFalse(ConductorProperties.hasCompactAreaDefined(Size.AWG_3, Insul.RHW));
-        assertFalse(ConductorProperties.hasCompactAreaDefined(Size.AWG_3, Insul.USE));
-        assertFalse(ConductorProperties.hasCompactAreaDefined(Size.AWG_3, Insul.THW));
-        assertFalse(ConductorProperties.hasCompactAreaDefined(Size.AWG_3, Insul.THHW));
-        assertFalse(ConductorProperties.hasCompactAreaDefined(Size.AWG_3, Insul.THHN));
-        assertFalse(ConductorProperties.hasCompactAreaDefined(Size.AWG_3, Insul.XHHW));
+        assertFalse(ConductorProperties.hasCompactAreaDefined(Size.AWG_10, Insulation.RHH));
+        assertFalse(ConductorProperties.hasCompactAreaDefined(Size.AWG_10, Insulation.THW));
+        assertFalse(ConductorProperties.hasCompactAreaDefined(Size.AWG_10, Insulation.THHW));
+        assertFalse(ConductorProperties.hasCompactAreaDefined(Size.AWG_10, Insulation.THHN));
+        assertFalse(ConductorProperties.hasCompactAreaDefined(Size.AWG_10, Insulation.XHHW));
+        assertTrue(ConductorProperties.hasCompactAreaDefined(Size.AWG_1, Insulation.RHH));
+        assertTrue(ConductorProperties.hasCompactAreaDefined(Size.AWG_1, Insulation.THW));
+        assertTrue(ConductorProperties.hasCompactAreaDefined(Size.AWG_1, Insulation.THHW));
+        assertTrue(ConductorProperties.hasCompactAreaDefined(Size.AWG_1, Insulation.THHN));
+        assertTrue(ConductorProperties.hasCompactAreaDefined(Size.AWG_1, Insulation.XHHW));
+        assertFalse(ConductorProperties.hasCompactAreaDefined(Size.AWG_3, Insulation.RHH));
+        assertFalse(ConductorProperties.hasCompactAreaDefined(Size.AWG_3, Insulation.RHW));
+        assertFalse(ConductorProperties.hasCompactAreaDefined(Size.AWG_3, Insulation.USE));
+        assertFalse(ConductorProperties.hasCompactAreaDefined(Size.AWG_3, Insulation.THW));
+        assertFalse(ConductorProperties.hasCompactAreaDefined(Size.AWG_3, Insulation.THHW));
+        assertFalse(ConductorProperties.hasCompactAreaDefined(Size.AWG_3, Insulation.THHN));
+        assertFalse(ConductorProperties.hasCompactAreaDefined(Size.AWG_3, Insulation.XHHW));
 
     }
 
@@ -248,40 +247,40 @@ class ConductorPropertiesTest {
 
     @Test
     void getStandardAmpacity() {
-        assertEquals(15, ConductorProperties.getStandardAmpacity(Size.AWG_14, Metal.COPPER, TempRating.T60));
-        assertEquals(20, ConductorProperties.getStandardAmpacity(Size.AWG_14, Metal.COPPER, TempRating.T75));
-        assertEquals(25, ConductorProperties.getStandardAmpacity(Size.AWG_14, Metal.COPPER, TempRating.T90));
+        assertEquals(15, ConductorProperties.getStandardAmpacity(Size.AWG_14, ConductiveMaterial.COPPER, TempRating.T60));
+        assertEquals(20, ConductorProperties.getStandardAmpacity(Size.AWG_14, ConductiveMaterial.COPPER, TempRating.T75));
+        assertEquals(25, ConductorProperties.getStandardAmpacity(Size.AWG_14, ConductiveMaterial.COPPER, TempRating.T90));
 
-        assertEquals(0, ConductorProperties.getStandardAmpacity(Size.AWG_14, Metal.ALUMINUM, TempRating.T60));
-        assertEquals(0, ConductorProperties.getStandardAmpacity(Size.AWG_14, Metal.ALUMINUM, TempRating.T75));
-        assertEquals(0, ConductorProperties.getStandardAmpacity(Size.AWG_14, Metal.ALUMINUM, TempRating.T90));
+        assertEquals(0, ConductorProperties.getStandardAmpacity(Size.AWG_14, ConductiveMaterial.ALUMINUM, TempRating.T60));
+        assertEquals(0, ConductorProperties.getStandardAmpacity(Size.AWG_14, ConductiveMaterial.ALUMINUM, TempRating.T75));
+        assertEquals(0, ConductorProperties.getStandardAmpacity(Size.AWG_14, ConductiveMaterial.ALUMINUM, TempRating.T90));
 
-        assertEquals(15, ConductorProperties.getStandardAmpacity(Size.AWG_12, Metal.ALUMINUM, TempRating.T60));
-        assertEquals(20, ConductorProperties.getStandardAmpacity(Size.AWG_12, Metal.ALUMINUM, TempRating.T75));
-        assertEquals(25, ConductorProperties.getStandardAmpacity(Size.AWG_12, Metal.ALUMINUM, TempRating.T90));
+        assertEquals(15, ConductorProperties.getStandardAmpacity(Size.AWG_12, ConductiveMaterial.ALUMINUM, TempRating.T60));
+        assertEquals(20, ConductorProperties.getStandardAmpacity(Size.AWG_12, ConductiveMaterial.ALUMINUM, TempRating.T75));
+        assertEquals(25, ConductorProperties.getStandardAmpacity(Size.AWG_12, ConductiveMaterial.ALUMINUM, TempRating.T90));
 
-        assertEquals(555, ConductorProperties.getStandardAmpacity(Size.KCMIL_2000, Metal.COPPER, TempRating.T60));
-        assertEquals(665, ConductorProperties.getStandardAmpacity(Size.KCMIL_2000, Metal.COPPER, TempRating.T75));
-        assertEquals(750, ConductorProperties.getStandardAmpacity(Size.KCMIL_2000, Metal.COPPER, TempRating.T90));
-        assertEquals(470, ConductorProperties.getStandardAmpacity(Size.KCMIL_2000, Metal.ALUMINUM, TempRating.T60));
-        assertEquals(560, ConductorProperties.getStandardAmpacity(Size.KCMIL_2000, Metal.ALUMINUM, TempRating.T75));
-        assertEquals(630, ConductorProperties.getStandardAmpacity(Size.KCMIL_2000, Metal.ALUMINUM, TempRating.T90));
+        assertEquals(555, ConductorProperties.getStandardAmpacity(Size.KCMIL_2000, ConductiveMaterial.COPPER, TempRating.T60));
+        assertEquals(665, ConductorProperties.getStandardAmpacity(Size.KCMIL_2000, ConductiveMaterial.COPPER, TempRating.T75));
+        assertEquals(750, ConductorProperties.getStandardAmpacity(Size.KCMIL_2000, ConductiveMaterial.COPPER, TempRating.T90));
+        assertEquals(470, ConductorProperties.getStandardAmpacity(Size.KCMIL_2000, ConductiveMaterial.ALUMINUM, TempRating.T60));
+        assertEquals(560, ConductorProperties.getStandardAmpacity(Size.KCMIL_2000, ConductiveMaterial.ALUMINUM, TempRating.T75));
+        assertEquals(630, ConductorProperties.getStandardAmpacity(Size.KCMIL_2000, ConductiveMaterial.ALUMINUM, TempRating.T90));
     }
 
     @Test
     void getSizePerCurrent() {
-        assertEquals(Size.KCMIL_2000, ConductorProperties.getSizePerCurrent(546, Metal.COPPER, TempRating.T60));
-        assertEquals(Size.KCMIL_2000, ConductorProperties.getSizePerCurrent(651, Metal.COPPER, TempRating.T75));
-        assertEquals(Size.KCMIL_2000, ConductorProperties.getSizePerCurrent(736, Metal.COPPER, TempRating.T90));
-        assertEquals(Size.KCMIL_2000, ConductorProperties.getSizePerCurrent(455.1, Metal.ALUMINUM, TempRating.T60));
-        assertEquals(Size.KCMIL_2000, ConductorProperties.getSizePerCurrent(546, Metal.ALUMINUM, TempRating.T75));
-        assertEquals(Size.KCMIL_2000, ConductorProperties.getSizePerCurrent(616, Metal.ALUMINUM, TempRating.T90));
+        assertEquals(Size.KCMIL_2000, ConductorProperties.getSizePerCurrent(546, ConductiveMaterial.COPPER, TempRating.T60));
+        assertEquals(Size.KCMIL_2000, ConductorProperties.getSizePerCurrent(651, ConductiveMaterial.COPPER, TempRating.T75));
+        assertEquals(Size.KCMIL_2000, ConductorProperties.getSizePerCurrent(736, ConductiveMaterial.COPPER, TempRating.T90));
+        assertEquals(Size.KCMIL_2000, ConductorProperties.getSizePerCurrent(455.1, ConductiveMaterial.ALUMINUM, TempRating.T60));
+        assertEquals(Size.KCMIL_2000, ConductorProperties.getSizePerCurrent(546, ConductiveMaterial.ALUMINUM, TempRating.T75));
+        assertEquals(Size.KCMIL_2000, ConductorProperties.getSizePerCurrent(616, ConductiveMaterial.ALUMINUM, TempRating.T90));
 
-        assertEquals(Size.AWG_14, ConductorProperties.getSizePerCurrent(5, Metal.COPPER, TempRating.T60));
-        assertEquals(Size.AWG_14, ConductorProperties.getSizePerCurrent(19, Metal.COPPER, TempRating.T75));
-        assertEquals(Size.AWG_12, ConductorProperties.getSizePerCurrent(26, Metal.COPPER, TempRating.T90));
-        assertEquals(Size.AWG_4, ConductorProperties.getSizePerCurrent(41, Metal.ALUMINUM, TempRating.T60));
-        assertEquals(Size.KCMIL_250, ConductorProperties.getSizePerCurrent(181, Metal.ALUMINUM, TempRating.T75));
-        assertEquals(Size.KCMIL_900, ConductorProperties.getSizePerCurrent(450, Metal.ALUMINUM, TempRating.T90));
+        assertEquals(Size.AWG_14, ConductorProperties.getSizePerCurrent(5, ConductiveMaterial.COPPER, TempRating.T60));
+        assertEquals(Size.AWG_14, ConductorProperties.getSizePerCurrent(19, ConductiveMaterial.COPPER, TempRating.T75));
+        assertEquals(Size.AWG_12, ConductorProperties.getSizePerCurrent(26, ConductiveMaterial.COPPER, TempRating.T90));
+        assertEquals(Size.AWG_4, ConductorProperties.getSizePerCurrent(41, ConductiveMaterial.ALUMINUM, TempRating.T60));
+        assertEquals(Size.KCMIL_250, ConductorProperties.getSizePerCurrent(181, ConductiveMaterial.ALUMINUM, TempRating.T75));
+        assertEquals(Size.KCMIL_900, ConductorProperties.getSizePerCurrent(450, ConductiveMaterial.ALUMINUM, TempRating.T90));
     }
 }

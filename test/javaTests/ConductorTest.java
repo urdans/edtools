@@ -28,8 +28,8 @@ class ConductorTest {
         NECEdition.setDefault(necEdition);
         Conductor cond1 = new Conductor()
                 .setSize(Size.AWG_8)
-                .setMetal(Metal.ALUMINUM)
-                .setInsulation(Insul.XHHW)
+                .setMetal(ConductiveMaterial.ALUMINUM)
+                .setInsulation(Insulation.XHHW)
                 .setLength(123);
         Conduit conduit = new Conduit(105)
                 .setType(Type.EMT)
@@ -39,24 +39,24 @@ class ConductorTest {
         cond1.setRole(Conductor.Role.GND);
         String cond1S = cond1.hasConduit()+", "+/*cond1.getCopperCoating()+
                 ", "+*/cond1.getCurrentCarryingCount()+", "+cond1.getDescription()
-                +", "+cond1.getInsulatedAreaIn2()+", "+cond1.getInsulation().getName()+", "+cond1.getLength()+", "+cond1.getMetal().getSymbol()+", "+ cond1.getRole()+", "+cond1.getSize().getName()+", "+cond1.getTemperatureRating();
+                +", "+cond1.getInsulatedAreaIn2()+", "+cond1.getInsulation().getName()+", "+cond1.getLength()+", "+cond1.getMetal().getName()+", "+ cond1.getRole()+", "+cond1.getSize().getName()+", "+cond1.getTemperatureRating();
         //--cloning
         Conductor cond2 = cond1.copy();
         String cond2S = cond2.hasConduit()+", "+/*cond2.getCopperCoating()+", "+*/cond2.getCurrentCarryingCount()+", "+cond2.getDescription()
-                +", "+cond2.getInsulatedAreaIn2()+", "+cond2.getInsulation().getName()+", "+cond2.getLength()+", "+cond2.getMetal().getSymbol()+", "+ cond2.getRole()+", "+cond2.getSize().getName()+", "+cond2.getTemperatureRating();
+                +", "+cond2.getInsulatedAreaIn2()+", "+cond2.getInsulation().getName()+", "+cond2.getLength()+", "+cond2.getMetal().getName()+", "+ cond2.getRole()+", "+cond2.getSize().getName()+", "+cond2.getTemperatureRating();
         cond2.setAmbientTemperatureF(155);
 //        cond2.setCopperCoating(Coating.UNCOATED);
         cond2.setRole(Conductor.Role.HOT);
         cond2.setSize(Size.AWG_4$0);
-        cond2.setMetal(Metal.COPPER);
-        cond2.setInsulation(Insul.TW);
+        cond2.setMetal(ConductiveMaterial.COPPER);
+        cond2.setInsulation(Insulation.TW);
         cond2.setLength(78);
         String cond1SS = cond1.hasConduit()+", "+/*cond1.getCopperCoating()+", "+*/cond1.getCurrentCarryingCount()+"," +
                 " "+cond1.getDescription()
-                +", "+cond1.getInsulatedAreaIn2()+", "+cond1.getInsulation().getName()+", "+cond1.getLength()+", "+cond1.getMetal().getSymbol()+", "+ cond1.getRole()+", "+cond1.getSize().getName()+", "+cond1.getTemperatureRating();
+                +", "+cond1.getInsulatedAreaIn2()+", "+cond1.getInsulation().getName()+", "+cond1.getLength()+", "+cond1.getMetal().getName()+", "+ cond1.getRole()+", "+cond1.getSize().getName()+", "+cond1.getTemperatureRating();
         String cond2SS = cond2.hasConduit()+", "+/*cond2.getCopperCoating()+", "+*/cond2.getCurrentCarryingCount()+
                 ", "+cond2.getDescription()
-                +", "+cond2.getInsulatedAreaIn2()+", "+cond2.getInsulation().getName()+", "+cond2.getLength()+", "+cond2.getMetal().getSymbol()+", "+ cond2.getRole()+", "+cond2.getSize().getName()+", "+cond2.getTemperatureRating();
+                +", "+cond2.getInsulatedAreaIn2()+", "+cond2.getInsulation().getName()+", "+cond2.getLength()+", "+cond2.getMetal().getName()+", "+ cond2.getRole()+", "+cond2.getSize().getName()+", "+cond2.getTemperatureRating();
         assertEquals(cond1S, cond1SS);
         assertNotEquals(cond2S, cond2SS);
     }
@@ -68,10 +68,10 @@ class ConductorTest {
         Conductor conductor = new Conductor();
         assertSame(conductor.getTemperatureRating(), TempRating.T75);
 
-        conductor.setInsulation(Insul.XHHW2);
+        conductor.setInsulation(Insulation.XHHW2);
         assertSame(conductor.getTemperatureRating(), TempRating.T90);
 
-        conductor.setInsulation(Insul.TW);
+        conductor.setInsulation(Insulation.TW);
         assertSame(conductor.getTemperatureRating(), TempRating.T60);
     }
 
@@ -103,8 +103,8 @@ class ConductorTest {
         NECEdition.setDefault(necEdition);
         conductor = new Conductor()
                 .setSize(Size.AWG_12)
-                .setMetal(Metal.COPPER)
-                .setInsulation(Insul.THHN)
+                .setMetal(ConductiveMaterial.COPPER)
+                .setInsulation(Insulation.THHN)
                 .setLength(125);
         conduit = new Conduit(100)
                 .setType(Type.PVC80)
@@ -134,8 +134,8 @@ class ConductorTest {
 
         conductor = new Conductor()
                 .setSize(Size.KCMIL_250)
-                .setMetal(Metal.ALUMINUM)
-                .setInsulation(Insul.THHW)
+                .setMetal(ConductiveMaterial.ALUMINUM)
+                .setInsulation(Insulation.THHW)
                 .setLength(125);
         assertEquals(1, conductor.getCorrectionFactor());
 
@@ -156,7 +156,7 @@ class ConductorTest {
         conduit.setRooftopDistance(0.5);
         assertEquals(0.41, conductor.getCorrectionFactor(), 0.001);
 
-        conductor.setInsulation(Insul.XHHW2);
+        conductor.setInsulation(Insulation.XHHW2);
         assertEquals(0.87, conductor.getCorrectionFactor(), 0.001);
     }
 
@@ -167,8 +167,8 @@ class ConductorTest {
 
         conductor = new Conductor()
                 .setSize(Size.KCMIL_250)
-                .setMetal(Metal.ALUMINUM)
-                .setInsulation(Insul.THHW)
+                .setMetal(ConductiveMaterial.ALUMINUM)
+                .setInsulation(Insulation.THHW)
                 .setLength(125);
         assertEquals(1, conductor.getCorrectionFactor());
 
@@ -188,7 +188,7 @@ class ConductorTest {
         conduit.setRooftopDistance(0.5);
         assertEquals(0.41, conductor.getCorrectionFactor(), 0.001);
 
-        conductor.setInsulation(Insul.XHHW2);
+        conductor.setInsulation(Insulation.XHHW2);
         assertEquals(0.87, conductor.getCorrectionFactor(), 0.001);
     }
 
@@ -199,8 +199,8 @@ class ConductorTest {
 
         conductor = new Conductor()
                 .setSize(Size.AWG_4)
-                .setMetal(Metal.COPPER)
-                .setInsulation(Insul.THW)
+                .setMetal(ConductiveMaterial.COPPER)
+                .setInsulation(Insulation.THW)
                 .setLength(70);
         conduit = new Conduit(86)
                 .setType(Type.EMT)
@@ -225,8 +225,8 @@ class ConductorTest {
         NECEdition.setDefault(necEdition);
         conductor = new Conductor()
                 .setSize(Size.AWG_4)
-                .setMetal(Metal.COPPER)
-                .setInsulation(Insul.THW)
+                .setMetal(ConductiveMaterial.COPPER)
+                .setInsulation(Insulation.THW)
                 .setLength(70);
         conduit = new Conduit(86)
                 .setType(Type.EMT)
@@ -245,8 +245,8 @@ class ConductorTest {
 
         conductor = new Conductor()
                 .setSize(Size.AWG_4)
-                .setMetal(Metal.COPPER)
-                .setInsulation(Insul.THW)
+                .setMetal(ConductiveMaterial.COPPER)
+                .setInsulation(Insulation.THW)
                 .setLength(70);
         conduit = new Conduit(86)
                 .setType(Type.EMT)
@@ -269,8 +269,8 @@ class ConductorTest {
         NECEdition.setDefault(necEdition);
         conductor = new Conductor()
                 .setSize(Size.AWG_4)
-                .setMetal(Metal.COPPER)
-                .setInsulation(Insul.THW)
+                .setMetal(ConductiveMaterial.COPPER)
+                .setInsulation(Insulation.THW)
                 .setLength(70);
         conduit = new Conduit(86)
                 .setType(Type.EMT)
@@ -292,8 +292,8 @@ class ConductorTest {
         NECEdition.setDefault(necEdition);
         conductor = new Conductor()
                 .setSize(Size.AWG_4)
-                .setMetal(Metal.COPPER)
-                .setInsulation(Insul.THW)
+                .setMetal(ConductiveMaterial.COPPER)
+                .setInsulation(Insulation.THW)
                 .setLength(70);
         conduit = new Conduit(86)
                 .setType(Type.EMT)
@@ -311,8 +311,8 @@ class ConductorTest {
         NECEdition.setDefault(necEdition);
         conductor = new Conductor()
                 .setSize(Size.AWG_4)
-                .setMetal(Metal.COPPER)
-                .setInsulation(Insul.THW)
+                .setMetal(ConductiveMaterial.COPPER)
+                .setInsulation(Insulation.THW)
                 .setLength(70);
         bundle = new Bundle(86);
         bundle.setBundlingLength(25);
@@ -330,8 +330,8 @@ class ConductorTest {
         NECEdition.setDefault(necEdition);
         conductor = new Conductor()
                 .setSize(Size.AWG_4)
-                .setMetal(Metal.COPPER)
-                .setInsulation(Insul.THW)
+                .setMetal(ConductiveMaterial.COPPER)
+                .setInsulation(Insulation.THW)
                 .setLength(70);
         Conductor conductor1 = conductor.copy();
         bundle = new Bundle(86);
@@ -352,8 +352,8 @@ class ConductorTest {
     void illustrateGuideExample1Page101(){
         Conductor conductor2 =
         new Conductor().setSize(Size.AWG_2)
-                .setMetal(Metal.COPPER)
-                .setInsulation(Insul.THWN2)
+                .setMetal(ConductiveMaterial.COPPER)
+                .setInsulation(Insulation.THWN2)
                 .setLength(10);
         Conduit raceway = new Conduit(110)
                 .setType(Type.PVC40)
@@ -381,8 +381,8 @@ class ConductorTest {
 
         Conductor conductor2 = new Conductor()
                 .setSize(Size.AWG_12)
-                .setMetal(Metal.COPPER)
-                .setInsulation(Insul.THHW)
+                .setMetal(ConductiveMaterial.COPPER)
+                .setInsulation(Insulation.THHW)
                 .setLength(10);
         Conduit raceway = new Conduit(TempRating.getFahrenheit(43))
                 .setType(Type.PVC40)
@@ -409,12 +409,11 @@ class ConductorTest {
         NECEdition.setDefault(necEdition);
         Conductor conductor2 = new Conductor()
                 .setSize(Size.KCMIL_350)
-                .setMetal(Metal.ALUMINUM)
-                .setInsulation(Insul.TBS)
+                .setMetal(ConductiveMaterial.ALUMINUM)
+                .setInsulation(Insulation.TBS)
                 .setLength(1.1234)
-                .setAmbientTemperatureF(132)
-//                .setCopperCoating(Coating.COATED)
-                .setRole(Conductor.Role.NCONC);
+                .setRole(Conductor.Role.NCONC)
+                .setAmbientTemperatureF(132);
 
         Bundle bundle = new Bundle(110);
         bundle.add(conductor2);
@@ -446,12 +445,11 @@ class ConductorTest {
         NECEdition.setDefault(necEdition);
         Conductor phaseA = new Conductor()
                 .setSize(Size.KCMIL_350)
-                .setMetal(Metal.ALUMINUM)
-                .setInsulation(Insul.TBS)
+                .setMetal(ConductiveMaterial.ALUMINUM)
+                .setInsulation(Insulation.TBS)
                 .setLength(1.1234)
-                .setAmbientTemperatureF(132)
-//                .setCopperCoating(Coating.COATED)
-                .setRole(Conductor.Role.NEUCC);
+                .setRole(Conductor.Role.NEUCC)
+                .setAmbientTemperatureF(132);
 
         Conduit conduit = new Conduit(110);
         conduit.add(phaseA);
@@ -497,8 +495,8 @@ class ConductorTest {
         NECEdition.setDefault(necEdition);
         Conductor conductor = new Conductor();
         assertEquals(Size.AWG_12, conductor.getSize());
-        assertEquals(Metal.COPPER, conductor.getMetal());
-        assertEquals(Insul.THW, conductor.getInsulation());
+        assertEquals(ConductiveMaterial.COPPER, conductor.getMetal());
+        assertEquals(Insulation.THW, conductor.getInsulation());
         assertEquals(100, conductor.getLength(), 0.001);
         assertEquals(86, conductor.getAmbientTemperatureF());
 //        assertEquals(Coating.UNCOATED, conductor.getCopperCoating());
@@ -512,14 +510,13 @@ class ConductorTest {
     @EnumSource(value = NECEdition.class)
     void test_set_conductor_properties(NECEdition necEdition) {
         NECEdition.setDefault(necEdition);
-        Conductor conductor = new Conductor();
-        conductor.setSize(Size.AWG_10);
-        conductor.setMetal(Metal.ALUMINUM);
-        conductor.setInsulation(Insul.THHW);
-        conductor.setLength(50);
-        conductor.setAmbientTemperatureF(90);
-//        conductor.setCopperCoating(Coating.COATED);
-        conductor.setRole(Conductor.Role.GND);
+        Conductor conductor = new Conductor()
+                .setSize(Size.AWG_10)
+                .setMetal(ConductiveMaterial.ALUMINUM)
+                .setInsulation(Insulation.THHW)
+                .setLength(50)
+                .setAmbientTemperatureF(90)
+                .setRole(Conductor.Role.GND);
 
         Conduit conduit = new Conduit(110);
         conduit.add(conductor);
@@ -529,8 +526,8 @@ class ConductorTest {
         bundle.add(conductor2);
 
         assertEquals(Size.AWG_10, conductor.getSize());
-        assertEquals(Metal.ALUMINUM, conductor.getMetal());
-        assertEquals(Insul.THHW, conductor.getInsulation());
+        assertEquals(ConductiveMaterial.ALUMINUM, conductor.getMetal());
+        assertEquals(Insulation.THHW, conductor.getInsulation());
         assertEquals(50, conductor.getLength(), 0.001);
         assertEquals(110, conductor.getAmbientTemperatureF());
 //        assertEquals(Coating.COATED, conductor.getCopperCoating());
@@ -544,18 +541,17 @@ class ConductorTest {
     @EnumSource(value = NECEdition.class)
     void test_get_conductor_properties(NECEdition necEdition) {
         NECEdition.setDefault(necEdition);
-        Conductor conductor = new Conductor();
-        conductor.setSize(Size.AWG_8);
-        conductor.setMetal(Metal.COPPER);
-        conductor.setInsulation(Insul.THW);
-        conductor.setLength(75);
-        conductor.setAmbientTemperatureF(80);
-//        conductor.setCopperCoating(Coating.UNCOATED);
-        conductor.setRole(Conductor.Role.NEUNCC);
+        Conductor conductor = new Conductor()
+                .setSize(Size.AWG_8)
+                .setMetal(ConductiveMaterial.COPPER)
+                .setInsulation(Insulation.THW)
+                .setLength(75)
+                .setAmbientTemperatureF(80)
+                .setRole(Conductor.Role.NEUNCC);
 
         assertEquals(Size.AWG_8, conductor.getSize());
-        assertEquals(Metal.COPPER, conductor.getMetal());
-        assertEquals(Insul.THW, conductor.getInsulation());
+        assertEquals(ConductiveMaterial.COPPER, conductor.getMetal());
+        assertEquals(Insulation.THW, conductor.getInsulation());
         assertEquals(75, conductor.getLength(), 0.001);
         assertEquals(80, conductor.getAmbientTemperatureF());
 //        assertEquals(Coating.UNCOATED, conductor.getCopperCoating());

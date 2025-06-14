@@ -78,5 +78,6 @@
       </library>
     </orderEntry>
     <orderEntry type="library" name="realityforge.jetbrains.annotations" level="project" />
+    <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
   </component>
 </module>

@@ -1,46 +1,73 @@
 package eecalcs.bundle;
 
 import eecalcs.conductors.*;
-import eecalcs.conductors.Cable;
-import eecalcs.conductors.Conductor;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- This class represents a bundle. A bundle is a group of cables or
- a group of insulated conductors, or a group made of a mix of both, that are
- installed in free air (not in a conduit) next to each other (paralleled, but
- not connected) without maintaining space, so they are staked, bundled, supported on
- bridled rings or simply tied together, along a defined distance.<p><br>
+ This class represents a bundle. A bundle is a group of cables or a group of insulated conductors, or a group made
+ of a mix of both, that are installed in free air (not in a conduit) next to each other (paralleled, but
+ not connected) without maintaining space, so they are staked, bundled, supported on bridled rings or simply tied
+ together, along a defined distance.<p>
 
- When cables or conductors are bundled, the heat produced by the current (joule
- effect) does not dissipate as easy as when they are separated. For this reason,
- the ampacity of the cable must be adjusted. The procedure to adjust the
+ When cables or conductors are bundled, the heat produced by the current (joule effect) does not dissipate as easy as
+ when they are separated. For this reason, the ampacity of the conductors must be adjusted. The procedure to adjust the
  ampacity is described in <b>NEC-2014-2017 310.15(B)(3), NEC-2020 310.15(C)</b>.<p>
 
- A bundle of insulated conductors are not common. The NEC does not
- prohibit it and rules NEC-2014-2017 310.15(B)(3)(a) and NEC-2020 310.15(C) mention conductors as possible members of
- a bundle, therefore recognizing they can also form bundles. But, because of its rareness (insulated conductors not
- in raceway), it is subject to AHJ approval. Having insulated conductors in free air would be considered a bad
- practice but since it is not forbidden by the code, it is considered in this software.
- Note that some jurisdictions might prohibit insulated conductors in free air, bundled or not.<p><br>
+ A bundle of insulated conductors are not common. The NEC does not prohibit it and rules NEC-2014-2017 310.15(B)(3)
+ (a) and NEC-2020 310.15(C) mention conductors as possible members of a bundle, therefore recognizing they can also
+ form bundles. But, because of its rareness (insulated conductors not in raceway), it is subject to AHJ approval.
+ Having insulated conductors in free air would be considered a bad practice but since it is not forbidden by the
+ code, it is considered in this software. Note that some jurisdictions might prohibit insulated conductors in free
+ air, bundled or not.<p>
+
+ The default parameters are: <p>
+ - Ambient temperature: 86 °F.<br>
+ - bundling length: 24 inches.<p>
+
+ These parameters can be changed through setters.
  */
 public class Bundle implements ROBundle {
+	public static double BUNDLE_CRITICAL_LENGTH = 24;
 	/** Distance in inches of the bundling (not the length of the cable/conductors). Originally zero, which does not
 	 have any meaning (a 0-length bundle is not physically possible). Length of bundle is critical above 24 inches
 	 */
-	private double bundlingLength = 0;
-	private final int ambientTemperatureF;
+	private double bundlingLength = BUNDLE_CRITICAL_LENGTH;
+	private int ambientTemperatureF = 86;
 
 	private final List<Conduitable> conduitables = new ArrayList<>();
 
 	public Bundle(int ambientTemperatureF){
+		setAmbientTemperatureF(ambientTemperatureF);
+	}
+
+	/**
+	 * Sets the ambient temperature of this bundle. If the given ambient temperature is out of the range
+	 * [{@link Factors#MIN_TEMP_F}, {@link Factors#MAX_TEMP_F}] an IllegalArgumentException is thrown.
+	 * @param ambientTemperatureF The ambient temperature in degrees Fahrenheit.
+	 * @return This Bundle object.
+	 */
+	public Bundle setAmbientTemperatureF(int ambientTemperatureF) {
 		if(ambientTemperatureF < Factors.MIN_TEMP_F || ambientTemperatureF > Factors.MAX_TEMP_F)
 			throw new IllegalArgumentException("Ambient temperature must be " +
 					"in the [" + Factors.MIN_TEMP_F + "," + Factors.MAX_TEMP_F + "] °F range.");
 		this.ambientTemperatureF = ambientTemperatureF;
+		updateAmbientTemperature();
+		return this;
+	}
+
+	/** Sets the given ambient temperature (in degrees Fahrenheit) to all the conduitables in the bundle.*/
+	private void updateAmbientTemperature() {
+		for (var c: conduitables) {
+			if (c instanceof RWConduitable) {
+				RWConduitable rwConduitable = (RWConduitable) c;
+				rwConduitable.setBundle2(null);
+				rwConduitable.setAmbientTemperatureF2(ambientTemperatureF);
+				rwConduitable.setBundle2(this);
+			}
+		}
 	}
 
 	@Override
@@ -69,7 +96,7 @@ public class Bundle implements ROBundle {
 	/**
 	 Adds the given conduitable to the bundle.
 	 * @param conduitable The conduitable to add. Cannot be null. If the conduitable is part of another bundle, or
-	 * conduit and IllegalArgumentException is thrown. If the conduitable is already in the bundle, nothing happens.
+	 * conduit, an IllegalArgumentException is thrown. If the conduitable is already in the bundle, nothing happens.
 	 * @return This bundle.
 	 */
 	public Bundle add(@NotNull Conduitable conduitable){
@@ -80,14 +107,10 @@ public class Bundle implements ROBundle {
 			throw new IllegalArgumentException("Cannot add to this bundle a " +
 					"conduitable that belongs to another bundle or conduit.");
 
-		if(conduitable instanceof Conductor) {
-			((Conductor) conduitable).setAmbientTemperatureF(ambientTemperatureF);
-			((Conductor) conduitable).setBundle(this);
-		}
-		else {
-			((Cable) conduitable).setAmbientTemperatureF(ambientTemperatureF);
-			((Cable) conduitable).setBundle(this);
-		}
+		/*This code is safe as long as any class that implements Conduitables, also implements
+		RWConduitables. For now, only two classes implements both, Conductor and Cable.*/
+		((RWConduitable)conduitable).setAmbientTemperatureF2(ambientTemperatureF);
+		((RWConduitable)conduitable).setBundle2(this);
 
 		conduitables.add(conduitable);
 		return this;
@@ -125,4 +148,8 @@ public class Bundle implements ROBundle {
 		return new ArrayList<>(conduitables);
 	}
 
+	@Override
+	public int getAmbientTemperatureF() {
+		return ambientTemperatureF;
+	}
 }

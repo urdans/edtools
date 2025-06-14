@@ -1,6 +1,6 @@
 package eecalcs.conductors;
 
-import eecalcs.conduits.Material;
+import eecalcs.conduits.OuterMaterial;
 
 /**
  Defines the type of cables recognized by the NEC that this software
@@ -9,15 +9,15 @@ import eecalcs.conduits.Material;
  cables are not handled by the class.
  */
 public enum CableType {
-    AC("Armored Cable", Material.STEEL),
-    MC("Metal Clad Cable", Material.STEEL),
-    NM("Non Metallic Jacket Cable", Material.PVC),
-    NMC("Non Metallic Jacket Corrosion Resistant Cable", Material.PVC),
-    NMS("Non Metallic Jacket Cable with ACMotor or Signaling Data Conductors", Material.PVC);
+    AC("Armored Cable", OuterMaterial.STEEL),
+    MC("ConductiveMaterial Clad Cable", OuterMaterial.STEEL),
+    NM("Non Metallic Jacket Cable", OuterMaterial.PVC),
+    NMC("Non Metallic Jacket Corrosion Resistant Cable", OuterMaterial.PVC),
+    NMS("Non Metallic Jacket Cable with AC Motor or Signaling Data Conductors", OuterMaterial.PVC);
     //TC("ACMotor and Control Tray Cable"); Not covered for now
     private final String name;
     private static final String[] names;
-    private final Material material;
+    private final OuterMaterial cableOuterMaterial;
 
     static{
         names = new String[values().length];
@@ -25,9 +25,9 @@ public enum CableType {
             names[i] = values()[i].getName();
     }
 
-    CableType(String name, Material material){
+    CableType(String name, OuterMaterial cableOuterMaterial){
         this.name = name;
-        this.material = material;
+        this.cableOuterMaterial = cableOuterMaterial;
     }
 
     /**
@@ -48,7 +48,10 @@ public enum CableType {
         return names;
     }
 
-    public Material getMaterial(){
-        return material;
+    /**
+     * @return The type of the outer material for this cable.
+     */
+    public OuterMaterial getCableOuterMaterial(){
+        return cableOuterMaterial;
     }
 }

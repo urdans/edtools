@@ -1,609 +1,403 @@
 package eecalcs.voltagedrop;
 
-import com.fasterxml.jackson.core.JsonGenerator;
+import eecalcs.conductors.ConductiveMaterial;
 import eecalcs.conductors.ConductorProperties;
-import eecalcs.conductors.Conduitable;
 import eecalcs.conductors.Size;
-import eecalcs.conduits.ConduitProperties;
-import eecalcs.conduits.Material;
+import eecalcs.conduits.OuterMaterial;
+import eecalcs.loads.Load;
+import eecalcs.loads.PowerFactorType;
 import eecalcs.systems.VoltageAC;
-import org.apache.commons.math3.complex.Complex;
-import tools.JSONTools;
-import tools.ROResultMessages;
-import tools.ResultMessage;
-import tools.ResultMessages;
-
-import java.io.IOException;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import tools.Helper;
 
 /**
- Provides methods for calculation of:
+ Class that provides methods for several calculations related to the line-to-line voltage drop as defined by IEEE
+ Std 141. It assumes the internal impedance of the voltage source is zero. The default parameters for this class are
+ as follows:
  <ul>
- <li>the AC voltage drop across conductors.</li>
- <li>the maximum length of a circuit for a given maximum voltage drop.</li>
- <li>the minimum conductor size for a given maximum voltage drop. </li>
- </ul>
- Before any computation is done, all the required input values are validated.
- If there is any invalid input value, the results of the calculations are
- useless (zero or null), in which case the resultMessages field contains the
- message explaining the reason. Most of those reasons are failing in the
- validation of the input data. However, there are few messages that are obtained
- during calculation time. These are related to NEC code violations and no
- valid results are obtained for the given set of conditions.<br>
- The resultMessages field must be checked for the presence of those messages.
- See {@link ResultMessages} class for how to use it.
+ <li>voltage system : 120V 1Φ 2W</li>
+ <li>load current: 10 amps</li>
+ <li>Power factor: 1.0</li>
+ <li>Power factor type: PowerFactorType.LAGGING</li>
+ <li>Conductor size: Size.AWG_12</li>
+ <li>Conductor length: 90 feet</li>
+ <li>Number of sets: 1</li>
+ <li>Conductor metal: ConductiveMaterial.COPPER</li>
+ <li>Conduit material: OuterMaterial.PVC</li>
+ <li>Maximum voltage drop percentage: 3%</li>
+</ul>
  */
-public class VoltageDropAC {
-	//region params
-	private final Conduitable conduitable;
-	private Material conduitMaterial = Material.PVC;
-	private double loadCurrent = 10;
+public class VoltageDropAC implements ROVoltageDropAC {
+	public static final int DECIMAL_PRECISION = 1;
+	public static final double SQRT3 = Math.sqrt(3);
+	public static final double CURRENT_OR_IMPEDANCE_TOO_HIGH = -1.0;
+	private VoltageAC voltageAC = VoltageAC.v120_1ph_2w;
+	private double loadCurrent = 10.0;
 	private double powerFactor = 1.0;
+	private PowerFactorType powerFactorType = PowerFactorType.LAGGING;
+	private Size conductorSize = Size.AWG_12;
+	private double conductorLength = 90;
+	private ConductiveMaterial conductiveMaterial = ConductiveMaterial.COPPER;
+	private OuterMaterial conduitMaterial = OuterMaterial.PVC;
 	private int numberOfSets = 1;
-	private VoltageAC sourceVoltageSystem = VoltageAC.v120_1ph_2w;
-	private double maxVoltageDropPercent = 3.0;
-	//endregion
+	private double maxVDropPercent = 3.0;
 
-	private final ResultMessages resultMessages = new ResultMessages();
-
-	//region Predefined messages
-	public static final ResultMessage ERROR01 = new ResultMessage(
-		"Source voltage must be greater that zero.",-1);
-	public static final ResultMessage ERROR02 = new ResultMessage(
-		"Conduit material cannot be null.",-2);
-	public static final ResultMessage ERROR03 = new ResultMessage(
-		"Conductor size cannot be null.",-3);
-	public static final ResultMessage ERROR04 = new ResultMessage(
-		"Number of sets must be between 1 and 10.",-4);
-	public static final ResultMessage ERROR05 = new ResultMessage(
-		"One way conductor length must be greater than 0.",-5);
-	public static final ResultMessage ERROR06 = new ResultMessage(
-		"Load current must be greater than 0.",-6);
-	public static final ResultMessage ERROR07 = new ResultMessage(
-		"Power factor must be between 0.7 and 1.",-7);
-	public static final ResultMessage ERROR08	= new ResultMessage(
-		"Voltage drop for determining conductor sizing must be" +
-			" between 0.5% and 25%",-8);
-	public static final ResultMessage ERROR10	= new ResultMessage(
-		"Source voltage cannot be null.",-10);
-	public static final ResultMessage ERROR11	= new ResultMessage(
-		"Conductor's temperature rating cannot be null",-11);
-	public static final ResultMessage ERROR12	= new ResultMessage(
-		"Conductor's metal cannot be null.",-12);
-	public static final ResultMessage ERROR14	= new ResultMessage(
-			"Conductor's copper coating cannot be null.",-14);
-	public static final ResultMessage ERROR20	= new ResultMessage(
-		"Load current exceeds maximum allowed ampacity of the" +
-			" conductor set.",-20);
-	public static final ResultMessage ERROR21	= new ResultMessage(
-		"Paralleled power conductors in sizes smaller than 1/0" +
-			" AWG are not permitted. NEC-310.10(H)(1)",-21);
-	public static final ResultMessage ERROR30	= new ResultMessage(
-		"No length can achieve that voltage drop under the given" +
-			"conditions.", -30);
-	public static final ResultMessage ERROR31	= new ResultMessage(
-		"No building conductor can achieve that voltage drop under " +
-			"the given conditions.",-31);
-	//endregion
-
-	/**
-	 @return The conduitable (conductor/cable) used for this voltage drop class.
-	 */
-	public Conduitable getConduitable() {
-		return conduitable;
+	@Override
+	public VoltageAC getVoltageAC() {
+		return voltageAC;
 	}
 
-	/**
-	 @return The material of the conduit protecting the conduitable.
-	 */
-	public Material getConduitMaterial() {
-		return conduitMaterial;
-	}
-
-	/**
-	 @return The current feeding the load, in amperes.
-	 */
+	@Override
 	public double getLoadCurrent() {
 		return loadCurrent;
 	}
 
-	/**
-	 @return The power factor of the load.
-	 */
+	@Override
 	public double getPowerFactor() {
 		return powerFactor;
 	}
 
-	/**
-	 @return The number of conduitables in parallel.
-	 */
+	@Override
+	public PowerFactorType getPowerFactorType() {
+		return powerFactorType;
+	}
+
+	@Override
+	public Size getConductorSize() {
+		return conductorSize;
+	}
+
+	@Override
+	public double getConductorLength() {
+		return conductorLength;
+	}
+
+	@Override
 	public int getNumberOfSets() {
 		return numberOfSets;
 	}
 
-	/**
-	 @return The voltage system supplying power to the circuit.
-	 @see VoltageAC
-	 */
-	public VoltageAC getSourceVoltageSystem() {
-		return sourceVoltageSystem;
+	@Override
+	public ConductiveMaterial getConductorMetal() {
+		return conductiveMaterial;
+	}
+
+	@Override
+	public OuterMaterial getConduitMaterial() {
+		return conduitMaterial;
+	}
+
+	@Override
+	public double getMaxVDropPercent() {
+		return maxVDropPercent;
 	}
 
 	/**
-	 @return The maximum permissible voltage drop in percentage.
+	 Creates a new VoltageDropAC object using the default parameters.
 	 */
-	public double getMaxVoltageDropPercent() {
-		return maxVoltageDropPercent;
+	public VoltageDropAC() {
 	}
 
 	/**
-	 @return The actual voltage drop percentage.
+	 Sets the voltage system for this voltage drop object.
+	 * @param voltageAC The voltage system for this object. Cannot be null.
+	 * @return This VoltageDropAC object.
 	 */
-	public double getVoltageDropPercentage() {
-		resultMessages.clearMessages();
-		if(checkRuleSet_1())
-			return calcVDPercent(calcVoltageDrop(calcVoltageAtLoad(conduitable.getSize())));
-		else
-			return 0;
+	public @NotNull VoltageDropAC setVoltageAC(@NotNull VoltageAC voltageAC) {
+		this.voltageAC = voltageAC;
+		return this;
 	}
 
-	/**
-	 @return The voltage drop in volts.
-	 */
-	public double getVoltageDropVolts() {
-		resultMessages.clearMessages();
-		if(checkRuleSet_1())
-			return calcVoltageDrop(calcVoltageAtLoad(conduitable.getSize()));
-		else
-			return 0;
-	}
-
-	/**
-	 @return The voltage at the load, in volts.
-	 */
-	public double getVoltageAtLoad() {
-		resultMessages.clearMessages();
-		if(checkRuleSet_1())
-			return calcVoltageAtLoad(conduitable.getSize());
-		else
-			return 0;
-	}
-
-	/**
-	 @return The maximum one-way length of the conductors/cable, in feet, that
-	 can be reached (under all other existing conditions) for the maximum
-	 voltage drop percentage provided.<br>
-	 Notice that it is possible that no length achieve that voltage drop
-	 under the given conditions and so, an error #30 would be stored.
-	 @see #setMaxVoltageDropPercent(double)
-	 */
-	public double getMaxLengthForMaxVD() {
-		resultMessages.clearMessages();
-		if(checkRuleSet_2())
-			return calcMaxLengthForMaxVD(conduitable.getSize());
-		else
-			return 0;
-	}
-
-	/**
-	 @return The minimum conductor size that would have the maximum voltage
-	 drop percentage provided. It's the "minimum compliant size".<br>
-	 Notice that it is possible that no building conductor size can achieve
-	 that voltage drop under the given conditions and so, an error #31 would
-	 be stored.
-	 @see #setMaxVoltageDropPercent(double)
-	 */
-	public Size getMinSizeForMaxVD() {
-		resultMessages.clearMessages();
-		if(checkRuleSet_3())
-			return calcMinSizeForMaxVD();
-		else
-			return null;
-	}
-
-	/**
-	 @return The voltage drop percentage for the conductor with the "minimum
-	 compliant size". The returned value is less or equal to the provided
-	 maximum voltage drop percentage.
-	 @see #getMinSizeForMaxVD()
-	 */
-	public double getVdPercentForMinSize() {
-		resultMessages.clearMessages();
-		if(checkRuleSet_3())
-			return calcVDPercent(calcVoltageDrop(calcVoltageAtLoad(calcMinSizeForMaxVD())));
-		else
-			return 0;
-	}
-
-	/**
-	 @return The maximum length, in feet, of the conductor with the "minimum
-	 compliant size" that can achieve the maximum voltage drop value provided.
-	 */
-	public double getMaxLengthForMinSize() {
-		resultMessages.clearMessages();
-		if(checkRuleSet_3())
-			return calcMaxLengthForMaxVD(calcMinSizeForMaxVD());
-		else
-			return 0;
-	}
-
-	/**
-	 @return A read-only version of the error and warning messages of this object.
-	 */
-	public ROResultMessages getResultMessages() {
-		return resultMessages;
-	}
-
-	/**
-	 Sets the material of the conduit that encapsulates the conductor/cable.
-	 @param conduitMaterial The material of the conduit; must be non null,
-	 otherwise an error #2 would be stored.
-	 */
-	public VoltageDropAC setConduitMaterial(Material conduitMaterial){
-		this.conduitMaterial = conduitMaterial;
-		rule01Fails();
+	public VoltageDropAC setLoad(@NotNull Load load){
+		setVoltageAC(load.getVoltageSource());
+		setLoadCurrent(load.getNominalCurrent());
+		setPowerFactor(load.getPowerFactor());
+		setPowerFactorType(load.getPowerFactorType());
 		return this;
 	}
 
 	/**
-	 Sets the load current.
-	 @param loadCurrent The load current in amperes; must be >0,
-	 otherwise an error #6 would be stored.<br>
-	 Notice that if this value exceeds the maximum allowed ampacity of the
-	 provided conductor set, an error #20 would be stored.
+	 Sets the load's current for this voltage drop object.
+	 * @param loadCurrent The load's current for this object, in amperes. Must be > 0.
+	 * @return This VoltageDropAC object.
 	 */
-	public VoltageDropAC setLoadCurrent(double loadCurrent){
+	public VoltageDropAC setLoadCurrent(double loadCurrent) {
+		if(loadCurrent < 0)
+			throw new IllegalArgumentException("Current must be >= 0");
 		this.loadCurrent = loadCurrent;
-		rule01Fails();
 		return this;
 	}
 
 	/**
-	 Sets the power factor of the load.
-	 @param powerFactor The power factor of the load (non-dimensional); must
-	 be a value between 0.7 and 1 (inclusive), otherwise an error #7 would be
-	 stored.
+	 Sets the power factor for this voltage drop object.
+	 * @param powerFactor The power factor for this object. Must be in the range of [0, 1].
+	 * @return This VoltageDropAC object.
 	 */
-	public VoltageDropAC setPowerFactor(double powerFactor){
+	public VoltageDropAC setPowerFactor(double powerFactor) {
+		if(powerFactor < 0 || powerFactor > 1)
+			throw new IllegalArgumentException("Power factor must be in the range of [0, 1]");
 		this.powerFactor = powerFactor;
-		rule01Fails();
 		return this;
 	}
 
 	/**
-	 Sets the number of conductors in parallel.
-	 @param numberOfSets The number of conductors in parallel; must
-	 be a value between 1 and 10 (inclusive), otherwise an error #4 would be
-	 stored.<br>
-	 Notice that if the size of the provided conductor is smaller
-	 than 1/0 AWG and the number of sets is greater than 1, an error #21 would
-	 also be stored.
+	 Sets the power factor type for this voltage drop object.
+	 * @param powerFactorType the power factor type for this object.
+	 * @return This VoltageDropAC object.
 	 */
-	public VoltageDropAC setNumberOfSets(int numberOfSets){
+	public @NotNull VoltageDropAC setPowerFactorType(@NotNull PowerFactorType powerFactorType) {
+		this.powerFactorType = powerFactorType;
+		return this;
+	}
+
+	/**
+	 Sets the conductor size for this voltage drop object.
+	 * @param conductorSize the conductor size for this object. Cannot be null.
+	 * @return This VoltageDropAC object.
+	 */
+	public @NotNull VoltageDropAC setConductorSize(@NotNull Size conductorSize) {
+		this.conductorSize = conductorSize;
+		return this;
+	}
+
+	/**
+	 Sets the conductor length for this voltage drop object.
+	 * @param conductorLength the length of the conductor for this object, in feet. Must be > 0.
+	 * @return This VoltageDropAC object.
+	 */
+	public @NotNull VoltageDropAC setConductorLength(double conductorLength) {
+		if (conductorLength <= 0)
+			throw new IllegalArgumentException();
+		this.conductorLength = conductorLength;
+		return this;
+	}
+
+	/**
+	 Sets the number of conductor sets for this voltage drop object.
+	 * @param numberOfSets the number of conductor sets for this object. Must be >= 1.
+	 * @return This VoltageDropAC object.
+	 */
+	public @NotNull VoltageDropAC setNumberOfSets(int numberOfSets) {
+		if (numberOfSets < 1)
+			throw new IllegalArgumentException();
 		this.numberOfSets = numberOfSets;
-		rule01Fails();
 		return this;
 	}
 
 	/**
-	 Sets the voltage system of the source.
-	 @param sourceVoltageSystem The object describing the voltage source; must
-	 be non-null and the voltage value must be greater than zero, otherwise
-	 errors #1 and #10 would be stored, respectively.
+	 Sets the type od conductor metal for this voltage drop object.
+	 * @param conductiveMaterial the conductor metal for this object. Cannot be null.
+	 * @return This VoltageDropAC object.
 	 */
-	public VoltageDropAC setSourceVoltageSystem(VoltageAC sourceVoltageSystem){
-		this.sourceVoltageSystem = sourceVoltageSystem;
-		rule01Fails();
+	public @NotNull VoltageDropAC setConductorMetal(@NotNull ConductiveMaterial conductiveMaterial) {
+		this.conductiveMaterial = conductiveMaterial;
 		return this;
 	}
 
 	/**
-	 Sets the maximum permissible voltage drop in percentage.
-	 @param maxVoltageDropPercent The maximum voltage drop in percentage; must
-	 be value between 0.5 and 25, otherwise an error #8 would be stored.
+	 Sets the conduit material for this voltage drop object.
+	 * @param conduitMaterial the conduit material for this object. Cannot be null.
+	 * @return This VoltageDropAC object.
 	 */
-	public VoltageDropAC setMaxVoltageDropPercent(double maxVoltageDropPercent){
-		this.maxVoltageDropPercent = maxVoltageDropPercent;
+	public @NotNull VoltageDropAC setConduitMaterial(@NotNull OuterMaterial conduitMaterial) {
+		this.conduitMaterial = conduitMaterial;
 		return this;
 	}
 
 	/**
-	 Constructs a VoltageDropAC object for the given conduitable
-	 (conductor/cable).
-	 @param conduitable The read-only conductor/cable used for the
-	 calculation. Here are the requirements and the otherwise-error numbers
-	 for this parameter:<br>
-	 - size must be nonnull -> error # 3.<br>
-	 - length must be greater than zero -> error #5.<br>
-	 - temperature rating must be nonnull -> error #11<br>
-	 - metal must be nonnull -> error #12.
+	 Sets the maximum allowed voltage drop for this voltage drop object.
+	 * @param maxVDropPercent the maximum voltage drop for this object in percentage. Must be in the range of (0,100].
+	 * @return This VoltageDropAC object.
 	 */
-	public VoltageDropAC(Conduitable conduitable){
-		if(conduitable == null)
-			throw new IllegalArgumentException("Conductor parameter cannot be" +
-					" null.");
-		this.conduitable = conduitable;
-		rule01Fails();
+	public @NotNull VoltageDropAC setMaxVDropPercent(double maxVDropPercent) {
+		if(maxVDropPercent <= 0 || maxVDropPercent > 100)
+			throw new IllegalArgumentException("Maximum voltage drop percent must be in the range of (0, 100]");
+		this.maxVDropPercent = maxVDropPercent;
+		return this;
+	}
+
+/*	public @NotNull VoltageDropAC setConductor(@NotNull Conductor conductor) {
+		conductorLength = conductor.getLength();
+		conductiveMaterial = conductor.getMetal();
+		conductorSize = conductor.getSize();
+		return this;
+	}*/
+
+/*	public @NotNull VoltageDropAC setConduit(@NotNull Conduit conduit) {
+		conduitMaterial = conduit.getMaterial();
+		return this;
+	}*/
+
+	@Override
+	public double getVoltageDropPercent(){
+		return getVoltageDropPercent(voltageAC.getVoltage(), voltageAC.getPhases(), loadCurrent, powerFactor,
+				powerFactorType == PowerFactorType.LAGGING, conductorSize, conductorLength, numberOfSets, conductiveMaterial, conduitMaterial);
+	}
+
+	@Override
+	public @Nullable Size getMinSizeForMaxVD(){
+		return getMinSizeForMaxVD(voltageAC.getVoltage(), voltageAC.getPhases(), loadCurrent, powerFactor,
+				powerFactorType == PowerFactorType.LAGGING, maxVDropPercent, conductorLength, numberOfSets, conductiveMaterial, conduitMaterial);
+	}
+
+	@Override
+	public double getMaxLengthForVD(){
+		return getMaxLengthForVD(voltageAC.getVoltage(), voltageAC.getPhases(), loadCurrent, powerFactor,
+				powerFactorType == PowerFactorType.LAGGING, conductorSize, maxVDropPercent, numberOfSets, conductiveMaterial, conduitMaterial);
+	}
+
+	public VoltageDropAC increaseNumberOfSets() {
+		this.numberOfSets++;
+		return this;
+	}
+
+	public VoltageDropAC decreaseNumberOfSets() {
+		this.numberOfSets--;
+		return this;
 	}
 
 	/**
-	 @return True if this rule fails. Add the corresponding error message to
-	 resultMessages
+	 Calculates the line-to-line voltage drop as defined by IEEE Std 141. It assumes the internal impedance of the
+	 voltage source is zero.
+	 * @param voltage The source voltage in volts. Must be > 0.
+	 * @param phases Number of phases of the voltage. Must be either 1 or 3.
+	 * @param current The load current in amperes. Must be >= 0.
+	 * @param pf The power factor of the load. Must be in the range of [0, 1].
+	 * @param lagging True: indicates that the power factor is lagging. False: indicates that the power factor is
+	 * leading.
+	 * @param size The size of the conductor as defined in {@link Size}. Cannot be null.
+	 * @param length The oneway length of the circuit measured from the source of voltage to the load terminals, in
+	 * feet. Must be > 0.
+	 * @param sets the number of sets. Must be an integer > 0.
+	 * @param conductiveMaterial The conductive conductiveMaterial of the conductor, as defined in {@link ConductiveMaterial}. Cannot be null.
+	 * @param conduitMaterial The conduitMaterial of the conduit containing the conductor, as defined in {@link OuterMaterial}. Use
+	 * null if the conductor is in free air or bundled.
+	 * @return The AC voltage drop expressed in percent of the voltage source. The current is always assumed to flow
+	 * from the positive terminal of voltage source towards the load. The voltage at the load is assumed to be positive
+	 * at the point where the current enters.
+	 * If the given current is too high, or if the given length too large (resulting in a high impedance), or both,
+	 * it is possible to obtain a condition where the load behaves as a source of voltage with reversed polarity. In
+	 * such a case, the result is CURRENT_OR_IMPEDANCE_TOO_HIGH (-1.0), indicating that the given parameters are
+	 * ill-conditioned, hence the calculation is not possible.
 	 */
-	private boolean rule01Fails(){
-		resultMessages.remove(ERROR12, ERROR02, ERROR06, ERROR07, ERROR04,
-				ERROR10, ERROR01);
-		if(conduitable.getMetal() == null)
-			resultMessages.add(ERROR12);
-		if(conduitMaterial == null)
-			resultMessages.add(ERROR02);
-		if(loadCurrent <= 0 )
-			resultMessages.add(ERROR06);
-		if(powerFactor < 0.7 || powerFactor > 1.0 )
-			resultMessages.add(ERROR07);
-		if(numberOfSets <= 0 || numberOfSets > 10)
-			resultMessages.add(ERROR04);
-		if(sourceVoltageSystem == null)
-			resultMessages.add(ERROR10);
-		else
-			if(sourceVoltageSystem.getVoltage() <= 0)
-				resultMessages.add(ERROR01);
-		return resultMessages.containsMessage(ERROR12, ERROR02, ERROR06,
-				ERROR07, ERROR04, ERROR10, ERROR01);
+	public static double getVoltageDropPercent(double voltage, int phases, double current, double pf,
+	                                           boolean lagging, @NotNull Size size, double length, int sets,
+	                                           @NotNull ConductiveMaterial conductiveMaterial, @Nullable OuterMaterial conduitMaterial) {
+		if(voltage <=0)
+			throw new IllegalArgumentException("Voltage must be > 0");
+		if( phases != 1 && phases != 3 )
+			throw new IllegalArgumentException("Phases must be either 1 or 3");
+		if(current < 0)
+			throw new IllegalArgumentException("Current must be >= 0");
+		if(pf < 0 || pf > 1)
+			throw new IllegalArgumentException("Power factor must be in the range of [0, 1]");
+		if(length <= 0)
+			throw new IllegalArgumentException("Length must be > 0");
+		if(sets <= 0)
+			throw new IllegalArgumentException("Sets must be an integer > 0");
+
+		double k = phases == 1? 2 : SQRT3;
+		if (conduitMaterial == null)
+			conduitMaterial = OuterMaterial.PVC;
+		double totalR = ConductorProperties.getACResistance(size, conductiveMaterial, conduitMaterial, length, sets);
+		double totalX = ConductorProperties.getReactance(size, conduitMaterial.isMagnetic(), length,
+				sets);
+		double currentAngleBeta = lagging? - Math.acos(pf) : Math.acos(pf);
+		double arcSinParam = current * (totalX * pf + totalR * Math.sin(currentAngleBeta)) / voltage;
+		if (Math.abs(arcSinParam) > 1.0)
+			return CURRENT_OR_IMPEDANCE_TOO_HIGH;
+		double voltageAngleTheta = Math.asin(arcSinParam);
+		double voltageAtLoad = voltage * Math.cos(voltageAngleTheta) - current * (totalR * pf - totalX * Math.sin(currentAngleBeta));
+		if (voltageAtLoad <= 0) //load behaving as reversed-polarity source?
+			return CURRENT_OR_IMPEDANCE_TOO_HIGH;
+		double vDropLN = voltage - voltageAtLoad;
+		double vDropLL = k * vDropLN;
+		return Helper.round((vDropLL / voltage) * 100, DECIMAL_PRECISION);
 	}
 
 	/**
-	 @return True if this rule fails. Add the corresponding error message to
-	 resultMessages
+	 Calculates the minimum conductor size having the given characteristics and used under the given conditions,
+	 whose voltage drop is equal or less than the given line-to-line voltage drop percentage.
+	 * @param voltage The source voltage in volts. Must be > 0.
+	 * @param phases Number of phases of the voltage. Must be either 1 or 3.
+	 * @param current The load current in amperes. Must be >= 0.
+	 * @param pf The power factor of the load. Must be in the range of [0, 1].
+	 * @param lagging True: indicates that the power factor is lagging. False: indicates that the power factor is
+	 * leading.
+	 * @param maxVDropPercent The maximum line-to-line voltage drop percent permitted. Must be in the range of (0,100].
+	 * @param length The oneway length of the circuit measured from the source of voltage to the load terminals, in
+	 * feet. Must be > 0.
+	 * @param sets the number of sets. Must be an integer > 0.
+	 * @param conductiveMaterial The conductive conductiveMaterial of the conductor, as defined in {@link ConductiveMaterial}. Cannot be null.
+	 * @param conduitMaterial The conduitMaterial of the conduit containing the conductor, as defined in {@link OuterMaterial}. Use
+	 * null if the conductor is in free air or bundled.
+	 * @return The minimum conductor size under the given conditions. If the given current is too high, or the
+	 * given length too large, or both, it is possible that not even the biggest conductor size can achieve a
+	 * line-to-line voltage drop percent that is equal or less than the given one. In such a case, the result is null,
+	 * indicating that the given parameters are ill-conditioned, hence the calculation is not valid.
 	 */
-	private boolean rule02Fails(){
-		resultMessages.remove(ERROR03, ERROR21, ERROR20);
-		if (conduitable.getSize() == null)
-			resultMessages.add(ERROR03);
-		else {
-			if ((conduitable.getSize().isLessThan(Size.AWG_1$0)) && numberOfSets > 1)
-				resultMessages.add(ERROR21.append("Actual size is " + conduitable.getSize().getName() + "."));
-		}
-		if(loadCurrent > numberOfSets * ConductorProperties.getStandardAmpacity(
-				conduitable.getSize(), conduitable.getMetal(),
-				conduitable.getTemperatureRating()))
-			resultMessages.add(ERROR20);
-
-		return resultMessages.containsMessage(ERROR03, ERROR21, ERROR20);
-	}
-
-	/**
-	 @return True if this rule fails. Add the corresponding error message to
-	 resultMessages
-	 */
-	private boolean rule03Fails(){
-		resultMessages.remove(ERROR05, ERROR11);
-		if(conduitable.getLength() <= 0)
-			resultMessages.add(ERROR05);
-		if(conduitable.getTemperatureRating() == null)
-			resultMessages.add(ERROR11);
-		return resultMessages.containsMessage(ERROR05, ERROR11);
-	}
-
-	/**
-	 @return True if this rule fails. Add the corresponding error message to
-	 resultMessages
-	 */
-	private boolean rule04Fails(){
-		resultMessages.remove(ERROR08);
-		if(maxVoltageDropPercent < 0.5 || maxVoltageDropPercent > 25.0)
-			resultMessages.add(ERROR08);
-		return resultMessages.containsMessage(ERROR08);
-	}
-
-	/**
-	 Check if this set of rules do not fail.
-	 @return True if the set of rules pass.
-	 */
-	private boolean checkRuleSet_1(){
-		return !(rule01Fails() | rule02Fails() | rule03Fails());
-	}
-
-	/**
-	 Check if this set of rules do not fail.
-	 @return True if the set of rules pass.
-	 */
-	private boolean checkRuleSet_2(){
-		return !(rule01Fails() | rule02Fails() | rule04Fails());
-	}
-
-	/**
-	 Check if this set of rules do not fail.
-	 @return True if the set of rules pass.
-	 */
-	private boolean checkRuleSet_3(){
-		return !(rule01Fails() | rule03Fails() | rule04Fails());
-	}
-
-	/**
-	 Returns the AC voltage in volts at the load terminals, for a
-	 Conduitable of the given size.
-	 */
-	private double calcVoltageAtLoad(Size size) {
-		double k = sourceVoltageSystem.getPhases() == 1 ? 2 :
-				sourceVoltageSystem.getFactor();
-
-		double oneWayACResistance = ConductorProperties.getACResistance(size,
-				conduitable.getMetal(), conduitMaterial,
-				conduitable.getLength(), numberOfSets);
-
-		double oneWayConductorReactance = ConductorProperties.getReactance(size,
-				conduitMaterial.isMagnetic(),
-				conduitable.getLength(), numberOfSets);
-
-		Complex totalConductorImpedanceComplex =
-				new Complex(k * oneWayACResistance,k * oneWayConductorReactance);
-
-		Complex sourceVoltageComplex = new Complex(sourceVoltageSystem.getVoltage(),0);
-
-		Complex loadCurrentComplex =
-				new Complex(loadCurrent * powerFactor,
-				-loadCurrent * Math.sin(Math.acos(powerFactor)));
-
-		Complex voltageDropAtConductorComplex = totalConductorImpedanceComplex.multiply(loadCurrentComplex);
-
-		Complex voltageAtLoadComplex = sourceVoltageComplex.subtract(voltageDropAtConductorComplex);
-
-		return voltageAtLoadComplex.abs();
-	}
-
-	/**
-	 Returns the AC voltage drop in volts for the given load terminal voltage.
-	 */
-	private double calcVoltageDrop(double voltageAtLoad){
-		return sourceVoltageSystem.getVoltage() - voltageAtLoad;
-	}
-
-	/**
-	 Returns the AC voltage drop in percentage for the given voltage drop.
-	 */
-	private double calcVDPercent(double voltageDrop){
-		return 100.0 * voltageDrop/sourceVoltageSystem.getVoltage();
-	}
-
-	/**
-	 Returns the maximum length in feet that the conductor parameter can have
-	 while having a voltage drop equal os less than the voltage drop
-	 percentage parameter.
-	 */
-	private double calcMaxLengthForMaxVD(Size size) {
-		double conductorR =	ConductorProperties.getACResistance(size,
-				conduitable.getMetal(),
-				conduitMaterial) * 0.001 / numberOfSets;
-
-		double conductorX = ConductorProperties.getReactance(size,
-				conduitMaterial.isMagnetic()) * 0.001 / numberOfSets;
-
-		double theta = Math.acos(powerFactor);
-		double Vs2 = Math.pow(sourceVoltageSystem.getVoltage(), 2);
-		double k = sourceVoltageSystem.getPhases() == 1 ? 2 : sourceVoltageSystem.getFactor();
-		double A = k * loadCurrent * (conductorR * powerFactor + conductorX * Math.sin(theta));
-		double B = k * loadCurrent * (conductorX * powerFactor - conductorR * Math.sin(theta));
-		double C = Vs2 * (1 - Math.pow(1 - maxVoltageDropPercent/100, 2));
-		double Rad = 4 * Vs2 * A * A - 4 * (A * A + B * B) * C;
-		if(Rad < 0)
-			Rad = 0;
-		/*double len2 = (2 * sourceVoltage.getVoltage() * A + Math.sqrt(Rad))/(2 * (A * A + B * B));
-		len1 is always the smallest value between the two lengths and produces
-		a voltage drop across the conductor that is less that the voltage
-		source, that is len1 is always the correct value, unless it's a
-		negative number.*/
-		double len1 =(2 * sourceVoltageSystem.getVoltage() * A - Math.sqrt(Rad))/(2 * (A * A + B * B));
-		if(len1 > 0)
-			return len1;
-		return 0;
-	}
-
-	/**
-	 Returns the minimum conductor size for the conductor parameter that will
-	 have a voltage drop percentage equal or less than the max voltage drop
-	 percentage parameter.
-	 */
-	private Size calcMinSizeForMaxVD() {
-		resultMessages.remove(ERROR30, ERROR31);
-		for(Size size : Size.values()) {
-			if(loadCurrent > numberOfSets *
-							ConductorProperties.getStandardAmpacity(size,
-									conduitable.getMetal(),
-									conduitable.getTemperatureRating()))
+	public static @Nullable Size getMinSizeForMaxVD(double voltage, int phases, double current, double pf,
+	                                                boolean lagging, double maxVDropPercent, double length, int sets,
+	                                                @NotNull ConductiveMaterial conductiveMaterial, @Nullable OuterMaterial conduitMaterial) {
+		if(maxVDropPercent <= 0 || maxVDropPercent > 100)
+			throw new IllegalArgumentException("Maximum voltage drop percent must be in the range of (0, 100]");
+		for (Size size : Size.values()) {
+			double vDrop = getVoltageDropPercent(voltage, phases, current, pf, lagging, size, length, sets, conductiveMaterial, conduitMaterial);
+			if (vDrop == CURRENT_OR_IMPEDANCE_TOO_HIGH)
 				continue;
-
-			double actualVDPercent =
-					calcVDPercent(calcVoltageDrop(calcVoltageAtLoad(size)));
-
-			if(actualVDPercent <= maxVoltageDropPercent){
-				if(numberOfSets > 1 && (size.isLessThan(Size.AWG_1$0)))
-					continue;
-				double maxLengthAC = calcMaxLengthForMaxVD(size);
-				if(maxLengthAC <= 0) {
-					resultMessages.add(ERROR30);
-					return null;
-				}
+			vDrop = Helper.round(vDrop, DECIMAL_PRECISION);
+			if (vDrop <= maxVDropPercent)
 				return size;
-			}
 		}
-		resultMessages.add(ERROR31);
 		return null;
 	}
 
 	/**
-	 @return A JSON string representing the class state plus all the results
-	 of the calculations performed by the class along with their respective
-	 result messages.
+	 Calculates the maximum length of the given conductor size, conduitMaterial and conditions, for the given voltage
+	 drop percentage.
+	 * @param voltage The source voltage in volts. Must be > 0.
+	 * @param phases Number of phases of the voltage. Must be either 1 or 3.
+	 * @param current The load current in amperes. Must be >= 0.
+	 * @param pf The power factor of the load. Must be in the range of [0, 1].
+	 * @param lagging True: indicates that the power factor is lagging. False: indicates that the power factor is
+	 * leading.
+	 * @param size The size of the conductor as defined in {@link Size}. Cannot be null.
+	 * @param maxVDropPercent The maximum line-to-line voltage drop percent permitted. Must be in the range of (0,100].
+	 * @param sets the number of sets. Must be an integer > 0.
+	 * @param conductiveMaterial The conductive conductiveMaterial of the conductor, as defined in {@link ConductiveMaterial}. Cannot be null.
+	 * @param conduitMaterial The conduitMaterial of the conduit containing the conductor, as defined in {@link OuterMaterial}. Use
+	 * null if the conductor is in free air or bundled.
+	 * @return The maximum one-way length in feet of the given conductor that would have a line-to-line voltage drop as
+	 * the given one.
 	 */
-	public String toJSON(){
-		JsonGenerator jg = JSONTools.getJsonGenerator();
-		try {
-			jg.writeStartObject();
+	public static double getMaxLengthForVD(double voltage, int phases, double current, double pf,
+	                                       boolean lagging, @NotNull Size size, double maxVDropPercent, int sets,
+	                                       @NotNull ConductiveMaterial conductiveMaterial, @Nullable OuterMaterial conduitMaterial) {
+		if(voltage <=0)
+			throw new IllegalArgumentException("Voltage must be > 0");
+		if( phases != 1 && phases != 3 )
+			throw new IllegalArgumentException("Phases must be either 1 or 3");
+		if(current < 0)
+			throw new IllegalArgumentException("Current must be >= 0");
+		if(pf < 0 || pf > 1)
+			throw new IllegalArgumentException("Power factor must be in the range of [0, 1]");
+		if(sets <= 0)
+			throw new IllegalArgumentException("Sets must be an integer > 0");
 
-			jg.writeObjectField("resultMessages", getResultMessages());
-
-			jg.writeObjectField("conduitable", getConduitable());
-			jg.writeObjectField("conduitMaterial", getConduitMaterial());
-			jg.writeNumberField("loadCurrent", getLoadCurrent());
-			jg.writeNumberField("powerFactor", getPowerFactor());
-			jg.writeNumberField("numberOfSets", getNumberOfSets());
-			jg.writeStringField("sourceVoltageSystem", getSourceVoltageSystem().toString());
-			jg.writeNumberField("maxVoltageDropPercent", getMaxVoltageDropPercent());
-
-			jg.writeFieldName("voltageAtLoad");
-			jg.writeStartObject();
-			jg.writeNumberField("value", getVoltageAtLoad());
-			jg.writeObjectField("resultMessages", getResultMessages());
-			jg.writeEndObject();
-
-			jg.writeFieldName("voltageDropVolts");
-			jg.writeStartObject();
-			jg.writeNumberField("value", getVoltageDropVolts());
-			jg.writeObjectField("resultMessages", getResultMessages());
-			jg.writeEndObject();
-
-			jg.writeFieldName("voltageDropPercentage");
-			jg.writeStartObject();
-			jg.writeNumberField("value", getVoltageDropPercentage());
-			jg.writeObjectField("resultMessages", getResultMessages());
-			jg.writeEndObject();
-
-			jg.writeFieldName("maxLengthForMaxVD");
-			jg.writeStartObject();
-			jg.writeNumberField("value", getMaxLengthForMaxVD());
-			jg.writeObjectField("resultMessages", getResultMessages());
-			jg.writeEndObject();
-
-			jg.writeFieldName("minSizeForMaxVD");
-			jg.writeStartObject();
-			jg.writeStringField("value",
-					getMinSizeForMaxVD() == null? "null":	getMinSizeForMaxVD().toString());
-			jg.writeObjectField("resultMessages", getResultMessages());
-			jg.writeEndObject();
-
-			jg.writeFieldName("maxLengthForMinSize");
-			jg.writeStartObject();
-			jg.writeNumberField("value", getMaxLengthForMinSize());
-			jg.writeObjectField("resultMessages", getResultMessages());
-			jg.writeEndObject();
-
-			jg.writeFieldName("vdPercentForMinSize");
-			jg.writeStartObject();
-			jg.writeNumberField("value", getVdPercentForMinSize());
-			jg.writeObjectField("resultMessages", getResultMessages());
-			jg.writeEndObject();
-
-			jg.writeEndObject();
-			jg.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return jg.getOutputTarget().toString();
-	}
-
-	@Override
-	public String toString() {
-		return "VoltageDropAC{" + "conduitable=" + conduitable + ", " +
-				"conduitMaterial=" + conduitMaterial + ", loadCurrent=" + loadCurrent + ", powerFactor=" + powerFactor + ", numberOfSets=" + numberOfSets + ", sourceVoltageSystem=" + sourceVoltageSystem + ", maxVoltageDropPercent=" + maxVoltageDropPercent + ", resultMessages=" + resultMessages + '}';
+		if(conduitMaterial == null) //free air?
+			conduitMaterial = OuterMaterial.PVC;//emulates free air condition.
+		double k = phases == 1? 2 : SQRT3;
+		double VDropLN = maxVDropPercent / (k * 100);
+		double VLL = voltage * (1-VDropLN);
+		double R_per1000FT = ConductorProperties.getACResistance(size, conductiveMaterial, conduitMaterial);
+		double X_per1000FT = ConductorProperties.getReactance(size, conduitMaterial.isMagnetic());
+		double currentAngleBeta = lagging? - Math.acos(pf) : Math.acos(pf);
+		double A = current * current * (R_per1000FT * R_per1000FT + X_per1000FT * X_per1000FT);
+		double B =
+				2 * VLL * current * (R_per1000FT * Math.cos(currentAngleBeta) - X_per1000FT * Math.sin(currentAngleBeta));
+		double C = VLL * VLL - voltage * voltage;
+		double B2_4AC = B * B - 4 * A * C;
+		return Helper.round((1000 * (-B + Math.sqrt(B2_4AC)) / (2 * A)), DECIMAL_PRECISION);
 	}
 }
