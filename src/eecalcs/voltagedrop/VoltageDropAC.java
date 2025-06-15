@@ -1,6 +1,6 @@
 package eecalcs.voltagedrop;
 
-import eecalcs.conductors.ConductiveMaterial;
+import eecalcs.conductors.ConductiveMetal;
 import eecalcs.conductors.ConductorProperties;
 import eecalcs.conductors.Size;
 import eecalcs.conduits.OuterMaterial;
@@ -23,7 +23,7 @@ import tools.Helper;
  <li>Conductor size: Size.AWG_12</li>
  <li>Conductor length: 90 feet</li>
  <li>Number of sets: 1</li>
- <li>Conductor metal: ConductiveMaterial.COPPER</li>
+ <li>Conductor metal: ConductiveMetal.COPPER</li>
  <li>Conduit material: OuterMaterial.PVC</li>
  <li>Maximum voltage drop percentage: 3%</li>
 </ul>
@@ -38,7 +38,7 @@ public class VoltageDropAC implements ROVoltageDropAC {
 	private PowerFactorType powerFactorType = PowerFactorType.LAGGING;
 	private Size conductorSize = Size.AWG_12;
 	private double conductorLength = 90;
-	private ConductiveMaterial conductiveMaterial = ConductiveMaterial.COPPER;
+	private ConductiveMetal conductiveMetal = ConductiveMetal.COPPER;
 	private OuterMaterial conduitMaterial = OuterMaterial.PVC;
 	private int numberOfSets = 1;
 	private double maxVDropPercent = 3.0;
@@ -79,8 +79,8 @@ public class VoltageDropAC implements ROVoltageDropAC {
 	}
 
 	@Override
-	public ConductiveMaterial getConductorMetal() {
-		return conductiveMaterial;
+	public ConductiveMetal getConductorMetal() {
+		return conductiveMetal;
 	}
 
 	@Override
@@ -187,11 +187,11 @@ public class VoltageDropAC implements ROVoltageDropAC {
 
 	/**
 	 Sets the type od conductor metal for this voltage drop object.
-	 * @param conductiveMaterial the conductor metal for this object. Cannot be null.
+	 * @param conductiveMetal the conductor metal for this object. Cannot be null.
 	 * @return This VoltageDropAC object.
 	 */
-	public @NotNull VoltageDropAC setConductorMetal(@NotNull ConductiveMaterial conductiveMaterial) {
-		this.conductiveMaterial = conductiveMaterial;
+	public @NotNull VoltageDropAC setConductorMetal(@NotNull ConductiveMetal conductiveMetal) {
+		this.conductiveMetal = conductiveMetal;
 		return this;
 	}
 
@@ -217,34 +217,22 @@ public class VoltageDropAC implements ROVoltageDropAC {
 		return this;
 	}
 
-/*	public @NotNull VoltageDropAC setConductor(@NotNull Conductor conductor) {
-		conductorLength = conductor.getLength();
-		conductiveMaterial = conductor.getMetal();
-		conductorSize = conductor.getSize();
-		return this;
-	}*/
-
-/*	public @NotNull VoltageDropAC setConduit(@NotNull Conduit conduit) {
-		conduitMaterial = conduit.getMaterial();
-		return this;
-	}*/
-
 	@Override
 	public double getVoltageDropPercent(){
 		return getVoltageDropPercent(voltageAC.getVoltage(), voltageAC.getPhases(), loadCurrent, powerFactor,
-				powerFactorType == PowerFactorType.LAGGING, conductorSize, conductorLength, numberOfSets, conductiveMaterial, conduitMaterial);
+				powerFactorType == PowerFactorType.LAGGING, conductorSize, conductorLength, numberOfSets, conductiveMetal, conduitMaterial);
 	}
 
 	@Override
 	public @Nullable Size getMinSizeForMaxVD(){
 		return getMinSizeForMaxVD(voltageAC.getVoltage(), voltageAC.getPhases(), loadCurrent, powerFactor,
-				powerFactorType == PowerFactorType.LAGGING, maxVDropPercent, conductorLength, numberOfSets, conductiveMaterial, conduitMaterial);
+				powerFactorType == PowerFactorType.LAGGING, maxVDropPercent, conductorLength, numberOfSets, conductiveMetal, conduitMaterial);
 	}
 
 	@Override
 	public double getMaxLengthForVD(){
 		return getMaxLengthForVD(voltageAC.getVoltage(), voltageAC.getPhases(), loadCurrent, powerFactor,
-				powerFactorType == PowerFactorType.LAGGING, conductorSize, maxVDropPercent, numberOfSets, conductiveMaterial, conduitMaterial);
+				powerFactorType == PowerFactorType.LAGGING, conductorSize, maxVDropPercent, numberOfSets, conductiveMetal, conduitMaterial);
 	}
 
 	public VoltageDropAC increaseNumberOfSets() {
@@ -270,7 +258,7 @@ public class VoltageDropAC implements ROVoltageDropAC {
 	 * @param length The oneway length of the circuit measured from the source of voltage to the load terminals, in
 	 * feet. Must be > 0.
 	 * @param sets the number of sets. Must be an integer > 0.
-	 * @param conductiveMaterial The conductive conductiveMaterial of the conductor, as defined in {@link ConductiveMaterial}. Cannot be null.
+	 * @param conductiveMetal The conductive conductiveMetal of the conductor, as defined in {@link ConductiveMetal}. Cannot be null.
 	 * @param conduitMaterial The conduitMaterial of the conduit containing the conductor, as defined in {@link OuterMaterial}. Use
 	 * null if the conductor is in free air or bundled.
 	 * @return The AC voltage drop expressed in percent of the voltage source. The current is always assumed to flow
@@ -283,7 +271,7 @@ public class VoltageDropAC implements ROVoltageDropAC {
 	 */
 	public static double getVoltageDropPercent(double voltage, int phases, double current, double pf,
 	                                           boolean lagging, @NotNull Size size, double length, int sets,
-	                                           @NotNull ConductiveMaterial conductiveMaterial, @Nullable OuterMaterial conduitMaterial) {
+	                                           @NotNull ConductiveMetal conductiveMetal, @Nullable OuterMaterial conduitMaterial) {
 		if(voltage <=0)
 			throw new IllegalArgumentException("Voltage must be > 0");
 		if( phases != 1 && phases != 3 )
@@ -300,7 +288,7 @@ public class VoltageDropAC implements ROVoltageDropAC {
 		double k = phases == 1? 2 : SQRT3;
 		if (conduitMaterial == null)
 			conduitMaterial = OuterMaterial.PVC;
-		double totalR = ConductorProperties.getACResistance(size, conductiveMaterial, conduitMaterial, length, sets);
+		double totalR = ConductorProperties.getACResistance(size, conductiveMetal, conduitMaterial, length, sets);
 		double totalX = ConductorProperties.getReactance(size, conduitMaterial.isMagnetic(), length,
 				sets);
 		double currentAngleBeta = lagging? - Math.acos(pf) : Math.acos(pf);
@@ -329,7 +317,7 @@ public class VoltageDropAC implements ROVoltageDropAC {
 	 * @param length The oneway length of the circuit measured from the source of voltage to the load terminals, in
 	 * feet. Must be > 0.
 	 * @param sets the number of sets. Must be an integer > 0.
-	 * @param conductiveMaterial The conductive conductiveMaterial of the conductor, as defined in {@link ConductiveMaterial}. Cannot be null.
+	 * @param conductiveMetal The conductive conductiveMetal of the conductor, as defined in {@link ConductiveMetal}. Cannot be null.
 	 * @param conduitMaterial The conduitMaterial of the conduit containing the conductor, as defined in {@link OuterMaterial}. Use
 	 * null if the conductor is in free air or bundled.
 	 * @return The minimum conductor size under the given conditions. If the given current is too high, or the
@@ -339,11 +327,11 @@ public class VoltageDropAC implements ROVoltageDropAC {
 	 */
 	public static @Nullable Size getMinSizeForMaxVD(double voltage, int phases, double current, double pf,
 	                                                boolean lagging, double maxVDropPercent, double length, int sets,
-	                                                @NotNull ConductiveMaterial conductiveMaterial, @Nullable OuterMaterial conduitMaterial) {
+	                                                @NotNull ConductiveMetal conductiveMetal, @Nullable OuterMaterial conduitMaterial) {
 		if(maxVDropPercent <= 0 || maxVDropPercent > 100)
 			throw new IllegalArgumentException("Maximum voltage drop percent must be in the range of (0, 100]");
 		for (Size size : Size.values()) {
-			double vDrop = getVoltageDropPercent(voltage, phases, current, pf, lagging, size, length, sets, conductiveMaterial, conduitMaterial);
+			double vDrop = getVoltageDropPercent(voltage, phases, current, pf, lagging, size, length, sets, conductiveMetal, conduitMaterial);
 			if (vDrop == CURRENT_OR_IMPEDANCE_TOO_HIGH)
 				continue;
 			vDrop = Helper.round(vDrop, DECIMAL_PRECISION);
@@ -365,7 +353,7 @@ public class VoltageDropAC implements ROVoltageDropAC {
 	 * @param size The size of the conductor as defined in {@link Size}. Cannot be null.
 	 * @param maxVDropPercent The maximum line-to-line voltage drop percent permitted. Must be in the range of (0,100].
 	 * @param sets the number of sets. Must be an integer > 0.
-	 * @param conductiveMaterial The conductive conductiveMaterial of the conductor, as defined in {@link ConductiveMaterial}. Cannot be null.
+	 * @param conductiveMetal The conductive conductiveMetal of the conductor, as defined in {@link ConductiveMetal}. Cannot be null.
 	 * @param conduitMaterial The conduitMaterial of the conduit containing the conductor, as defined in {@link OuterMaterial}. Use
 	 * null if the conductor is in free air or bundled.
 	 * @return The maximum one-way length in feet of the given conductor that would have a line-to-line voltage drop as
@@ -373,7 +361,7 @@ public class VoltageDropAC implements ROVoltageDropAC {
 	 */
 	public static double getMaxLengthForVD(double voltage, int phases, double current, double pf,
 	                                       boolean lagging, @NotNull Size size, double maxVDropPercent, int sets,
-	                                       @NotNull ConductiveMaterial conductiveMaterial, @Nullable OuterMaterial conduitMaterial) {
+	                                       @NotNull ConductiveMetal conductiveMetal, @Nullable OuterMaterial conduitMaterial) {
 		if(voltage <=0)
 			throw new IllegalArgumentException("Voltage must be > 0");
 		if( phases != 1 && phases != 3 )
@@ -390,7 +378,7 @@ public class VoltageDropAC implements ROVoltageDropAC {
 		double k = phases == 1? 2 : SQRT3;
 		double VDropLN = maxVDropPercent / (k * 100);
 		double VLL = voltage * (1-VDropLN);
-		double R_per1000FT = ConductorProperties.getACResistance(size, conductiveMaterial, conduitMaterial);
+		double R_per1000FT = ConductorProperties.getACResistance(size, conductiveMetal, conduitMaterial);
 		double X_per1000FT = ConductorProperties.getReactance(size, conduitMaterial.isMagnetic());
 		double currentAngleBeta = lagging? - Math.acos(pf) : Math.acos(pf);
 		double A = current * current * (R_per1000FT * R_per1000FT + X_per1000FT * X_per1000FT);

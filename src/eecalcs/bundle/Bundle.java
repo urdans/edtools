@@ -62,10 +62,7 @@ public class Bundle implements ROBundle {
 	private void updateAmbientTemperature() {
 		for (var c: conduitables) {
 			if (c instanceof RWConduitable) {
-				RWConduitable rwConduitable = (RWConduitable) c;
-				rwConduitable.setBundle2(null);
-				rwConduitable.setAmbientTemperatureF2(ambientTemperatureF);
-				rwConduitable.setBundle2(this);
+				((RWConduitable) c).setAmbientTemperatureF(ambientTemperatureF);
 			}
 		}
 	}
@@ -94,25 +91,16 @@ public class Bundle implements ROBundle {
 	}
 
 	/**
-	 Adds the given conduitable to the bundle.
-	 * @param conduitable The conduitable to add. Cannot be null. If the conduitable is part of another bundle, or
-	 * conduit, an IllegalArgumentException is thrown. If the conduitable is already in the bundle, nothing happens.
+	 Adds a conduitable to this bundle by making a copy of it.
+	 * @param conduitable The conduitable from which a copy will be added to this bundle. Cannot be null.
 	 * @return This bundle.
 	 */
 	public Bundle add(@NotNull Conduitable conduitable){
-		if (conduitables.contains(conduitable))
-			return this;
-
-		if(conduitable.hasConduit() || conduitable.hasBundle())
-			throw new IllegalArgumentException("Cannot add to this bundle a " +
-					"conduitable that belongs to another bundle or conduit.");
-
-		/*This code is safe as long as any class that implements Conduitables, also implements
-		RWConduitables. For now, only two classes implements both, Conductor and Cable.*/
-		((RWConduitable)conduitable).setAmbientTemperatureF2(ambientTemperatureF);
-		((RWConduitable)conduitable).setBundle2(this);
-
-		conduitables.add(conduitable);
+		Conduitable c = conduitable.copy(this);
+		if (c instanceof RWConduitable) {
+			((RWConduitable) c).setAmbientTemperatureF(ambientTemperatureF);
+		}
+		conduitables.add(c);
 		return this;
 	}
 
@@ -144,6 +132,7 @@ public class Bundle implements ROBundle {
 	 bundle.
 	 @see Conduitable
 	 */
+	@Deprecated
 	public List<Conduitable> getConduitables() {
 		return new ArrayList<>(conduitables);
 	}

@@ -22,7 +22,7 @@ import tools.Tools;
 
  The default values for a conductor are:
  <p>- Size: 12 AWG
- <p>- ConductiveMaterial: Copper
+ <p>- ConductiveMetal: Copper
  <p>- Insulation: THW
  <p>- Length: 100 feet (always given in feet)
  <p>- Ambient temperature = 86 °F (Always given in degrees Fahrenheit).
@@ -34,7 +34,7 @@ import tools.Tools;
 public class Conductor implements Conduitable, RWConduitable {
 	//region params
 	private @NotNull Size size = Size.AWG_12;
-	private @NotNull ConductiveMaterial conductiveMaterial = ConductiveMaterial.COPPER;
+	private @NotNull ConductiveMetal conductiveMetal = ConductiveMetal.COPPER;
 	private @NotNull Insulation insulation  = Insulation.THW;
 	private double length = 100;
 	private int ambientTemperatureF = 86;
@@ -114,7 +114,7 @@ public class Conductor implements Conduitable, RWConduitable {
 		}
 	}
 
-	/** Construct a Conductor object with all the default values.*/
+	/** Creates a Conductor object in free air.*/
 	public Conductor() {}
 
 	/**
@@ -131,7 +131,7 @@ public class Conductor implements Conduitable, RWConduitable {
 	 */
 	public Conductor copyFrom(@NotNull Conductor conductor){
 		size = conductor.size;
-		conductiveMaterial = conductor.conductiveMaterial;
+		conductiveMetal = conductor.conductiveMetal;
 		insulation =conductor.insulation;
 		length = conductor.length;
 		ambientTemperatureF = conductor.ambientTemperatureF;
@@ -150,12 +150,12 @@ public class Conductor implements Conduitable, RWConduitable {
 	}
 
 	/**
-	 Sets the conductiveMaterial of this conductor.
-	 @param conductiveMaterial The new conductiveMaterial type for this conductor. Cannot be null.
+	 Sets the conductiveMetal of this conductor.
+	 @param conductiveMetal The new conductiveMetal type for this conductor. Cannot be null.
 	 @return This conductor.
 	 */
-	public Conductor setMetal(@NotNull ConductiveMaterial conductiveMaterial){
-		this.conductiveMaterial = conductiveMaterial;
+	public Conductor setMetal(@NotNull ConductiveMetal conductiveMetal){
+		this.conductiveMetal = conductiveMetal;
 		return this;
 	}
 
@@ -181,35 +181,13 @@ public class Conductor implements Conduitable, RWConduitable {
 		return this;
 	}
 
-	/**
-	 Sets the ambient temperature of this conductor. This parameter can only be assigned if the conductor does not
-	 belong to a conduit or to a bundle, otherwise an IllegalArgumentException is thrown. Keep in mind that a
-	 conduit/bundle object can assign this temperature when this conductor belongs to that conduit/bundle.
-	 <p> {@link #hasConduit()} and {@link #hasBundle()} can be used to test the condition of this conductor.
-
-	 @param ambientTemperatureF The ambient temperature in degrees Fahrenheits. The ambient temperature must be in
-	 the [{@link Factors#MIN_TEMP_F}, {@link Factors#MAX_TEMP_F}] °F range.
-	 @return This Conductor.
-	 */
-	public Conductor setAmbientTemperatureF(int ambientTemperatureF){
-		setAmbientTemperatureF2(ambientTemperatureF);
-		return this;
-	}
-
-	/**
-	 Same as {@link #setAmbientTemperatureF(int)} except that this method does not return anything.
-	 */
 	@Override
-	public void setAmbientTemperatureF2(int ambientTemperatureF){
-		if(hasConduit() || hasBundle())
-			throw new IllegalArgumentException("Ambient temperature cannot be" +
-					" assigned to a conductor that belongs to a conduit or " +
-					"to a bundle. Use the conduit or bundle to set the " +
-					"temperature of this conductor.");
+	public Conductor setAmbientTemperatureF(int ambientTemperatureF){
 		if(ambientTemperatureF < Factors.MIN_TEMP_F || ambientTemperatureF > Factors.MAX_TEMP_F)
 			throw new IllegalArgumentException("Ambient temperature must be " +
 					"in the [" + Factors.MIN_TEMP_F + "," + Factors.MAX_TEMP_F + "] °F range.");
 		this.ambientTemperatureF = ambientTemperatureF;
+		return this;
 	}
 
 	/**
@@ -222,60 +200,23 @@ public class Conductor implements Conduitable, RWConduitable {
 		return this;
 	}
 
-	/**
-	 Sets the conduit for this conductor. This method can only be called from the Conduit object that will
-	 contain this conductor; a call from other objects will throw an IllegalCallerException.
-	 Once this conductor is set in a conduit, it cannot be changed.
-	 @param conduit The conduit this conductor will belong to.
-	 */
-	public Conductor setConduit(@Nullable Conduit conduit){
-		if(Tools.getClassName(Thread.currentThread().getStackTrace()[2].getClassName()).equals("Conduit"))
-			this.conduit = conduit;
-		else
-			throw new IllegalCallerException("setConduit method cannot be called from outside of a Conduit object.");
-		return this;
-	}
-
 	@Override
-	public void setConduit2(@Nullable Conduit conduit) {
-		if(Tools.getClassName(Thread.currentThread().getStackTrace()[2].getClassName()).equals("Conduit"))
-			this.conduit = conduit;
-		else
-			throw new IllegalCallerException("setConduit2 method cannot be called from outside of a Conduit object.");
-	}
-
-	/**
-	 Sets the bundle for this conductor. This method can only be called from the Bundle object that will
-	 contain this conductor; a call from other objects will throw an IllegalCallerException.
-	 Once this conductor is set in a bundle, it cannot be changed.
-	 @param bundle The bundle this conductor will belong to.
-	 */
-	public Conductor setBundle(@NotNull Bundle bundle){
-		if(Tools.getClassName(Thread.currentThread().getStackTrace()[2].getClassName()).equals("Bundle"))
-			this.bundle = bundle;
-		else
-			throw new IllegalCallerException("setBundle method cannot be called from outside of a Bundle object.");
-		return this;
-	}
-
-	@Override
-	public void setBundle2(@Nullable Bundle bundle) {
-		if(Tools.getClassName(Thread.currentThread().getStackTrace()[2].getClassName()).equals("Bundle"))
-			this.bundle = bundle;
-		else
-			throw new IllegalCallerException("setBundle2 method cannot be called from outside of a Bundle object.");
-	}
-
-	/**
-	 Returns a deep and convenient copy of this Conductor object. The new copy
-	 is exactly the same as this conductor, except: (convenience)
-	 <p>- it does not copy the conduit property, that is, the new copy is
-	 assumed in free air (not in a conduit).
-	 <p>- it does not copy the bundle property, that is, the new copy is
-	 assumed not to be grouped with other conductors.
-	 */
 	public Conductor copy(){
 		return new Conductor().copyFrom(this);
+	}
+
+	@Override
+	public Conductor copy(@NotNull Conduit conduit){
+		Conductor conductor = copy();
+		conductor.conduit = conduit;
+		return conductor;
+	}
+
+	@Override
+	public Conductor copy(@NotNull Bundle bundle){
+		Conductor conductor = copy();
+		conductor.bundle = bundle;
+		return conductor;
 	}
 
 	@Override
@@ -284,8 +225,8 @@ public class Conductor implements Conduitable, RWConduitable {
 	}
 
 	@Override
-	public @NotNull ConductiveMaterial getMetal() {
-		return conductiveMaterial;
+	public @NotNull ConductiveMetal getMetal() {
+		return conductiveMetal;
 	}
 
 	@Override
@@ -308,7 +249,7 @@ public class Conductor implements Conduitable, RWConduitable {
 	@NEC(year = "2017")
 	@NEC(year = "2020")
 	public double getCorrectedAndAdjustedAmpacity(){
-		return ConductorProperties.getStandardAmpacity(size, conductiveMaterial,
+		return ConductorProperties.getStandardAmpacity(size, conductiveMetal,
 				ConductorProperties.getTempRating(insulation)) * getCompoundFactor();
 	}
 
@@ -436,7 +377,7 @@ public class Conductor implements Conduitable, RWConduitable {
 
 	@Override
 	public String toString() {
-		return "Conductor {" + "size=" + size + ", conductiveMaterial=" + conductiveMaterial + ", " +
+		return "Conductor {" + "size=" + size + ", conductiveMetal=" + conductiveMetal + ", " +
 				"insulation=" + insulation + ", length=" + length + ", " +
 				"ambientTemperatureF=" + ambientTemperatureF + ", " +
 				", role=" + role + ", " +

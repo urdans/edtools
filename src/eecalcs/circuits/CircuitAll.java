@@ -1128,7 +1128,7 @@ public class CircuitAll {
 		if(higherRating == 30)
 			if(_getSize().ordinal() < Size.AWG_10.ordinal()) {
 				size = Size.AWG_10;//NEC-240.4(D)(7)
-				if(_getConduitable().getMetal() == ConductiveMaterial.ALUMINUM)
+				if(_getConduitable().getMetal() == ConductiveMetal.ALUMINUM)
 					size = Size.AWG_8;//NEC-240.4(D)(6)
 			}
 		else if(circuitAmpacity <= higherRating) {//NEC-240.4
@@ -1199,7 +1199,7 @@ public class CircuitAll {
 	 false otherwise.
 	 */
 	private boolean checkRule_240_4_D_7(){
-		if(_getSize() == Size.AWG_10 && _getConduitable().getMetal() == ConductiveMaterial.COPPER) {
+		if(_getSize() == Size.AWG_10 && _getConduitable().getMetal() == ConductiveMetal.COPPER) {
 			if (OCPDRating > 30)
 				OCPDRating = 30;
 			return true;
@@ -1214,7 +1214,7 @@ public class CircuitAll {
 	 */
 	private boolean checkRule_240_4_D_6(){
 		if(_getSize() == Size.AWG_10 &&
-				_getConduitable().getMetal() == ConductiveMaterial.ALUMINUM &&
+				_getConduitable().getMetal() == ConductiveMetal.ALUMINUM &&
 				load.getRequiredCircuitType() != CircuitType.MULTI_OUTLET_BRANCH){
 			if (OCPDRating > 25)
 				OCPDRating = 25;
@@ -1229,7 +1229,7 @@ public class CircuitAll {
 	 false otherwise.
 	 */
 	private boolean checkRule_240_4_D_5(){
-		if(_getSize() == Size.AWG_12 && _getConduitable().getMetal() == ConductiveMaterial.COPPER) {
+		if(_getSize() == Size.AWG_12 && _getConduitable().getMetal() == ConductiveMetal.COPPER) {
 			if (OCPDRating > 20)
 				OCPDRating = 20;
 			return true;
@@ -1243,7 +1243,7 @@ public class CircuitAll {
 	 false otherwise.
 	 */
 	private boolean checkRule_240_4_D_4(){
-		if(_getSize() == Size.AWG_12 && _getConduitable().getMetal() == ConductiveMaterial.ALUMINUM) {
+		if(_getSize() == Size.AWG_12 && _getConduitable().getMetal() == ConductiveMetal.ALUMINUM) {
 			OCPDRating = 15; //NEC-240.4(D)(4)
 			return true;
 		}
@@ -1393,8 +1393,8 @@ public class CircuitAll {
 	 <b>CalculateOCPDRating() must be called prior to calling this method !</b>
 	 */
 	private boolean calculateEGC(){
-		ConductiveMaterial conductiveMaterial = usingCable ? cable.getMetal(): groundingConductor.getMetal();
-		Size egcSize = EGC.getEGCSize(OCPDRating, conductiveMaterial);
+		ConductiveMetal conductiveMetal = usingCable ? cable.getMetal(): groundingConductor.getMetal();
+		Size egcSize = EGC.getEGCSize(OCPDRating, conductiveMetal);
 
 		if(egcSize == null)
 			return false;
@@ -1792,15 +1792,15 @@ Third line, circuit ratings:
 	}
 
 	/**
-	 Sets the conductiveMaterial for all conductors of this circuit.
-	 @param conductiveMaterial The new conductiveMaterial.
-	 @see ConductiveMaterial
+	 Sets the conductiveMetal for all conductors of this circuit.
+	 @param conductiveMetal The new conductiveMetal.
+	 @see ConductiveMetal
 	 */
-	public void setMetal(ConductiveMaterial conductiveMaterial){
+	public void setMetal(ConductiveMetal conductiveMetal){
 		if(usingCable)
-			conduitables.forEach(conduitable ->	((Cable)conduitable).setMetalForPhaseAndNeutral(conductiveMaterial));
+			conduitables.forEach(conduitable ->	((Cable)conduitable).setMetalForPhaseAndNeutral(conductiveMetal));
 		else
-			conduitables.forEach(conduitable ->	((Conductor)conduitable).setMetal(conductiveMaterial));
+			conduitables.forEach(conduitable ->	((Conductor)conduitable).setMetal(conductiveMetal));
 	}
 
 	/** Returns Conduitable interface to this circuit's internal cable or

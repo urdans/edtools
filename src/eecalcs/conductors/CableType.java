@@ -10,7 +10,7 @@ import eecalcs.conduits.OuterMaterial;
  */
 public enum CableType {
     AC("Armored Cable", OuterMaterial.STEEL),
-    MC("ConductiveMaterial Clad Cable", OuterMaterial.STEEL),
+    MC("ConductiveMetal Clad Cable", OuterMaterial.STEEL),
     NM("Non Metallic Jacket Cable", OuterMaterial.PVC),
     NMC("Non Metallic Jacket Corrosion Resistant Cable", OuterMaterial.PVC),
     NMS("Non Metallic Jacket Cable with AC Motor or Signaling Data Conductors", OuterMaterial.PVC);

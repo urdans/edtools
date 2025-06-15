@@ -41,12 +41,12 @@ public class EGC {
 	};
 
 	/**
-	 @return The size of the EGC per table NEC-250.122, for the given OCPD rating and conductiveMaterial.
+	 @return The size of the EGC per table NEC-250.122, for the given OCPD rating and conductiveMetal.
 	 @param ocpdRating Rating of the OCPD. Must be in the range [15, 6000] (minimum and maximum standard OCPD
 	 ratings), otherwise an {@link IllegalArgumentException} is thrown.
-	 @param conductiveMaterial The conductiveMaterial of the conductor.
+	 @param conductiveMetal The conductiveMetal of the conductor.
 	 */
-	public static Size getEGCSize(int ocpdRating, @NotNull ConductiveMaterial conductiveMaterial){
+	public static Size getEGCSize(int ocpdRating, @NotNull ConductiveMetal conductiveMetal){
 		if(ocpdRating < 15 || ocpdRating > 6000)
 			throw new IllegalArgumentException("The OCPD rating must be in the range [15, 6000]");
 		int index = table.length - 1;
@@ -58,7 +58,7 @@ public class EGC {
 			}
 		}
 
-		if(conductiveMaterial == ConductiveMaterial.COPPER)
+		if(conductiveMetal == ConductiveMetal.COPPER)
 			return table[index].copperSize;
 		return table[index].aluminiumSize;
 	}

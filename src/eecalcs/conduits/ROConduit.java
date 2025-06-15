@@ -22,14 +22,6 @@ public interface ROConduit {
 	boolean isEmpty();
 
 	/**
-	 Asks if this conduit already contains the given conduitable.
-	 @param conduitable The conduitable to check if it is already contained by
-	 this conduit.
-	 @return True if this conduit contains it, false otherwise.
-	 */
-	boolean hasConduitable(@NotNull Conduitable conduitable);
-
-	/**
 	 Returns the minimum allowable trade size for this conduit.
 	 @return The minimum allowable trade size for this conduit.
 	 */

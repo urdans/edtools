@@ -1,6 +1,6 @@
 package eecalcs.voltagedrop;
 
-import eecalcs.conductors.ConductiveMaterial;
+import eecalcs.conductors.ConductiveMetal;
 import eecalcs.conductors.Size;
 import eecalcs.conduits.OuterMaterial;
 import eecalcs.loads.PowerFactorType;
@@ -23,7 +23,7 @@ public interface ROVoltageDropAC {
 
 	int getNumberOfSets();
 
-	ConductiveMaterial getConductorMetal();
+	ConductiveMetal getConductorMetal();
 
 	OuterMaterial getConduitMaterial();
 

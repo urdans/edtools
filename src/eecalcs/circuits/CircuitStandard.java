@@ -46,9 +46,9 @@ import org.jetbrains.annotations.Nullable;
 public class CircuitStandard implements Circuit{
 	public static final String NO_NEUTRAL_CONDUCTOR = "The circuit does not have a neutral conductor";
 	private final Load load;
-	private final Conductor phaseConductor;//Represents the phase conductors
-	private final Conductor neutralConductor;
-	private final Conductor groundConductor;
+	private Conductor phaseConductor;//Represents the phase conductors
+	private Conductor neutralConductor;
+	private Conductor groundConductor;
 	private final VoltageDropAC voltageDropAC;
 	private final Conduit conduit;
 
@@ -89,9 +89,18 @@ public class CircuitStandard implements Circuit{
 		   When decreasing the number of conduits bear in mind that the number of sets per conduit could require a
 		   big conduit beyond what is available in the market. Should I use a maximum conduit size?
 		*/
-		conduit = new Conduit()
-				.add(neutralConductor) //if null nothing happens
-				.add(groundConductor);
+		conduit = new Conduit();
+		if (neutralConductor != null) {
+			conduit.add(neutralConductor); //if null nothing happens
+			//getting the copy
+			neutralConductor = (Conductor) conduit.getConduitables().get(0);
+		}
+
+		conduit.add(groundConductor);
+		//getting the copy
+		int index = neutralConductor == null ? 0 : 1;
+		groundConductor = (Conductor) conduit.getConduitables().get(index);
+
 		//up to here
 
 		voltageDropAC = new VoltageDropAC()
@@ -104,6 +113,11 @@ public class CircuitStandard implements Circuit{
 			conduit.add(phaseConductor.copy()); //adding the B phase
 		if (voltageDropAC.getVoltageAC().getHots() == 3)
 			conduit.add(phaseConductor.copy()); //adding the C phase
+
+		//getting the copy
+		index = neutralConductor == null ? 1 : 2;
+		phaseConductor = (Conductor) conduit.getConduitables().get(index);
+
 	}
 
 	public CircuitStandard setTerminationTempRating(@NotNull TempRating terminationTempRating) {
@@ -162,15 +176,15 @@ public class CircuitStandard implements Circuit{
 		return this;
 	}
 
-	public CircuitStandard setMetal(ConductiveMaterial conductiveMaterial) {
-		phaseConductor.setMetal(conductiveMaterial);
+	public CircuitStandard setMetal(ConductiveMetal conductiveMetal) {
+		phaseConductor.setMetal(conductiveMetal);
 		if (neutralConductor != null)
-			neutralConductor.setMetal(conductiveMaterial);
+			neutralConductor.setMetal(conductiveMetal);
 		return this;
 	}
 
-	public CircuitStandard setEGCMetal(ConductiveMaterial conductiveMaterial) {
-		groundConductor.setMetal(conductiveMaterial);
+	public CircuitStandard setEGCMetal(ConductiveMetal conductiveMetal) {
+		groundConductor.setMetal(conductiveMetal);
 		return this;
 	}
 
@@ -458,7 +472,7 @@ other parameters and make them coordinate at a single point.
 	@NEC(year = "2017")
 	@NEC(year = "2020")
 	private @Nullable Size getProposedSizePerAmpacity(boolean forNeutral) {
-//		ConductiveMaterial metal = phaseConductor.getMetal();
+//		ConductiveMetal metal = phaseConductor.getMetal();
 //		TempRating insulationRating = phaseConductor.getTemperatureRating();
 
 		/*The compound factor depends on the ambient temperature and the number of CCC in the conduit. Both

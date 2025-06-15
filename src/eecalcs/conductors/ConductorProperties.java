@@ -1,5 +1,4 @@
 package eecalcs.conductors;
-/* Revised on 11/24/23 to make compatible with NEC 2020 Edition*/
 
 import eecalcs.conduits.OuterMaterial;
 import eecalcs.systems.Location;
@@ -856,58 +855,58 @@ public class ConductorProperties {
 	}
 
 	/**
-	 Returns the DC resistance of this conductor size for the given conductiveMaterial.
+	 Returns the DC resistance of this conductor size for the given conductiveMetal.
 	 @param conductorSize The size of the conductor as defined by {@link Size}
-	 @param conductiveMaterial The conductiveMaterial of the conductor as defined by  {@link ConductiveMaterial}.
+	 @param conductiveMetal The conductiveMetal of the conductor as defined by  {@link ConductiveMetal}.
 	 None of these parameters can be null.
 	 @return The DC resistance of this conductor in ohms per 1000 feet.
 	 */
 	public static double getDCResistance(@NotNull Size conductorSize,
-	                                     @NotNull ConductiveMaterial conductiveMaterial) {
-		if (conductiveMaterial == ConductiveMaterial.COPPER)
+	                                     @NotNull ConductiveMetal conductiveMetal) {
+		if (conductiveMetal == ConductiveMetal.COPPER)
 			return bySize(conductorSize).CuResDCUncoated;
-		if (conductiveMaterial == ConductiveMaterial.COPPERCOATED)
+		if (conductiveMetal == ConductiveMetal.COPPERCOATED)
 			return bySize(conductorSize).CuResDCCoated;
 		return bySize(conductorSize).ALResDC;
 	}
 
 	/**
-	 Returns the DC resistance of this conductor size for the given conductiveMaterial,
+	 Returns the DC resistance of this conductor size for the given conductiveMetal,
 	 length, sets, etc.
 	 @param conductorSize Not null. The size of the conductor as defined by
 	 {@link Size}.
-	 @param conductiveMaterial Not null. The conductiveMaterial of the conductor as defined by
-	 {@link ConductiveMaterial}.
+	 @param conductiveMetal Not null. The conductiveMetal of the conductor as defined by
+	 {@link ConductiveMetal}.
 	 @param oneWayLength The length of the conductor. Must be >0
 	 @param numberOfSets The number of conductors in parallel. Must be >0.
 	 @return The DC resistance in ohms of this conductor size under the given
 	 conditions.
 	 */
 	public static double getDCResistance(@NotNull Size conductorSize,
-	                                     @NotNull ConductiveMaterial conductiveMaterial,
+	                                     @NotNull ConductiveMetal conductiveMetal,
 	                                     double oneWayLength, int numberOfSets) {
 		if (oneWayLength <= 0)
 			throw new IllegalArgumentException("oneWayLength must be > 0");
 		if (numberOfSets <= 0 )
 			throw new IllegalArgumentException("numberOfSets must be > 0");
 
-		return getDCResistance(conductorSize, conductiveMaterial) * 0.001 * oneWayLength / numberOfSets;
+		return getDCResistance(conductorSize, conductiveMetal) * 0.001 * oneWayLength / numberOfSets;
 	}
 
 	/**
-	 Returns the AC resistance of this conductor size for the given conductiveMaterial and
+	 Returns the AC resistance of this conductor size for the given conductiveMetal and
 	 conduit material.
 	 @param conductorSize Not null. The size of the conductor as defined by
 	 {@link Size}.
-	 @param conductiveMaterial Not null. The conductiveMaterial of the conductor as defined by
-	 {@link ConductiveMaterial}.
+	 @param conductiveMetal Not null. The conductiveMetal of the conductor as defined by
+	 {@link ConductiveMetal}.
 	 @param conduitMaterial The material type of the conduit as specified in {@link OuterMaterial}, or NULL if the
 	 conductor is in free air.
 	 @return The AC resistance in ohms per 1000 feet.
 	 */
-	public static double getACResistance(@NotNull Size conductorSize, @NotNull ConductiveMaterial conductiveMaterial,
+	public static double getACResistance(@NotNull Size conductorSize, @NotNull ConductiveMetal conductiveMetal,
 	                                     @Nullable OuterMaterial conduitMaterial) {
-		if (conductiveMaterial == ConductiveMaterial.COPPER) {
+		if (conductiveMetal == ConductiveMetal.COPPER) {
 			if (conduitMaterial == OuterMaterial.PVC)
 				return bySize(conductorSize).CuResInPVCCond;
 			else if (conduitMaterial == OuterMaterial.ALUMINUM)
@@ -925,12 +924,12 @@ public class ConductorProperties {
 	}
 
 	/**
-	 Returns the AC resistance of this conductor size for the given conductiveMaterial,
+	 Returns the AC resistance of this conductor size for the given conductiveMetal,
 	 conduit material, length and number of sets.
 	 @param conductorSize Not null. The size of the conductor as defined by
 	 {@link Size}
-	 @param conductiveMaterial Not null. The conductiveMaterial of the conductor as defined by
-	 {@link ConductiveMaterial}.
+	 @param conductiveMetal Not null. The conductiveMetal of the conductor as defined by
+	 {@link ConductiveMetal}.
 	 @param conduitMaterial Not null. The material type of the conduit as
 	 specified in {@link OuterMaterial}.
 	 @param oneWayLength The length of the conductor in feet. Must be >0
@@ -939,39 +938,39 @@ public class ConductorProperties {
 	 @return The AC resistance in ohms of this conductor size under the given
 	 conditions.
 	 */
-	public static double getACResistance(@NotNull Size conductorSize, @NotNull ConductiveMaterial conductiveMaterial,
+	public static double getACResistance(@NotNull Size conductorSize, @NotNull ConductiveMetal conductiveMetal,
 	                                     @NotNull OuterMaterial conduitMaterial,
 	                                     double oneWayLength, int numberOfSets) {
 		if (oneWayLength < 0)
 			throw new IllegalArgumentException("oneWayLength must be > 0");
 		if (numberOfSets <= 0 )
 			throw new IllegalArgumentException("numberOfSets must be > 0");
-		return getACResistance(conductorSize, conductiveMaterial, conduitMaterial) * 0.001 * oneWayLength / numberOfSets;
+		return getACResistance(conductorSize, conductiveMetal, conduitMaterial) * 0.001 * oneWayLength / numberOfSets;
 	}
 
 	/**
-	 Returns the ampacity of the given conductor size for the given conductiveMaterial and
+	 Returns the ampacity of the given conductor size for the given conductiveMetal and
 	 temperature rating per the NEC table 310.16 (old 310.15(B)(16)) (30 °C, up to 3
 	 current-carrying conductors)
 	 @param conductorSize Not null. The size of the conductor as defined by
 	 {@link Size}
-	 @param conductiveMaterial Not null. The conductiveMaterial of the conductor as defined in
-	 {@link ConductiveMaterial}.
+	 @param conductiveMetal Not null. The conductiveMetal of the conductor as defined in
+	 {@link ConductiveMetal}.
 	 @param temperatureRating Not null. The temperature rating as defined in
 	 {@link TempRating}
 	 @return The ampacity in amperes.
 	 */
 	public static double getStandardAmpacity(@NotNull Size conductorSize,
-	                                         @NotNull ConductiveMaterial conductiveMaterial,
+	                                         @NotNull ConductiveMetal conductiveMetal,
 	                                         @NotNull TempRating temperatureRating) {
-		if (conductiveMaterial == ConductiveMaterial.COPPER) {
+		if (conductiveMetal == ConductiveMetal.COPPER) {
 			if (temperatureRating == TempRating.T60)
 				return bySize(conductorSize).CuAmp60;
 			else if (temperatureRating == TempRating.T75)
 				return bySize(conductorSize).CuAmp75;
 			else //temperatureRating == TempRating.T90
 				return bySize(conductorSize).CuAmp90;
-		} else { //conductiveMaterial == ConductiveMaterial.ALUMINUM
+		} else { //conductiveMetal == ConductiveMetal.ALUMINUM
 			if (temperatureRating == TempRating.T60)
 				return bySize(conductorSize).AlAmp60;
 			else if (temperatureRating == TempRating.T75)
@@ -982,26 +981,26 @@ public class ConductorProperties {
 	}
 
 	/**
-	 Returns the minimum allowed size for a conductor of the given conductiveMaterial and temperature rating, for the
+	 Returns the minimum allowed size for a conductor of the given conductiveMetal and temperature rating, for the
 	 given current, as per table 310.16.<p>
 	 The returned size does not account for any correction or adjustment factor, that is, the ambient temperature is
 	 86 °F and no more than 3 current-carrying conductors in a raceway.
 	 @param current The current in amperes. This value should be the one obtained once all conditions of use have
 	 been accounted for, that is, once the temperature correction factor, the adjustment factor and any other
 	 restriction have been applied. Must be > 0.
-	 @param conductiveMaterial Not null. The metal of the conductor as defined in {@link ConductiveMaterial}.
+	 @param conductiveMetal Not null. The metal of the conductor as defined in {@link ConductiveMetal}.
 	 @param tempRating Not null. The temperature rating of the conductor (its insulation) as defined in
 	 {@link TempRating}.
 	 @return The minimum size of the conductor that can carry the given current for the temperature rating, or null
 	 if no conductor can carry the given high current.
 	 */
 	public static @Nullable Size getSizePerCurrent(double current,
-	                                               @NotNull ConductiveMaterial conductiveMaterial,
+	                                               @NotNull ConductiveMetal conductiveMetal,
 	                                               @NotNull TempRating tempRating) {
 		if (current <= 0)
 			throw new IllegalArgumentException("current must be > 0");
 
-		if (conductiveMaterial == ConductiveMaterial.COPPER) {
+		if (conductiveMetal == ConductiveMetal.COPPER) {
 			if (tempRating == TempRating.T60) {
 				for (Properties properties : table)
 					if (properties.CuAmp60 >= current)
@@ -1015,7 +1014,7 @@ public class ConductorProperties {
 					if (properties.CuAmp90 >= current)
 						return properties.size;
 			}
-		} else { //conductiveMaterial == ConductiveMaterial.ALUMINUM
+		} else { //conductiveMetal == ConductiveMetal.ALUMINUM
 			if (tempRating == TempRating.T60) {
 				for (Properties properties : table)
 					if (properties.AlAmp60 >= current)

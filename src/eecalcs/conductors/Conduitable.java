@@ -1,6 +1,8 @@
 package eecalcs.conductors;
 
+import eecalcs.bundle.Bundle;
 import eecalcs.circuits.CircuitAll;
+import eecalcs.conduits.Conduit;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -116,7 +118,7 @@ public interface Conduitable {
 	 {@link CircuitAll} class would need as reversed
 	 coefficient to multiply the load amperes (to get the 144.23 AMPS from
 	 the example). Then the method
-	 {@link ConductorProperties#getSizePerCurrent(double, ConductiveMaterial, TempRating)} can provide the proper size of the conductor.
+	 {@link ConductorProperties#getSizePerCurrent(double, ConductiveMetal, TempRating)} can provide the proper size of the conductor.
 	 */
 	double getCorrectedAndAdjustedAmpacity();
 
@@ -187,10 +189,25 @@ public interface Conduitable {
 	/**
 	 @return The metal of this conduitable.
 	 */
-	@NotNull ConductiveMaterial getMetal();
+	@NotNull ConductiveMetal getMetal();
 
 	/**
 	 @return The length of this conductor in feet (one-way length).
 	 */
 	double getLength();
+
+	/**
+	 * @return A deep copy of this conduitable, except that the copy is in free air.
+	 */
+	Conduitable copy();
+
+	/**
+	 * @return A deep copy of this conduitable, except that the copy is in the given conduit.
+	 */
+	Conduitable copy(@NotNull Conduit conduit);
+
+	/**
+	 * @return A deep copy of this conduitable, except that the copy is in the given bundle.
+	 */
+	Conduitable copy(@NotNull Bundle bundle);
 }

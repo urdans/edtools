@@ -1,7 +1,7 @@
 package test.java;
 
 import eecalcs.circuits.OCPD;
-import eecalcs.conductors.ConductiveMaterial;
+import eecalcs.conductors.ConductiveMetal;
 import eecalcs.conductors.EGC;
 import eecalcs.conductors.Size;
 import org.junit.jupiter.api.Test;
@@ -43,34 +43,34 @@ class OCPDTest {
 
     @Test
     void getEGCSize(){
-        assertThrows (IllegalArgumentException.class, () -> EGC.getEGCSize(0, ConductiveMaterial.COPPER));
-        assertThrows(IllegalArgumentException.class, () -> EGC.getEGCSize(1, ConductiveMaterial.COPPER));
-        assertThrows(IllegalArgumentException.class, () -> EGC.getEGCSize(-10, ConductiveMaterial.COPPER));
-        assertThrows(IllegalArgumentException.class, () -> EGC.getEGCSize(14, ConductiveMaterial.COPPER));
-        assertEquals(Size.AWG_14, EGC.getEGCSize(15, ConductiveMaterial.COPPER));
-        assertEquals(Size.AWG_12, EGC.getEGCSize(15, ConductiveMaterial.ALUMINUM));
+        assertThrows (IllegalArgumentException.class, () -> EGC.getEGCSize(0, ConductiveMetal.COPPER));
+        assertThrows(IllegalArgumentException.class, () -> EGC.getEGCSize(1, ConductiveMetal.COPPER));
+        assertThrows(IllegalArgumentException.class, () -> EGC.getEGCSize(-10, ConductiveMetal.COPPER));
+        assertThrows(IllegalArgumentException.class, () -> EGC.getEGCSize(14, ConductiveMetal.COPPER));
+        assertEquals(Size.AWG_14, EGC.getEGCSize(15, ConductiveMetal.COPPER));
+        assertEquals(Size.AWG_12, EGC.getEGCSize(15, ConductiveMetal.ALUMINUM));
 
-        assertEquals(Size.AWG_12, EGC.getEGCSize(16, ConductiveMaterial.COPPER));
-        assertEquals(Size.AWG_10, EGC.getEGCSize(16, ConductiveMaterial.ALUMINUM));
+        assertEquals(Size.AWG_12, EGC.getEGCSize(16, ConductiveMetal.COPPER));
+        assertEquals(Size.AWG_10, EGC.getEGCSize(16, ConductiveMetal.ALUMINUM));
 
-        assertEquals(Size.AWG_10, EGC.getEGCSize(55, ConductiveMaterial.COPPER));
-        assertEquals(Size.AWG_8, EGC.getEGCSize(55, ConductiveMaterial.ALUMINUM));
+        assertEquals(Size.AWG_10, EGC.getEGCSize(55, ConductiveMetal.COPPER));
+        assertEquals(Size.AWG_8, EGC.getEGCSize(55, ConductiveMetal.ALUMINUM));
 
-        assertEquals(Size.AWG_6, EGC.getEGCSize(150, ConductiveMaterial.COPPER));
-        assertEquals(Size.AWG_6, EGC.getEGCSize(100, ConductiveMaterial.ALUMINUM));
+        assertEquals(Size.AWG_6, EGC.getEGCSize(150, ConductiveMetal.COPPER));
+        assertEquals(Size.AWG_6, EGC.getEGCSize(100, ConductiveMetal.ALUMINUM));
 
-        assertEquals(Size.AWG_2$0, EGC.getEGCSize(1000, ConductiveMaterial.COPPER));
-        assertEquals(Size.AWG_4$0, EGC.getEGCSize(1000, ConductiveMaterial.ALUMINUM));
+        assertEquals(Size.AWG_2$0, EGC.getEGCSize(1000, ConductiveMetal.COPPER));
+        assertEquals(Size.AWG_4$0, EGC.getEGCSize(1000, ConductiveMetal.ALUMINUM));
 
-        assertEquals(Size.KCMIL_1250, EGC.getEGCSize(5999, ConductiveMaterial.ALUMINUM));
+        assertEquals(Size.KCMIL_1250, EGC.getEGCSize(5999, ConductiveMetal.ALUMINUM));
 
-        assertEquals(Size.KCMIL_800, EGC.getEGCSize(6000, ConductiveMaterial.COPPER));
-        assertEquals(Size.KCMIL_1250, EGC.getEGCSize(6000, ConductiveMaterial.ALUMINUM));
+        assertEquals(Size.KCMIL_800, EGC.getEGCSize(6000, ConductiveMetal.COPPER));
+        assertEquals(Size.KCMIL_1250, EGC.getEGCSize(6000, ConductiveMetal.ALUMINUM));
 
-        assertThrows (IllegalArgumentException.class, () -> EGC.getEGCSize(6001, ConductiveMaterial.COPPER));
-        assertThrows (IllegalArgumentException.class, () -> EGC.getEGCSize(6001, ConductiveMaterial.ALUMINUM));
+        assertThrows (IllegalArgumentException.class, () -> EGC.getEGCSize(6001, ConductiveMetal.COPPER));
+        assertThrows (IllegalArgumentException.class, () -> EGC.getEGCSize(6001, ConductiveMetal.ALUMINUM));
 
-        assertEquals(Size.AWG_6, EGC.getEGCSize(110, ConductiveMaterial.COPPER));
+        assertEquals(Size.AWG_6, EGC.getEGCSize(110, ConductiveMetal.COPPER));
     }
 
     @Test

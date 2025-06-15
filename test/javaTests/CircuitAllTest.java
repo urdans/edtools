@@ -46,6 +46,7 @@ class CircuitAllTest {
         //grounding
         assertEquals(Size.AWG_6, circuitAll.getGroundingConductor().getSize());
         //conduit
+        //this is one of the two test
         assertEquals(TradeSize.T1_1$2, circuitAll.getPrivateConduit().getTradeSize());
 
 
@@ -84,7 +85,7 @@ The following are the getters that expose such objects:
 *       ->setInsulation(Insulation insul)                     -->hide&move to CircuitAll
 *       ->setLength(double length)                       -->hide&move to CircuitAll
 *            ->use setCircuitLength and rename it to setLength
-*       ->setMetalForPhaseAndNeutral(ConductiveMaterial metal)                          -->hide&move to CircuitAll
+*       ->setMetalForPhaseAndNeutral(ConductiveMetal metal)                          -->hide&move to CircuitAll
 *       ->setPhaseConductorSize(Size size)     ->WEIRD->### what is this for?###
 *            (why do I need to manually set the size of the circuitAll conductors?)
 *             Try not to use it.
@@ -93,7 +94,7 @@ The following are the getters that expose such objects:
 *       ->Conductor setSize(Size size)         ->WEIRD->### what is this for?###
 *            (why do I need to manually set the size of the circuitAll conductors?)
 *            Try not to use it.
-*       ->Conductor setMetalForPhaseAndNeutral(ConductiveMaterial metal)                -->hide&move to CircuitAll
+*       ->Conductor setMetalForPhaseAndNeutral(ConductiveMetal metal)                -->hide&move to CircuitAll
 *       ->setInsulation(Insulation insulation)                -->hide&move to CircuitAll
 *       ->setLength(double length)                       -->hide&move to CircuitAll
 *       ->setAmbientTemperatureF(int ambientTemperatureF)-->hide&move to CircuitAll

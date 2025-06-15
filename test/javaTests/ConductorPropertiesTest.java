@@ -12,9 +12,9 @@ class ConductorPropertiesTest {
 
     @Test
     void getSizeByAmperes() {
-        assertEquals(Size.AWG_1, ConductorProperties.getSizePerCurrent(144.23, ConductiveMaterial.COPPER, TempRating.T90));
-        assertEquals(Size.AWG_1$0, ConductorProperties.getSizePerCurrent(144.23, ConductiveMaterial.COPPER, TempRating.T75));
-        assertEquals(Size.AWG_3$0, ConductorProperties.getSizePerCurrent(144.23, ConductiveMaterial.ALUMINUM, TempRating.T75));
+        assertEquals(Size.AWG_1, ConductorProperties.getSizePerCurrent(144.23, ConductiveMetal.COPPER, TempRating.T90));
+        assertEquals(Size.AWG_1$0, ConductorProperties.getSizePerCurrent(144.23, ConductiveMetal.COPPER, TempRating.T75));
+        assertEquals(Size.AWG_3$0, ConductorProperties.getSizePerCurrent(144.23, ConductiveMetal.ALUMINUM, TempRating.T75));
     }
 
     @Test
@@ -99,22 +99,22 @@ class ConductorPropertiesTest {
 
     @Test
     void getDCResistance() {
-        assertEquals(3.19, ConductorProperties.getDCResistance(Size.AWG_14, ConductiveMaterial.COPPERCOATED/*, Coating.COATED*/),0.001);
-        assertEquals(0.0106, ConductorProperties.getDCResistance(Size.KCMIL_2000, ConductiveMaterial.ALUMINUM/*, Coating.COATED*/),0.0001);
+        assertEquals(3.19, ConductorProperties.getDCResistance(Size.AWG_14, ConductiveMetal.COPPERCOATED/*, Coating.COATED*/),0.001);
+        assertEquals(0.0106, ConductorProperties.getDCResistance(Size.KCMIL_2000, ConductiveMetal.ALUMINUM/*, Coating.COATED*/),0.0001);
 
-        assertEquals(0.0106*100*0.001/3, ConductorProperties.getDCResistance(Size.KCMIL_2000, ConductiveMaterial.ALUMINUM, 100, 3/*, Coating.COATED*/), 0.0001);
+        assertEquals(0.0106*100*0.001/3, ConductorProperties.getDCResistance(Size.KCMIL_2000, ConductiveMetal.ALUMINUM, 100, 3/*, Coating.COATED*/), 0.0001);
     }
 
     @Test
     void getACResistance() {
-        assertEquals(3.1, ConductorProperties.getACResistance(Size.AWG_14, ConductiveMaterial.COPPER, OuterMaterial.PVC),0.001);
-        assertEquals(0.0166, ConductorProperties.getACResistance(Size.KCMIL_2000, ConductiveMaterial.ALUMINUM, OuterMaterial.STEEL),0.0001);
+        assertEquals(3.1, ConductorProperties.getACResistance(Size.AWG_14, ConductiveMetal.COPPER, OuterMaterial.PVC),0.001);
+        assertEquals(0.0166, ConductorProperties.getACResistance(Size.KCMIL_2000, ConductiveMetal.ALUMINUM, OuterMaterial.STEEL),0.0001);
     }
 
     @Test
     void getAmpacity() {
-        assertEquals(15, ConductorProperties.getStandardAmpacity(Size.AWG_14, ConductiveMaterial.COPPER, TempRating.T60));
-        assertEquals(630, ConductorProperties.getStandardAmpacity(Size.KCMIL_2000, ConductiveMaterial.ALUMINUM, TempRating.T90));
+        assertEquals(15, ConductorProperties.getStandardAmpacity(Size.AWG_14, ConductiveMetal.COPPER, TempRating.T60));
+        assertEquals(630, ConductorProperties.getStandardAmpacity(Size.KCMIL_2000, ConductiveMetal.ALUMINUM, TempRating.T90));
     }
 
 
@@ -247,40 +247,40 @@ class ConductorPropertiesTest {
 
     @Test
     void getStandardAmpacity() {
-        assertEquals(15, ConductorProperties.getStandardAmpacity(Size.AWG_14, ConductiveMaterial.COPPER, TempRating.T60));
-        assertEquals(20, ConductorProperties.getStandardAmpacity(Size.AWG_14, ConductiveMaterial.COPPER, TempRating.T75));
-        assertEquals(25, ConductorProperties.getStandardAmpacity(Size.AWG_14, ConductiveMaterial.COPPER, TempRating.T90));
+        assertEquals(15, ConductorProperties.getStandardAmpacity(Size.AWG_14, ConductiveMetal.COPPER, TempRating.T60));
+        assertEquals(20, ConductorProperties.getStandardAmpacity(Size.AWG_14, ConductiveMetal.COPPER, TempRating.T75));
+        assertEquals(25, ConductorProperties.getStandardAmpacity(Size.AWG_14, ConductiveMetal.COPPER, TempRating.T90));
 
-        assertEquals(0, ConductorProperties.getStandardAmpacity(Size.AWG_14, ConductiveMaterial.ALUMINUM, TempRating.T60));
-        assertEquals(0, ConductorProperties.getStandardAmpacity(Size.AWG_14, ConductiveMaterial.ALUMINUM, TempRating.T75));
-        assertEquals(0, ConductorProperties.getStandardAmpacity(Size.AWG_14, ConductiveMaterial.ALUMINUM, TempRating.T90));
+        assertEquals(0, ConductorProperties.getStandardAmpacity(Size.AWG_14, ConductiveMetal.ALUMINUM, TempRating.T60));
+        assertEquals(0, ConductorProperties.getStandardAmpacity(Size.AWG_14, ConductiveMetal.ALUMINUM, TempRating.T75));
+        assertEquals(0, ConductorProperties.getStandardAmpacity(Size.AWG_14, ConductiveMetal.ALUMINUM, TempRating.T90));
 
-        assertEquals(15, ConductorProperties.getStandardAmpacity(Size.AWG_12, ConductiveMaterial.ALUMINUM, TempRating.T60));
-        assertEquals(20, ConductorProperties.getStandardAmpacity(Size.AWG_12, ConductiveMaterial.ALUMINUM, TempRating.T75));
-        assertEquals(25, ConductorProperties.getStandardAmpacity(Size.AWG_12, ConductiveMaterial.ALUMINUM, TempRating.T90));
+        assertEquals(15, ConductorProperties.getStandardAmpacity(Size.AWG_12, ConductiveMetal.ALUMINUM, TempRating.T60));
+        assertEquals(20, ConductorProperties.getStandardAmpacity(Size.AWG_12, ConductiveMetal.ALUMINUM, TempRating.T75));
+        assertEquals(25, ConductorProperties.getStandardAmpacity(Size.AWG_12, ConductiveMetal.ALUMINUM, TempRating.T90));
 
-        assertEquals(555, ConductorProperties.getStandardAmpacity(Size.KCMIL_2000, ConductiveMaterial.COPPER, TempRating.T60));
-        assertEquals(665, ConductorProperties.getStandardAmpacity(Size.KCMIL_2000, ConductiveMaterial.COPPER, TempRating.T75));
-        assertEquals(750, ConductorProperties.getStandardAmpacity(Size.KCMIL_2000, ConductiveMaterial.COPPER, TempRating.T90));
-        assertEquals(470, ConductorProperties.getStandardAmpacity(Size.KCMIL_2000, ConductiveMaterial.ALUMINUM, TempRating.T60));
-        assertEquals(560, ConductorProperties.getStandardAmpacity(Size.KCMIL_2000, ConductiveMaterial.ALUMINUM, TempRating.T75));
-        assertEquals(630, ConductorProperties.getStandardAmpacity(Size.KCMIL_2000, ConductiveMaterial.ALUMINUM, TempRating.T90));
+        assertEquals(555, ConductorProperties.getStandardAmpacity(Size.KCMIL_2000, ConductiveMetal.COPPER, TempRating.T60));
+        assertEquals(665, ConductorProperties.getStandardAmpacity(Size.KCMIL_2000, ConductiveMetal.COPPER, TempRating.T75));
+        assertEquals(750, ConductorProperties.getStandardAmpacity(Size.KCMIL_2000, ConductiveMetal.COPPER, TempRating.T90));
+        assertEquals(470, ConductorProperties.getStandardAmpacity(Size.KCMIL_2000, ConductiveMetal.ALUMINUM, TempRating.T60));
+        assertEquals(560, ConductorProperties.getStandardAmpacity(Size.KCMIL_2000, ConductiveMetal.ALUMINUM, TempRating.T75));
+        assertEquals(630, ConductorProperties.getStandardAmpacity(Size.KCMIL_2000, ConductiveMetal.ALUMINUM, TempRating.T90));
     }
 
     @Test
     void getSizePerCurrent() {
-        assertEquals(Size.KCMIL_2000, ConductorProperties.getSizePerCurrent(546, ConductiveMaterial.COPPER, TempRating.T60));
-        assertEquals(Size.KCMIL_2000, ConductorProperties.getSizePerCurrent(651, ConductiveMaterial.COPPER, TempRating.T75));
-        assertEquals(Size.KCMIL_2000, ConductorProperties.getSizePerCurrent(736, ConductiveMaterial.COPPER, TempRating.T90));
-        assertEquals(Size.KCMIL_2000, ConductorProperties.getSizePerCurrent(455.1, ConductiveMaterial.ALUMINUM, TempRating.T60));
-        assertEquals(Size.KCMIL_2000, ConductorProperties.getSizePerCurrent(546, ConductiveMaterial.ALUMINUM, TempRating.T75));
-        assertEquals(Size.KCMIL_2000, ConductorProperties.getSizePerCurrent(616, ConductiveMaterial.ALUMINUM, TempRating.T90));
+        assertEquals(Size.KCMIL_2000, ConductorProperties.getSizePerCurrent(546, ConductiveMetal.COPPER, TempRating.T60));
+        assertEquals(Size.KCMIL_2000, ConductorProperties.getSizePerCurrent(651, ConductiveMetal.COPPER, TempRating.T75));
+        assertEquals(Size.KCMIL_2000, ConductorProperties.getSizePerCurrent(736, ConductiveMetal.COPPER, TempRating.T90));
+        assertEquals(Size.KCMIL_2000, ConductorProperties.getSizePerCurrent(455.1, ConductiveMetal.ALUMINUM, TempRating.T60));
+        assertEquals(Size.KCMIL_2000, ConductorProperties.getSizePerCurrent(546, ConductiveMetal.ALUMINUM, TempRating.T75));
+        assertEquals(Size.KCMIL_2000, ConductorProperties.getSizePerCurrent(616, ConductiveMetal.ALUMINUM, TempRating.T90));
 
-        assertEquals(Size.AWG_14, ConductorProperties.getSizePerCurrent(5, ConductiveMaterial.COPPER, TempRating.T60));
-        assertEquals(Size.AWG_14, ConductorProperties.getSizePerCurrent(19, ConductiveMaterial.COPPER, TempRating.T75));
-        assertEquals(Size.AWG_12, ConductorProperties.getSizePerCurrent(26, ConductiveMaterial.COPPER, TempRating.T90));
-        assertEquals(Size.AWG_4, ConductorProperties.getSizePerCurrent(41, ConductiveMaterial.ALUMINUM, TempRating.T60));
-        assertEquals(Size.KCMIL_250, ConductorProperties.getSizePerCurrent(181, ConductiveMaterial.ALUMINUM, TempRating.T75));
-        assertEquals(Size.KCMIL_900, ConductorProperties.getSizePerCurrent(450, ConductiveMaterial.ALUMINUM, TempRating.T90));
+        assertEquals(Size.AWG_14, ConductorProperties.getSizePerCurrent(5, ConductiveMetal.COPPER, TempRating.T60));
+        assertEquals(Size.AWG_14, ConductorProperties.getSizePerCurrent(19, ConductiveMetal.COPPER, TempRating.T75));
+        assertEquals(Size.AWG_12, ConductorProperties.getSizePerCurrent(26, ConductiveMetal.COPPER, TempRating.T90));
+        assertEquals(Size.AWG_4, ConductorProperties.getSizePerCurrent(41, ConductiveMetal.ALUMINUM, TempRating.T60));
+        assertEquals(Size.KCMIL_250, ConductorProperties.getSizePerCurrent(181, ConductiveMetal.ALUMINUM, TempRating.T75));
+        assertEquals(Size.KCMIL_900, ConductorProperties.getSizePerCurrent(450, ConductiveMetal.ALUMINUM, TempRating.T90));
     }
 }

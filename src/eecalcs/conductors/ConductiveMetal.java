@@ -9,7 +9,7 @@ package eecalcs.conductors;
  <li><b>COPPERCOATED</b>: "CU COATED"</li>
  </ul>
  */
-public enum ConductiveMaterial {
+public enum ConductiveMetal {
 	COPPER("CU"),
 	ALUMINUM("AL"),
 	COPPERCOATED("CU COATED");
@@ -22,7 +22,7 @@ public enum ConductiveMaterial {
 			names[i] = values()[i].getName();
 	}
 
-	ConductiveMaterial(String name){
+	ConductiveMetal(String name){
 		this.name = name;
 	}
 

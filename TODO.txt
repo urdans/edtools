@@ -1,5 +1,25 @@
 6/2/25
 ------
+Renamed ConductiveMaterial to ConductiveMetal
+Cleaning up commented code
+Refactoring Conductor, Cable, Bundle, and Conduit as follows:
+	- The conductors and cables added to conduit are added as deep copies.
+	- Removed setting the conduit and bundle for conduitables (the infamous setConduit and setConduit2).
+	- Adding constructors for conduitables in free air, in conduit and in bundle.
+	- Ambient temperature of a conduitable is now set through one method (removed setAmbientTemperatureF2). Plus, no need to check is the conduitable is already in a conduit or bundle (thanks to making copies when adding to conduit/bundle!)
+	- Removed method hasConduitable
+	
+
+
+        //getting the copy
+        conductor = (Conductor) conduit.getConduitables().get(0);
+
+        //getting the copy
+        cable = (Cable) conduit.getConduitables().get(0);
+		
+        //getting the copy
+        conductor1 = (Conductor) bundle.getConduitables().get(0);		
+
 The last commit included the following changes/comments:
 		-Added support for NEC tags.
 		-Refactored, simplified, many classes:
@@ -221,50 +241,50 @@ mind at all times, how to avoid side effects. Here is my strategy/architecture:
 1. Objects use objects.
 A class can have private field object that the class uses "privately". There are two scenarios:
 	1.1. The class does not expose the object to the exterior. There is no getter. In that case, the object can be
-	mutable and the class can handle the change of state for that single object. The class consumes behavior and state
-	from this object. For example a private-no-getter-field object TList.
-	The bad thing about this, is that the class depends on this private object. So, if the object is not going to change
-	 with time (because it is not prone to be change), go ahead and use it. But, if this object is under development,
-	 that is, prone to changes, specially if it is made by a third party, the best thing to do is that the field is
-	 coupled to an interface, not to the implementation. Any object that implements that interface can be used without
-	 changing the internals of the class.
+		mutable and the class can handle the change of state for that single object. The class consumes behavior and state
+		from this object. For example a private-no-getter-field object TList.
+		The bad thing about this, is that the class depends on this private object. So, if the object is not going to change
+		with time (because it is not prone to be changed), go ahead and use it. But, if this object is under development,
+		that is, prone to changes, specially if it is made by a third party, the best thing to do is that the field is
+		coupled to an interface, not to the implementation. Any object that implements that interface can be used without
+		changing the internals of the class.
 	1.2. The class exposes the object to the exterior. There are three scenarios here:
 		1.2.1. The getter to the object returns a copy of the object. Any change to that object outside the class
-		will not affect the container class.
+			will not affect the container class.
 		1.2.2. The getter returns a read-only interface to that object, so the exterior can read the state of the object
-		but cannot make changes. This is achieved by placing all the getters in an interface. For example, a class Point
-		might have getters and setters. So we make the class Point to implement ROPoint (or ImmutablePoint), and we move
-		all the getter definitions to the interface ROPoint.
+			but cannot make changes. This is achieved by placing all the getters in an interface. For example, a class Point
+			might have getters and setters. So we make the class Point to implement ROPoint (or ImmutablePoint), and we move
+			all the getter definitions to the interface ROPoint.
 		1.2.3. The getter returns the object reference. THERE WILL BE SIDE EFFECTS!. This is what I think the cult of
-		anti-mutability fears of. Well, this scenario is needed for GUI interfaces where you want your GUI to update
-		once you change something somewhere (however, you could use an MVC architecture to separate
-		concerns/responsibilities). For other cases, we need to avoid exposing object references. However, if you really
-		need to expose that object you can do two things to keep control over your code:
-			- Use listeners: this adds a lot of complexity.
-			- Do not trust that object. That is, everytime your class is requested to provide state (which happens
-			through getters), your class must assume that the object has changed. That is, recompute your state
-			everytime it is requested and provide all the class state at once (we do not want the state to change in
-			between calls to getters, since the value obtained from one getter might be not compatible with the value
-			returned by another getter later in the code, so the state must be picked all at once).
+			anti-mutability fears of. Well, this scenario is needed for GUI interfaces where you want your GUI to update
+			once you change something somewhere (however, you could use an MVC architecture to separate
+			concerns/responsibilities). For other cases, we need to avoid exposing object references. However, if you really
+			need to expose that object you can do two things to keep control over your code:
+			se listeners: this adds a lot of complexity.
+			o not trust that object. That is, everytime your class is requested to provide state (which happens
+			hrough getters), your class must assume that the object has changed. That is, recompute your state
+			verytime it is requested and provide all the class state at once (we do not want the state to change in
+			etween calls to getters, since the value obtained from one getter might be not compatible with the value
+			eturned by another getter later in the code, so the state must be picked all at once).
 		In general, the change of state in a class should be done through the class, by calling setters of behavioral
-		methods, but never getters!!!
+		methods, but never through getters!!!
 
-2. A container class is passed an external object.
-A class manages a list of objects. Every object is added in bulk or one by one. The class has the methods "add" and
-"remove". There are two cases:
+2. A container class is passed (injected) an external object.
+	A class manages a list of objects. Every object is added in bulk or one by one. The class has the methods "add" and
+	"remove". There are two cases:
 	2.1. We do not need to change the state of the owned objects. In that case the objects can be immutable or be
-	represented by an immutable interface.
+		represented by an immutable interface.
 	2.2. We need to change the state of the owned objects. How do we know this object is not being used by another
-	object that also can change its state? There are two approaches:
+		object that also can change its state? There are two approaches:
 		2.2.1. The "add" method makes a copy of the passed object.
 		2.2.2. The object has a field that references the container class. So, the "add" method checks if the passed
-		object has that field null before actually adding it to the list. If that field is not null there can be two
-		scenarios:
+			object has that field null before actually adding it to the list. If that field is not null there can be two
+			scenarios:
 			2.2.2.1. The "add" method throws an exception if the object is owned by another object. That is, we do not
-			want to change this object and produce a side effect in the other container. This is the best approach.
+				want to change this object and produce a side effect in the other container. This is the best approach.
 			2.2.2.2. The "add" method detach the object from its container by calling
-			myObject.getContainer().remove(myObject). Of course, this produces side effect in the other container that
-			in some cases might be desired. In other circumstances, do not use this approach.
+				myObject.getContainer().remove(myObject). Of course, this produces side effect in the other container that
+				in some cases might be desired. In other circumstances, do not use this approach.
 
 3. Strategies applicable only to this software:
 *-ResultMessage is immutable.

@@ -63,19 +63,12 @@ public class Conduit implements ROConduit {
 			throw new IllegalArgumentException("Ambient temperature must be " +
 					"in the [" + Factors.MIN_TEMP_F + "," + Factors.MAX_TEMP_F + "] °F range.");
 		this.ambientTemperatureF = ambientTemperatureF;
-		updateAmbientTemperature();
-		return this;
-	}
-
-
-	private void updateAmbientTemperature() {
 		for (var c: conduitables) {
 			if (c instanceof RWConduitable) {
-				((RWConduitable) c).setConduit2(null);
-				((RWConduitable) c).setAmbientTemperatureF2(ambientTemperatureF);
-				((RWConduitable) c).setConduit2(this);
+				((RWConduitable) c).setAmbientTemperatureF(ambientTemperatureF);
 			}
 		}
+		return this;
 	}
 
 	@Override
@@ -209,33 +202,16 @@ public class Conduit implements ROConduit {
 	}
 
 	/**
-	 * Adds a conduitable to this conduit.
-	 * @param conduitable The conduitable to add. If the conduitable already exist inside the conduit, or its
-	 *                       value is null, nothing is added to the conduit.
+	 * Adds a conduitable to this conduit by making a copy of the passed conduitable.
+	 * @param conduitable The conduitable from which a copy will be added to this conduit. Cannot be null.
 	 * @return This conduit.
 	 */
-	public Conduit add(@Nullable Conduitable conduitable){
-		if (conduitables.contains(conduitable) || conduitable == null)
-			return this;
-		if(conduitable.hasConduit() || conduitable.hasBundle())
-			throw new IllegalArgumentException("Cannot add to this conduit a " +
-					"conduitable that belongs to another conduit or bundle.");
-
-		/*This is dangerous. This code is safe as long as any class that implements Conduitables, also implements
-		RWConduitables. For now, only two classes implements both, Conductor and Cable.*/
-		((RWConduitable)conduitable).setAmbientTemperatureF2(ambientTemperatureF);
-		((RWConduitable)conduitable).setConduit2(this);
-/*		if(conduitable instanceof Conductor) {
-			//the order of this is important
-			((Conductor) conduitable).setAmbientTemperatureF(ambientTemperatureF);
-			((Conductor) conduitable).setConduit(this);
+	public Conduit add(@NotNull Conduitable conduitable){
+		Conduitable c = conduitable.copy(this);
+		if (c instanceof RWConduitable) {
+			((RWConduitable) c).setAmbientTemperatureF(ambientTemperatureF);
 		}
-		else {
-			//the order of this is important
-			((Cable) conduitable).setAmbientTemperatureF(ambientTemperatureF);
-			((Cable) conduitable).setConduit(this);
-		}*/
-		conduitables.add(conduitable);
+		conduitables.add(c);
 		return this;
 	}
 
@@ -293,19 +269,9 @@ public class Conduit implements ROConduit {
 	 conduit.
 	 @see Conduitable
 	 */
+	@Deprecated
 	public List<Conduitable> getConduitables() {
 		return new ArrayList<>(conduitables);
-	}
-
-	/**
-	 * Checks if this conduit already contains the given conduitable.
-	 * @param conduitable The conduitable to check if it is already contained by
-	this conduit.
-	 * @return True if this conduit contains it, false otherwise.
-	 */
-	@Override
-	public boolean hasConduitable(@NotNull Conduitable conduitable) {
-		return conduitables.contains(conduitable);
 	}
 
 	/**

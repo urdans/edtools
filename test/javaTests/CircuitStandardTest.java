@@ -2,7 +2,7 @@ package javaTests;
 
 import eecalcs.circuits.CircuitStandard;
 import eecalcs.circuits.CircuitType;
-import eecalcs.conductors.ConductiveMaterial;
+import eecalcs.conductors.ConductiveMetal;
 import eecalcs.conductors.Insulation;
 import eecalcs.conductors.Size;
 import eecalcs.conductors.TempRating;
@@ -29,13 +29,13 @@ class CircuitStandardTest {
         circuit
                 .setAmbientTemperature(86)
                 .setConduitType(Type.EMT)
-                .setEGCMetal(ConductiveMaterial.COPPER)
+                .setEGCMetal(ConductiveMetal.COPPER)
                 .setFullPercentRated(false)
                 .setInsulation(Insulation.THW)
                 .setLength(90)
                 .setMaxVDropPercent(3.0)
                 .setMinimumTradeSize(TradeSize.T1$2)
-                .setMetal(ConductiveMaterial.COPPER)
+                .setMetal(ConductiveMetal.COPPER)
                 .setRooftopDistance(-1)
                 .setTerminationTempRating(TempRating.UNKNOWN);
 
@@ -56,13 +56,13 @@ class CircuitStandardTest {
         circuit
                 .setAmbientTemperature(90)
                 .setConduitType(Type.ENT)
-                .setEGCMetal(ConductiveMaterial.ALUMINUM)
+                .setEGCMetal(ConductiveMetal.ALUMINUM)
                 .setFullPercentRated(true)
                 .setInsulation(Insulation.TW)
                 .setLength(60)
                 .setMaxVDropPercent(3.5)
                 .setMinimumTradeSize(TradeSize.T1)
-                .setMetal(ConductiveMaterial.ALUMINUM)
+                .setMetal(ConductiveMetal.ALUMINUM)
                 .setRooftopDistance(1)
                 .setTerminationTempRating(TempRating.T75);
 
@@ -83,13 +83,13 @@ class CircuitStandardTest {
         circuit
                 .setAmbientTemperature(75)
                 .setConduitType(Type.PVCA)
-                .setEGCMetal(ConductiveMaterial.COPPERCOATED)
+                .setEGCMetal(ConductiveMetal.COPPERCOATED)
                 .setFullPercentRated(false)
                 .setInsulation(Insulation.THHN)
                 .setLength(80)
                 .setMaxVDropPercent(5.0)
                 .setMinimumTradeSize(TradeSize.T1_1$2)
-                .setMetal(ConductiveMaterial.COPPERCOATED)
+                .setMetal(ConductiveMetal.COPPERCOATED)
                 .setRooftopDistance(2)
                 .setTerminationTempRating(TempRating.T60);
 
@@ -110,13 +110,13 @@ class CircuitStandardTest {
         circuit
                 .setAmbientTemperature(65)
                 .setConduitType(Type.LFMC)
-                .setEGCMetal(ConductiveMaterial.COPPER)
+                .setEGCMetal(ConductiveMetal.COPPER)
                 .setFullPercentRated(true)
                 .setInsulation(Insulation.RHH)
                 .setLength(9)
                 .setMaxVDropPercent(2.0)
                 .setMinimumTradeSize(TradeSize.T3$4)
-                .setMetal(ConductiveMaterial.COPPER)
+                .setMetal(ConductiveMetal.COPPER)
                 .setRooftopDistance(-1)
                 .setTerminationTempRating(TempRating.UNKNOWN);
 
@@ -137,13 +137,13 @@ class CircuitStandardTest {
         circuit
                 .setAmbientTemperature(62)
                 .setConduitType(Type.HDPE)
-                .setEGCMetal(ConductiveMaterial.ALUMINUM)
+                .setEGCMetal(ConductiveMetal.ALUMINUM)
                 .setFullPercentRated(false)
                 .setInsulation(Insulation.TBS)
                 .setLength(19)
                 .setMaxVDropPercent(2.5)
                 .setMinimumTradeSize(TradeSize.T1$2)
-                .setMetal(ConductiveMaterial.COPPER)
+                .setMetal(ConductiveMetal.COPPER)
                 .setRooftopDistance(-1)
                 .setTerminationTempRating(TempRating.T60)
                 .setCircuitType(CircuitType.DEDICATED_BRANCH);
@@ -165,13 +165,13 @@ class CircuitStandardTest {
         circuit
                 .setAmbientTemperature(86)
                 .setConduitType(Type.EMT)
-                .setEGCMetal(ConductiveMaterial.COPPER)
+                .setEGCMetal(ConductiveMetal.COPPER)
                 .setFullPercentRated(false)
                 .setInsulation(Insulation.THW)
                 .setLength(90)
                 .setMaxVDropPercent(3.0)
                 .setMinimumTradeSize(TradeSize.T1$2)
-                .setMetal(ConductiveMaterial.COPPER)
+                .setMetal(ConductiveMetal.COPPER)
                 .setRooftopDistance(-1)
                 .setTerminationTempRating(TempRating.UNKNOWN)
                 .setCircuitType(CircuitType.DEDICATED_BRANCH);
@@ -272,13 +272,13 @@ class CircuitStandardTest {
         circuit
                 .setAmbientTemperature(86)
                 .setConduitType(Type.EMT)
-                .setEGCMetal(ConductiveMaterial.COPPER)
+                .setEGCMetal(ConductiveMetal.COPPER)
                 .setFullPercentRated(false)
                 .setInsulation(Insulation.THW)
                 .setLength(90)
                 .setMaxVDropPercent(3.0)
                 .setMinimumTradeSize(TradeSize.T1$2)
-                .setMetal(ConductiveMaterial.COPPER)
+                .setMetal(ConductiveMetal.COPPER)
                 .setRooftopDistance(-1)
                 .setTerminationTempRating(TempRating.UNKNOWN)
                 .setCircuitType(CircuitType.DEDICATED_BRANCH);
@@ -360,13 +360,13 @@ class CircuitStandardTest {
         circuit
                 .setAmbientTemperature(86)
                 .setConduitType(Type.EMT)
-                .setEGCMetal(ConductiveMaterial.COPPER)
+                .setEGCMetal(ConductiveMetal.COPPER)
                 .setFullPercentRated(false)
                 .setInsulation(Insulation.THW)
                 .setLength(90)
                 .setMaxVDropPercent(3.0)
                 .setMinimumTradeSize(TradeSize.T1$2)
-                .setMetal(ConductiveMaterial.COPPER)
+                .setMetal(ConductiveMetal.COPPER)
                 .setRooftopDistance(-1)
                 .setTerminationTempRating(TempRating.UNKNOWN)
                 .setCircuitType(CircuitType.DEDICATED_BRANCH);
@@ -448,13 +448,13 @@ class CircuitStandardTest {
         circuit
                 .setAmbientTemperature(96)
                 .setConduitType(Type.PVC80)
-                .setEGCMetal(ConductiveMaterial.COPPER)
+                .setEGCMetal(ConductiveMetal.COPPER)
                 .setFullPercentRated(true)
                 .setInsulation(Insulation.THWN2)
                 .setLength(400)
                 .setMaxVDropPercent(1.8)
                 .setMinimumTradeSize(TradeSize.T1)
-                .setMetal(ConductiveMaterial.COPPER)
+                .setMetal(ConductiveMetal.COPPER)
                 .setRooftopDistance(-1)
                 .setTerminationTempRating(TempRating.T75)
                 .setCircuitType(CircuitType.FEEDER);
@@ -480,7 +480,7 @@ class CircuitStandardTest {
         circuit.setTerminationTempRating(TempRating.T90);
         assertEquals(Size.AWG_3$0, circuit.getPhaseConductorSizePerAmpacity());
 
-        circuit.setMetal(ConductiveMaterial.ALUMINUM).setMaxVDropPercent(2.0).setTerminationTempRating(TempRating.T75);
+        circuit.setMetal(ConductiveMetal.ALUMINUM).setMaxVDropPercent(2.0).setTerminationTempRating(TempRating.T75);
         assertEquals(Size.KCMIL_2000, circuit.getPhaseConductorSizePerVoltageDrop());
         assertEquals(Size.KCMIL_300, circuit.getPhaseConductorSizePerAmpacity());
 
@@ -503,13 +503,13 @@ class CircuitStandardTest {
         circuit
                 .setAmbientTemperature(96)
                 .setConduitType(Type.PVC80)
-                .setEGCMetal(ConductiveMaterial.COPPER)
+                .setEGCMetal(ConductiveMetal.COPPER)
                 .setFullPercentRated(true)
                 .setInsulation(Insulation.THWN2)
                 .setLength(400)
                 .setMaxVDropPercent(1.8)
                 .setMinimumTradeSize(TradeSize.T1)
-                .setMetal(ConductiveMaterial.COPPER)
+                .setMetal(ConductiveMetal.COPPER)
                 .setRooftopDistance(-1)
                 .setTerminationTempRating(TempRating.T75)
                 .setCircuitType(CircuitType.FEEDER);
@@ -532,13 +532,13 @@ class CircuitStandardTest {
         circuit
                 .setAmbientTemperature(107)
                 .setConduitType(Type.EMT)
-                .setEGCMetal(ConductiveMaterial.COPPER)
+                .setEGCMetal(ConductiveMetal.COPPER)
                 .setFullPercentRated(false)
                 .setInsulation(Insulation.XHHW2)
                 .setLength(100)
                 .setMaxVDropPercent(3)
                 .setMinimumTradeSize(TradeSize.T1)
-                .setMetal(ConductiveMaterial.COPPER)
+                .setMetal(ConductiveMetal.COPPER)
                 .setRooftopDistance(-1)
                 .setTerminationTempRating(TempRating.T75)
                 .setCircuitType(CircuitType.DEDICATED_BRANCH);
@@ -555,6 +555,7 @@ class CircuitStandardTest {
         assertEquals(113.1, circuit.getConductorsAmpacity());
 
         assertEquals(125, circuit.getOCPDRating());
+        //this is one of the two test
         assertEquals(Size.KCMIL_1750, circuit.getEGCConductorSize());
 
         assertEquals(5, circuit.getConduit().getFillingConductorCount());
