@@ -386,16 +386,26 @@ public class Cable implements Conduitable, RWConduitable {
 
 	@Override
 	public Cable copy(@NotNull Conduit conduit) {
-		Cable cable = copy();
-		cable.conduit = conduit;
-		return cable;
+		if(Tools.getClassName(Thread.currentThread().getStackTrace()[3].getClassName()).equals("Conduit")) {
+			Cable cable = copy();
+			cable.conduit = conduit;
+			return cable;
+		}
+		else
+			throw new IllegalCallerException("Method copy(@NotNull Conduit conduit) cannot be called from outside of " +
+					"a Conduit object.");
 	}
 
 	@Override
 	public Cable copy(@NotNull Bundle bundle) {
-		Cable cable = copy();
-		cable.bundle = bundle;
-		return cable;
+		if(Tools.getClassName(Thread.currentThread().getStackTrace()[3].getClassName()).equals("Bundle")) {
+			Cable cable = copy();
+			cable.bundle = bundle;
+			return cable;
+		}
+		else
+			throw new IllegalCallerException("Method copy(@NotNull Bundle bundle) cannot be called from outside " +
+					"of a Bundle object.");
 	}
 
 	/** Returns true if this cable is jacketed, false otherwise*/

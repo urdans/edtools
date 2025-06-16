@@ -1,9 +1,5 @@
 package eecalcs.conductors;
 
-import eecalcs.bundle.Bundle;
-import eecalcs.conduits.Conduit;
-import org.jetbrains.annotations.Nullable;
-
 public interface RWConduitable {
     /**
      Sets the ambient temperature of this RWConduitable.

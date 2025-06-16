@@ -616,4 +616,19 @@ class ConductorTest {
         assertThrows(IllegalArgumentException.class, () -> conductor.setAmbientTemperatureF(186));
         assertThrows(IllegalArgumentException.class, () -> conductor.setAmbientTemperatureF(-77));
     }
+
+    @Test
+    void thatWeCannotCallCopyOnAConductorOutsideAConduitOrBundle(){
+        //outside a conduit
+        Conduit conduit = new Conduit(120);
+        assertThrows(IllegalCallerException.class, () -> new Conductor().copy(conduit));
+        Conductor conductor = new Conductor();
+        assertThrows(IllegalCallerException.class, () -> conductor.copy(conduit));
+
+        //outside a bundle
+        Bundle bundle = new Bundle(120);
+        assertThrows(IllegalCallerException.class, () -> new Conductor().copy(bundle));
+        Conductor conductor1 = new Conductor();
+        assertThrows(IllegalCallerException.class, () -> conductor1.copy(bundle));
+    }
 }

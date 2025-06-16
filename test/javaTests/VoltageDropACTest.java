@@ -21,6 +21,13 @@ class VoltageDropACTest {
 				.setConduitMaterial(OuterMaterial.STEEL);
 		assertEquals(2.7, voltageDropAC.getVoltageDropPercent(), 0.01);
 
+		voltageDropAC.increaseNumberOfSets();
+		voltageDropAC.increaseNumberOfSets();
+		assertEquals(2.7/3, voltageDropAC.getVoltageDropPercent(), 0.01);
+		voltageDropAC.decreaseNumberOfSets();
+		assertEquals(2.7/2, voltageDropAC.getVoltageDropPercent(), 0.1);
+		voltageDropAC.decreaseNumberOfSets();
+
 		voltageDropAC
 				.setVoltageAC(VoltageAC.v480_3ph_3w)
 				.setLoadCurrent(500)
@@ -117,6 +124,13 @@ class VoltageDropACTest {
 				.setConduitMaterial(OuterMaterial.STEEL);
 		assertEquals(Size.AWG_3$0, voltageDropAC.getMinSizeForMaxVD());
 
+		voltageDropAC.increaseNumberOfSets();
+		assertEquals(Size.AWG_1, voltageDropAC.getMinSizeForMaxVD());
+		voltageDropAC.decreaseNumberOfSets();
+		assertEquals(Size.AWG_3$0, voltageDropAC.getMinSizeForMaxVD());
+		voltageDropAC.decreaseNumberOfSets();//does not decrease to less than 1
+		assertEquals(Size.AWG_3$0, voltageDropAC.getMinSizeForMaxVD());
+
 		voltageDropAC
 				.setVoltageAC(VoltageAC.v120_1ph_2w)
 				.setLoadCurrent(10)
@@ -174,6 +188,16 @@ class VoltageDropACTest {
 				.setConductorSize(Size.AWG_14)
 				.setMaxVDropPercent(3.00)
 				.setConduitMaterial(OuterMaterial.STEEL);
+		assertEquals(38.71, voltageDropAC.getMaxLengthForVD(),0.01);
+
+		voltageDropAC.increaseNumberOfSets();
+		assertEquals(2, voltageDropAC.getNumberOfSets());
+		assertEquals(77.4, voltageDropAC.getMaxLengthForVD(),0.01);
+		voltageDropAC.increaseNumberOfSets();
+		assertEquals(3, voltageDropAC.getNumberOfSets());
+		assertEquals(116.1, voltageDropAC.getMaxLengthForVD(),0.01);
+		voltageDropAC.decreaseNumberOfSets();
+		voltageDropAC.decreaseNumberOfSets();
 		assertEquals(38.71, voltageDropAC.getMaxLengthForVD(),0.01);
 
 		voltageDropAC

@@ -9,6 +9,8 @@ import org.jetbrains.annotations.Nullable;
 import tools.JSONTools;
 import tools.Tools;
 
+import java.util.Arrays;
+
 /**
  Encapsulates the properties and methods for a single conductor in the context
  of its ambient temperature, its length, its {@link Conduit conduit} or
@@ -207,16 +209,26 @@ public class Conductor implements Conduitable, RWConduitable {
 
 	@Override
 	public Conductor copy(@NotNull Conduit conduit){
-		Conductor conductor = copy();
-		conductor.conduit = conduit;
-		return conductor;
+		if(Tools.getClassName(Thread.currentThread().getStackTrace()[3].getClassName()).equals("Conduit")) {
+			Conductor conductor = copy();
+			conductor.conduit = conduit;
+			return conductor;
+		}
+		else
+			throw new IllegalCallerException("Method copy(@NotNull Conduit conduit) cannot be called from outside of " +
+					"a Conduit object.");
 	}
 
 	@Override
 	public Conductor copy(@NotNull Bundle bundle){
-		Conductor conductor = copy();
-		conductor.bundle = bundle;
-		return conductor;
+		if(Tools.getClassName(Thread.currentThread().getStackTrace()[3].getClassName()).equals("Bundle")) {
+			Conductor conductor = copy();
+			conductor.bundle = bundle;
+			return conductor;
+		}
+		else
+			throw new IllegalCallerException("Method copy(@NotNull Bundle bundle) cannot be called from outside " +
+					"of a Bundle object.");
 	}
 
 	@Override

@@ -109,6 +109,12 @@ public class VoltageDropAC implements ROVoltageDropAC {
 		return this;
 	}
 
+	/**
+	 Sets the load for this voltage drop object by making copy of the involved properties of the given load; that is,
+	 later changes to the load object will not the state of this object.
+	 * @param load The load for this object. Cannot be null.
+	 * @return This VoltageDropAC object.
+	 */
 	public VoltageDropAC setLoad(@NotNull Load load){
 		setVoltageAC(load.getVoltageSource());
 		setLoadCurrent(load.getNominalCurrent());
@@ -242,6 +248,8 @@ public class VoltageDropAC implements ROVoltageDropAC {
 
 	public VoltageDropAC decreaseNumberOfSets() {
 		this.numberOfSets--;
+		if(this.numberOfSets == 0)
+			this.numberOfSets = 1;
 		return this;
 	}
 
@@ -378,8 +386,8 @@ public class VoltageDropAC implements ROVoltageDropAC {
 		double k = phases == 1? 2 : SQRT3;
 		double VDropLN = maxVDropPercent / (k * 100);
 		double VLL = voltage * (1-VDropLN);
-		double R_per1000FT = ConductorProperties.getACResistance(size, conductiveMetal, conduitMaterial);
-		double X_per1000FT = ConductorProperties.getReactance(size, conduitMaterial.isMagnetic());
+		double R_per1000FT = ConductorProperties.getACResistance(size, conductiveMetal, conduitMaterial)/sets;
+		double X_per1000FT = ConductorProperties.getReactance(size, conduitMaterial.isMagnetic())/sets;
 		double currentAngleBeta = lagging? - Math.acos(pf) : Math.acos(pf);
 		double A = current * current * (R_per1000FT * R_per1000FT + X_per1000FT * X_per1000FT);
 		double B =

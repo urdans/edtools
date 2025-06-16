@@ -202,11 +202,15 @@ public interface Conduitable {
 	Conduitable copy();
 
 	/**
+	 * This method is intended to be used by the Conduit class when adding a conduitable to itself. Do tno call
+	 * this method directly. Calling this method under a different circumstance will throw an IllegalCallerException.<br>
 	 * @return A deep copy of this conduitable, except that the copy is in the given conduit.
 	 */
 	Conduitable copy(@NotNull Conduit conduit);
 
 	/**
+	 * This method is intended to be used by the Bundle class when adding a conduitable to itself. Do tno call
+	 * this method directly. Calling this method under a different circumstance will throw an IllegalCallerException.<br>
 	 * @return A deep copy of this conduitable, except that the copy is in the given bundle.
 	 */
 	Conduitable copy(@NotNull Bundle bundle);

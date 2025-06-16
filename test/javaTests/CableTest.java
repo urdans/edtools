@@ -811,4 +811,19 @@ class CableTest {
         //that the cable knows about the conduit (by having the same rooftop distance)
         assertEquals(conduit.getRooftopDistance(), cable.getRooftopDistance());
     }
+
+    @Test
+    void thatWeCannotCallCopyOnACableOutsideAConduitOrBundle(){
+        //outside a conduit
+        Conduit conduit = new Conduit(120);
+        assertThrows(IllegalCallerException.class, () -> new Cable(VoltageAC.v208_3ph_4w).copy(conduit));
+        Cable cable = new Cable(VoltageAC.v240_1ph_3w);
+        assertThrows(IllegalCallerException.class, () -> cable.copy(conduit));
+
+        //outside a bundle
+        Bundle bundle = new Bundle(120);
+        assertThrows(IllegalCallerException.class, () -> new Cable(VoltageAC.v208_3ph_4w).copy(bundle));
+        Cable cable1 = new Cable(VoltageAC.v240_1ph_3w);
+        assertThrows(IllegalCallerException.class, () -> cable1.copy(bundle));
+    }
 }
